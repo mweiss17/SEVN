@@ -1,3 +1,4 @@
 data/
 *.db
 colmap_workspace/*
+.DS_Store
