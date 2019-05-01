@@ -1,0 +1,2 @@
+# https://www.sony-semicon.co.jp/products_en/IS/sensor1/img/products/ProductBrief_IMX408_20171109.pdf
+1 SIMPLE_FISHEYE 1088 1600 800 0 800 0
