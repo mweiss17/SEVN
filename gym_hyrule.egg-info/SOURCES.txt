@@ -1,0 +1,6 @@
+setup.py
+gym_hyrule.egg-info/PKG-INFO
+gym_hyrule.egg-info/SOURCES.txt
+gym_hyrule.egg-info/dependency_links.txt
+gym_hyrule.egg-info/requires.txt
+gym_hyrule.egg-info/top_level.txt
