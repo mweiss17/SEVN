@@ -88,7 +88,6 @@ class HyruleEnv(gym.GoalEnv):
         self._action_set = HyruleEnv.Actions
         self.action_space = spaces.Discrete(len(self._action_set))
         self.observation_space = spaces.Box(low=0, high=255, shape=obs_shape, dtype=np.float32) # spaces.dict goes here
-        import pdb; pdb.set_trace()
         path = _ROOT + path
         f = gzip.GzipFile(path + "images.pkl.gz", "r")
         self.images_df = pickle.load(f)
@@ -204,10 +203,12 @@ class HyruleEnv(gym.GoalEnv):
             action = shortest_path[0]
         image, x, w = self._get_image()
         visible_text = self.get_visible_text(x, w)
+        was_successful_trajectory = False
 
         if not self.can_done and self.is_successful_trajectory(x):
             done = True
             reward = self.compute_reward(x, {}, done)
+            was_successful_trajectory = True
         elif action == self.Actions.FORWARD:
             self.transition()
         elif self.can_done and action == self.Actions.DONE:
@@ -238,7 +239,11 @@ class HyruleEnv(gym.GoalEnv):
         # print(s)
         # print(obs)
         obs = self.obs_wrap(obs)
-        return obs, reward, done, {}
+        info = {}
+        if done:
+            info["was_successful_trajectory"] = was_successful_trajectory
+
+        return obs, reward, done, info
 
 
     def _get_image(self, high_res=False, plot=False):
