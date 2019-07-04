@@ -331,6 +331,11 @@ class HyruleEnv(gym.GoalEnv):
     def obs_wrap(self, obs):
         coord_holder = np.zeros((1, 84, 84), dtype=np.float32)
         coord_holder[0, 0, :4] = obs['rel_gps']
+        coord_holder[0, 0, 4:10] = obs['visible_text']['street_names']
+        coord_holder[0, 0, 10:84] = obs['visible_text']['house_numbers'][0:74]
+        coord_holder[0, 1, :46] = obs['visible_text']['house_numbers'][74:120]
+        coord_holder[0, 2, :40] = obs['mission']['house_numbers']
+        coord_holder[0, 2, 40:43] = obs['mission']["street_names"]
         out = np.concatenate((obs['image'], coord_holder), axis=0)
         return out
 
