@@ -113,6 +113,7 @@ class HyruleEnvShaped(gym.GoalEnv):
             segment_group = self.meta_df[self.meta_df.frame == goal.frame.iloc[0]].group.iloc[0]
             segment_panos = self.meta_df[(self.meta_df.group == segment_group) & (self.meta_df.type == "street_segment")]
             G.remove_nodes_from(self.meta_df[~self.meta_df.index.isin(segment_panos.index)].index)
+            self.max_num_steps = self.meta_df[(self.meta_df.type == "street_segment") & (self.meta_df.group == segment_group)].shape[0]
         else:
             goal = goals.loc[np.random.choice(goals.frame.values.tolist())]
         goal_idx = self.meta_df[self.meta_df.frame == goal.frame.iloc[0]].frame.iloc[0]
