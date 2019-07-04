@@ -47,6 +47,6 @@ register(
 register(
     id='Hyrule-ImgOnlyShaped-v1',
     entry_point='hyrule_gym.envs:HyruleEnvShaped',
-    kwargs={'use_image_obs': True, 'use_gps_obs': False, 'visible_text_obs': False},
+    kwargs={'use_image_obs': True, 'use_gps_obs': False, 'use_visible_text_obs': False},
     max_episode_steps=10000,
 )
