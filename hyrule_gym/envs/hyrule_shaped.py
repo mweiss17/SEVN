@@ -57,7 +57,7 @@ class HyruleEnvShaped(gym.GoalEnv):
         assert street_name in self.all_street_names
         return (self.all_street_names == street_name).astype(int)
 
-    def __init__(self, path="/mini-corl/processed/", obs_shape=(4, 84, 84), use_image_obs=False, use_gps_obs=False, use_visible_text_obs=False):
+    def __init__(self, path="/corl/processed/", obs_shape=(4, 84, 84), use_image_obs=False, use_gps_obs=False, use_visible_text_obs=False):
         self.viewer = None
         self.use_image_obs = use_image_obs
         self.use_gps_obs = use_gps_obs
