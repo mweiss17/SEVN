@@ -27,7 +27,7 @@ ACTION_MEANING = {
     6: 'NOOP',
 }
 
-class HyruleEnv(gym.GoalEnv):
+class HyruleEnvShaped(gym.GoalEnv):
     metadata = {'render.modes': ['human', 'rgb_array']}
 
     class Actions(enum.IntEnum):
@@ -36,22 +36,6 @@ class HyruleEnv(gym.GoalEnv):
         FORWARD = 2
         RIGHT_SMALL = 3
         RIGHT_BIG = 4
-
-    class NoopActions(enum.IntEnum):
-        LEFT_BIG = 0
-        LEFT_SMALL = 1
-        FORWARD = 2
-        RIGHT_SMALL = 3
-        RIGHT_BIG = 4
-        NOOP = 6
-
-    class DoneActions(enum.IntEnum):
-        LEFT_BIG = 0
-        LEFT_SMALL = 1
-        FORWARD = 2
-        RIGHT_SMALL = 3
-        RIGHT_BIG = 4
-        DONE = 5
 
     @classmethod
     def norm_angle(cls, x):
@@ -70,21 +54,16 @@ class HyruleEnv(gym.GoalEnv):
         return res.reshape(-1)
 
     def convert_street_name(self, street_name):
-        res = self.meta_df[self.meta_df.obj_type == 'street_sign'].street_name.unique()
-        res = (res == street_name).astype(int)
-        return res
+        assert street_name in self.all_street_names
+        return (self.all_street_names == street_name).astype(int)
 
-    def __init__(self, path="/mini-corl/processed/", obs_shape=(4, 84, 84), shaped_reward=True, can_noop=False, can_done=False, store_test=False, test_mode=False):
+    def __init__(self, path="/mini-corl/processed/", obs_shape=(4, 84, 84), use_image_obs=False, use_gps_obs=False, use_visible_text_obs=False):
         self.viewer = None
+        self.use_image_obs = use_image_obs
+        self.use_gps_obs = use_gps_obs
+        self.use_visible_text_obs = use_visible_text_obs
         self.needs_reset = True
-        self.can_noop = can_noop
-        self.can_done = can_done
-        if can_noop:
-            HyruleEnv.Actions = HyruleEnv.NoopActions
-        elif can_done:
-            HyruleEnv.Actions = HyruleEnv.DoneActions
-
-        self._action_set = HyruleEnv.Actions
+        self._action_set = HyruleEnvShaped.Actions
         self.action_space = spaces.Discrete(len(self._action_set))
         self.observation_space = spaces.Box(low=0, high=255, shape=obs_shape, dtype=np.float32) # spaces.dict goes here
         path = _ROOT + path
@@ -94,19 +73,13 @@ class HyruleEnv(gym.GoalEnv):
         self.meta_df = pd.read_hdf(path + "meta.hdf5", key='df', mode='r')
         self.G = nx.read_gpickle(path + "graph.pkl")
 
-        self.num_streets = self.meta_df[self.meta_df.obj_type == 'street_sign'].street_name.unique().size
-        self.curriculum_learning = False
+        self.all_street_names = self.meta_df[self.meta_df.is_goal == True].street_name.unique()
+        self.num_streets = self.all_street_names.size
         self.agent_loc = np.random.choice(self.meta_df.frame)
         self.agent_dir = 0
-        self.difficulty = 0
-        self.weighted = True
 
-        self.shaped_reward = shaped_reward
         self.max_num_steps = 100
         self.num_steps_taken = 0
-
-        self.store_test = store_test
-        self.test_mode = test_mode
 
     def turn(self, action):
         action = self._action_set(action)
@@ -130,15 +103,11 @@ class HyruleEnv(gym.GoalEnv):
         else:
             return angle
 
-    def select_goal(self, same_segment=True, one_segment=True, difficulty=0):
+    def select_goal(self, same_segment=True):
         goals = self.meta_df[self.meta_df.is_goal == True]
         G = self.G.copy()
         if same_segment:
-            if one_segment:
-                frames = self.meta_df[(self.meta_df.type == "street_segment") & self.meta_df.frame.isin(goals.frame) & (self.meta_df.group == 1)].frame
-                self.max_num_steps = self.meta_df[(self.meta_df.type == "street_segment") & (self.meta_df.group == 1)].shape[0]
-            else:
-                frames = self.meta_df[(self.meta_df.type == "street_segment") & self.meta_df.frame.isin(goals.frame)].frame
+            frames = self.meta_df[(self.meta_df.type == "street_segment") & self.meta_df.frame.isin(goals.frame)].frame
             goals_on_street_segment = goals[goals.frame.isin(frames)]
             goal = goals_on_street_segment.loc[np.random.choice(goals_on_street_segment.frame.values.tolist())]
             segment_group = self.meta_df[self.meta_df.frame == goal.frame.iloc[0]].group.iloc[0]
@@ -146,7 +115,6 @@ class HyruleEnv(gym.GoalEnv):
             G.remove_nodes_from(self.meta_df[~self.meta_df.index.isin(segment_panos.index)].index)
         else:
             goal = goals.loc[np.random.choice(goals.frame.values.tolist())]
-
         goal_idx = self.meta_df[self.meta_df.frame == goal.frame.iloc[0]].frame.iloc[0]
         self.goal_id = goal.house_number
         label = self.meta_df[self.meta_df.frame == int(self.meta_df.loc[goal_idx].frame.iloc[0])]
@@ -175,12 +143,10 @@ class HyruleEnv(gym.GoalEnv):
 
         self.agent_loc = min(neighbors, key=neighbors.get)
 
-    def set_difficulty(self, difficulty, weighted=False):
-        self.difficulty = difficulty
-
     def step(self, a):
         done = False
         reward = 0.0
+        self.num_steps_taken += 1
         action = self._action_set(a)
         oracle = False
         if oracle:
@@ -190,55 +156,33 @@ class HyruleEnv(gym.GoalEnv):
         visible_text = self.get_visible_text(x, w)
         was_successful_trajectory = False
 
-        if not self.can_done and self.is_successful_trajectory(x):
+        if self.is_successful_trajectory(x):
             done = True
-            reward = self.compute_reward(x, {}, done)
             was_successful_trajectory = True
+        elif self.num_steps_taken >= self.max_num_steps and done == False:
+            done = True
         elif action == self.Actions.FORWARD:
             self.transition()
-        elif self.can_done and action == self.Actions.DONE:
-            done = True
-            reward = self.compute_reward(x, {}, done)
-            # print("Mission reward: " + str(reward))
         else:
             self.turn(action)
+        reward = self.compute_reward(x, {}, done)
 
-        if self.shaped_reward:
-            reward = self.compute_reward(x, {}, done)
-            #print("Current reward: " + str(reward))
         self.agent_gps = self.sample_gps(self.meta_df.loc[self.agent_loc])
-        rel_gps = [self.target_gps[0] - self.agent_gps[0], self.target_gps[1] - self.agent_gps[1],
-                   self.target_gps[0], self.target_gps[1]]
+        rel_gps = [self.target_gps[0] - self.agent_gps[0], self.target_gps[1] - self.agent_gps[1]]
         obs = {"image": image, "mission": self.goal_address, "rel_gps": rel_gps, "visible_text": visible_text}
-        self.num_steps_taken += 1
-        if self.num_steps_taken >= self.max_num_steps and done == False:
-            done = True
-            reward = 0.0
-        s = "obs: "
-        for k, v in obs.items():
-            if k != "image":
-                s = s + ", " + str(k) + ": " + str(v)
-        if done:
-            self.needs_reset = True
-        # print(self.agent_loc)
-        # print(s)
-        # print(obs)
         obs = self.obs_wrap(obs)
+
         info = {}
         if done:
             info["was_successful_trajectory"] = was_successful_trajectory
+            self.needs_reset = True
 
         return obs, reward, done, info
 
 
     def _get_image(self, high_res=False, plot=False):
-        if high_res:
-            path = "data/data/mini-corl/panos/pano_"+ str(int(30*self.G.nodes[self.agent_loc]['timestamp'])).zfill(6) + ".png"
-            img = cv2.resize(cv2.imread(path)[:, :, ::-1], (960, 480))
-            obs_shape = (480, 480, 3)
-        else:
-            img = self.images_df[self.meta_df.loc[self.agent_loc, 'frame'][0]]
-            obs_shape = self.observation_space.shape
+        img = self.images_df[self.meta_df.loc[self.agent_loc, 'frame'][0]]
+        obs_shape = self.observation_space.shape
 
         pano_rotation = self.norm_angle(self.meta_df.loc[self.agent_loc, 'angle'][0] + 90)
         w = obs_shape[1]
@@ -254,10 +198,6 @@ class HyruleEnv(gym.GoalEnv):
         else:
             res_img = img[:, x:x + w]
 
-        if plot:
-            _, ax = plt.subplots(figsize=(18, 18))
-            ax.imshow(res_img.astype(int))
-            plt.show()
         return res_img, x, w
 
     def get_visible_text(self, x, w):
@@ -295,32 +235,34 @@ class HyruleEnv(gym.GoalEnv):
     def reset(self):
         self.needs_reset = False
         self.num_steps_taken = 0
-        if self.test_mode:
-            self.load_test_task()
-        else:
-            self.goal_idx, self.goal_address, self.goal_dir = self.select_goal(same_segment=True, difficulty=self.difficulty)
-            self.prev_spl = len(self.shortest_path_length())
-            if self.store_test:
-                self.store_test_task()
-                self.store_test = False
+        self.goal_idx, self.goal_address, self.goal_dir = self.select_goal(same_segment=True)
+        self.prev_spl = len(self.shortest_path_length())
         self.start_spl = self.prev_spl
         self.agent_gps = self.sample_gps(self.meta_df.loc[self.agent_loc])
         self.target_gps = self.sample_gps(self.meta_df.loc[self.goal_idx], scale=3.0)
         image, x, w = self._get_image()
-        rel_gps = [self.target_gps[0] - self.agent_gps[0], self.target_gps[1] - self.agent_gps[1],
-                   self.target_gps[0], self.target_gps[1]]
+        rel_gps = [self.target_gps[0] - self.agent_gps[0], self.target_gps[1] - self.agent_gps[1]]
         obs = {"image": image, "mission": self.goal_address, "rel_gps": rel_gps, "visible_text": self.get_visible_text(x, w)}
         obs = self.obs_wrap(obs)
         return obs
 
     def obs_wrap(self, obs):
         coord_holder = np.zeros((1, 84, 84), dtype=np.float32)
-        coord_holder[0, 0, :2] = obs['rel_gps']
-        coord_holder[0, 0, 2:8] = obs['visible_text']['street_names']
-        coord_holder[0, 0, 8:84] = obs['visible_text']['house_numbers'][0:76]
-        coord_holder[0, 1, :44] = obs['visible_text']['house_numbers'][76:120]
-        coord_holder[0, 2, :40] = obs['mission']['house_numbers']
-        coord_holder[0, 2, 40:43] = obs['mission']["street_names"]
+
+        if self.use_gps_obs:
+            coord_holder[0, 0, :2] = obs['rel_gps']
+
+        coord_holder[0, 0, 3] = self.num_streets
+        if self.use_visible_text_obs:
+            coord_holder[0, 1, :2 * self.num_streets] = obs['visible_text']['street_names']
+            coord_holder[0, 2, :] = obs['visible_text']['house_numbers'][:84]
+            coord_holder[0, 3, :36] = obs['visible_text']['house_numbers'][84:120]
+        if not self.use_image_obs:
+            obs['image'] = np.zeros((3, 84, 84))
+
+        coord_holder[0, 4, :40] = obs['mission']['house_numbers']
+        coord_holder[0, 4, 40:40 + self.num_streets] = obs['mission']["street_names"]
+
         out = np.concatenate((obs['image'], coord_holder), axis=0)
         return out
 
@@ -358,7 +300,6 @@ class HyruleEnv(gym.GoalEnv):
         path = nx.shortest_path(self.G, cur_node, target=target_node)
         actions = []
         for idx, node in enumerate(path):
-
             if idx + 1 != len(path):
                 target_dir = self.get_angle_between_nodes(node, path[idx + 1], use_agent_dir=False)
                 actions.extend(self.angles_to_turn(cur_dir, target_dir))
@@ -366,9 +307,6 @@ class HyruleEnv(gym.GoalEnv):
                 actions.append(self.Actions.FORWARD)
             else:
                 actions.extend(self.angles_to_turn(cur_dir, self.goal_dir + 180))
-                if self.can_done:
-                    actions.append(self.Actions.DONE)
-        # print("SPL:", len(actions))
         return actions
 
 
@@ -390,33 +328,26 @@ class HyruleEnv(gym.GoalEnv):
                 ob, reward, done, info = env.step()
                 assert reward == env.compute_reward(ob['achieved_goal'], ob['goal'], info)
         """
-        if self.shaped_reward:
-            cur_spl = len(self.shortest_path_length())
-            # print("SPL:", cur_spl)
-            if done and self.is_successful_trajectory(x):
-                reward = 2.0
-            elif done and not self.is_successful_trajectory(x):
-                reward = -2.0
-            elif self.prev_spl - cur_spl > 0:
-                reward = 1 #- (self.num_steps_taken / self.start_spl)
-            elif self.prev_spl - cur_spl <= 0:
-                reward = -1
-            else:
-                reward = 0.0
-            self.prev_spl = cur_spl
-            # print("reward: " + str(reward))
-            return reward
-        if self.is_successful_trajectory(x):
-            return 1.0
-        return 0.0
+        cur_spl = len(self.shortest_path_length())
+        if done and self.is_successful_trajectory(x):
+            reward = 2.0
+        elif done and not self.is_successful_trajectory(x):
+            reward = -2.0
+        elif self.prev_spl - cur_spl > 0:
+            reward = 1
+        elif self.prev_spl - cur_spl <= 0:
+            reward = -1
+        else:
+            reward = 0.0
+        self.prev_spl = cur_spl
+        return reward
 
     def is_successful_trajectory(self, x):
         subset = self.meta_df.loc[self.agent_loc, ["frame", "obj_type", "house_number", "x_min", "x_max"]]
-        label = subset[(subset.house_number == self.goal_id.iloc[0]) & (subset.obj_type == "door")]#) & (subset.obj_type == "door")]].any()
+        label = subset[(subset.house_number == self.goal_id.iloc[0]) & (subset.obj_type == "door")]
         x_min = label.x_min.get(0, 0) if type(label.x_min) == pd.Series else label.x_min
         x_max = label.x_max.get(0, 0) if type(label.x_max) == pd.Series else label.x_max
         if label.any().any() and x < x_min and x + 84 > x_max:
-            #print("achieved goal")
             return True
         return False
 
@@ -447,10 +378,6 @@ class HyruleEnv(gym.GoalEnv):
             'RIGHT_SMALL': ord('e'),
             'RIGHT_BIG': ord('d'),
         }
-        if self.can_noop:
-            KEYWORD_TO_KEY['NOOP'] = ord('n')
-        if self.can_done:
-            KEYWORD_TO_KEY['DONE'] = ord('s')
 
         keys_to_action = {}
 
@@ -465,21 +392,3 @@ class HyruleEnv(gym.GoalEnv):
             keys_to_action[keys] = action_id
 
         return keys_to_action
-
-    def store_test_task(self):
-        path = "/data/data/mini-corl/processed/"
-        agent_info = {"idx": self.agent_loc, "dir": self.agent_dir}
-        goal_info = {"idx": self.goal_idx, "dir": self.goal_dir, "address": self.goal_address, "goal_id": self.goal_id}
-        test_task = {"agent_info": agent_info, "goal_info": goal_info, "spl": self.prev_spl}
-        np.save(self.mydir+path + "test_task.npy", test_task)
-
-    def load_test_task(self):
-        test_task = np.load(self.mydir+"/data/data/mini-corl/processed/test_task.npy")
-        self.agent_loc = test_task.item().get('agent_info')['idx']
-        self.agent_dir = test_task.item().get('agent_info')['dir']
-        self.goal_idx = test_task.item().get('goal_info')['idx']
-        self.goal_dir = test_task.item().get('goal_info')['dir']
-        self.goal_address = test_task.item().get('goal_info')['address']
-        self.goal_id = test_task.item().get('goal_info')['goal_id']
-        self.prev_spl = test_task.item().get('spl')
-        #print("Test Task SPL:", test_task.item().get('spl'))

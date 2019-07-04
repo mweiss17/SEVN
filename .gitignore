@@ -1,5 +1,6 @@
 venv/
 data/
 *.db
+*.pyc
 colmap_workspace/*
 .DS_Store
