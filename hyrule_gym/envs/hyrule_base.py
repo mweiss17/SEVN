@@ -1,4 +1,3 @@
-""" This is the simulator for NAVI project. It defines the action and observation spaces, tracks the agent's state, and specifies game logic. """
 from __future__ import print_function, division
 import enum
 import math
@@ -27,7 +26,7 @@ ACTION_MEANING = {
     6: 'NOOP',
 }
 
-class HyruleEnvShaped(gym.GoalEnv):
+class HyruleBase(gym.GoalEnv):
     metadata = {'render.modes': ['human', 'rgb_array']}
 
     class Actions(enum.IntEnum):
@@ -57,7 +56,7 @@ class HyruleEnvShaped(gym.GoalEnv):
         assert street_name in self.all_street_names
         return (self.all_street_names == street_name).astype(int)
 
-    def __init__(self, obs_shape=(4, 84, 84), use_image_obs=False, use_gps_obs=False, use_visible_text_obs=False, use_full=False):
+    def __init__(self, obs_shape=(4, 84, 84), use_image_obs=False, use_gps_obs=False, use_visible_text_obs=False, use_full=False, reward_type=None):
         path = "/mini-corl/processed/"
         self.max_num_steps = 300 # self.meta_df[self.meta_df.type == "street_segment"].groupby(self.meta_df.group).count()
         if use_full:
@@ -70,8 +69,9 @@ class HyruleEnvShaped(gym.GoalEnv):
         self.use_image_obs = use_image_obs
         self.use_gps_obs = use_gps_obs
         self.use_visible_text_obs = use_visible_text_obs
+        self.reward_type = reward_type
         self.needs_reset = True
-        self._action_set = HyruleEnvShaped.Actions
+        self._action_set = HyruleBase.Actions
         self.action_space = spaces.Discrete(len(self._action_set))
         self.observation_space = spaces.Box(low=0, high=255, shape=obs_shape, dtype=np.float32) # spaces.dict goes here
         f = gzip.GzipFile(path + "images.pkl.gz", "r")
@@ -132,7 +132,6 @@ class HyruleEnvShaped(gym.GoalEnv):
         goal_address = {"house_numbers": self.convert_house_numbers(int(goal.house_number.iloc[0])),
                         "street_names": self.convert_street_name(goal.street_name.iloc[0])}
         return goal_idx, goal_address, goal_dir
-
 
     def transition(self):
         """
@@ -346,7 +345,9 @@ class HyruleEnvShaped(gym.GoalEnv):
             reward = 1
         elif self.prev_spl - cur_spl <= 0:
             reward = -1
-        assert reward
+
+        if self.reward_type == "Sparse" and reward != 2.0 and reward != -2.0:
+            reward = 0
         self.prev_spl = cur_spl
         return reward
 
