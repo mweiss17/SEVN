@@ -79,6 +79,7 @@ class HyruleEnvShaped(gym.GoalEnv):
         f.close()
         self.meta_df = pd.read_hdf(path + "meta.hdf5", key='df', mode='r')
         self.G = nx.read_gpickle(path + "graph.pkl")
+        import pdb;pdb.set_trace()
 
         self.all_street_names = self.meta_df.street_name.dropna().unique()
         self.num_streets = self.all_street_names.size
@@ -232,9 +233,10 @@ class HyruleEnvShaped(gym.GoalEnv):
 
     def sample_gps(self, groundtruth, scale=1):
         coords = groundtruth[['x', 'y']]
-        gps_scale = 100.0  # TODO: Arbitrary. Need a better normalizing value here. Requires min-max from dataframe.
-        x = (coords.at[0, 'x'] + np.random.normal(loc=0.0, scale=scale)) / gps_scale
-        y = (coords.at[0, 'y'] + np.random.normal(loc=0.0, scale=scale)) / gps_scale
+        x_scale = self.meta_df.x.max() - self.meta_df.x.min()
+        y_scale = self.meta_df.y.max() - self.meta_df.y.min()
+        x = (coords.at[0, 'x'] + np.random.normal(loc=0.0, scale=5)) / x_scale
+        y = (coords.at[0, 'y'] + np.random.normal(loc=0.0, scale=5)) / y_scale
         return (x, y)
 
     def reset(self):
