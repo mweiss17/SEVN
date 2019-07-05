@@ -36,6 +36,7 @@ class HyruleEnvShaped(gym.GoalEnv):
         FORWARD = 2
         RIGHT_SMALL = 3
         RIGHT_BIG = 4
+        DONE = 5
 
     @classmethod
     def norm_angle(cls, x):
@@ -65,7 +66,7 @@ class HyruleEnvShaped(gym.GoalEnv):
             self.max_num_steps = 399 + 6 # self.meta_df[self.meta_df.type == "street_segment"].groupby(self.meta_df.group).count()
         path = _ROOT + path
 
-        print(f"Booting environment from {path} with shaped reward, image_obs: {use_image_obs}, gps: {use_gps_obs}, visible_text: {use_visible_text_obs}")
+        print(f"Booting environment from {path} with Sparse reward, image_obs: {use_image_obs}, gps: {use_gps_obs}, visible_text: {use_visible_text_obs}")
         self.viewer = None
         self.use_image_obs = use_image_obs
         self.use_gps_obs = use_gps_obs
@@ -79,6 +80,7 @@ class HyruleEnvShaped(gym.GoalEnv):
         f.close()
         self.meta_df = pd.read_hdf(path + "meta.hdf5", key='df', mode='r')
         self.G = nx.read_gpickle(path + "graph.pkl")
+        import pdb;pdb.set_trace()
 
         self.all_street_names = self.meta_df.street_name.dropna().unique()
         self.num_streets = self.all_street_names.size
