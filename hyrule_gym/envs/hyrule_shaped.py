@@ -59,10 +59,10 @@ class HyruleEnvShaped(gym.GoalEnv):
 
     def __init__(self, obs_shape=(4, 84, 84), use_image_obs=False, use_gps_obs=False, use_visible_text_obs=False, use_full=False):
         path = "/mini-corl/processed/"
-        self.max_num_steps = 272 + 6 # self.meta_df[self.meta_df.type == "street_segment"].groupby(self.meta_df.group).count()
+        self.max_num_steps = 300 # self.meta_df[self.meta_df.type == "street_segment"].groupby(self.meta_df.group).count()
         if use_full:
             path = "/corl/processed/"
-            self.max_num_steps = 399 + 6 # self.meta_df[self.meta_df.type == "street_segment"].groupby(self.meta_df.group).count()
+            self.max_num_steps = 420 # self.meta_df[self.meta_df.type == "street_segment"].groupby(self.meta_df.group).count()
         path = _ROOT + path
 
         print(f"Booting environment from {path} with shaped reward, image_obs: {use_image_obs}, gps: {use_gps_obs}, visible_text: {use_visible_text_obs}")
@@ -150,16 +150,17 @@ class HyruleEnvShaped(gym.GoalEnv):
 
     def step(self, a):
         done = False
+        was_successful_trajectory = False
+        oracle = False
+
         reward = 0.0
         self.num_steps_taken += 1
         action = self._action_set(a)
-        oracle = False
         if oracle:
             shortest_path = self.shortest_path_length()
             action = shortest_path[0]
         image, x, w = self._get_image()
         visible_text = self.get_visible_text(x, w)
-        was_successful_trajectory = False
 
         if self.is_successful_trajectory(x):
             done = True
@@ -173,7 +174,8 @@ class HyruleEnvShaped(gym.GoalEnv):
         reward = self.compute_reward(x, {}, done)
 
         self.agent_gps = self.sample_gps(self.meta_df.loc[self.agent_loc])
-        rel_gps = [self.target_gps[0] - self.agent_gps[0], self.target_gps[1] - self.agent_gps[1]]
+        rel_gps = [self.target_gps[0] - self.agent_gps[0], self.target_gps[1] - self.agent_gps[1],
+                   self.target_gps[0], self.target_gps[1]]
         obs = {"image": image, "mission": self.goal_address, "rel_gps": rel_gps, "visible_text": visible_text}
         obs = self.obs_wrap(obs)
 
@@ -223,19 +225,20 @@ class HyruleEnvShaped(gym.GoalEnv):
             temp[:nums.size] = nums
         visible_text["house_numbers"] = temp
 
-        temp = np.zeros(2 * self.num_streets)
+        vec_size = 2 * self.num_streets
+        temp = np.zeros(vec_size)
         if len(street_signs) != 0:
-            nums = np.hstack(street_signs)[:6]
+            nums = np.hstack(street_signs)[:vec_size]
             temp[:nums.size] = nums
         visible_text["street_names"] = temp
         return visible_text
 
-    def sample_gps(self, groundtruth, scale=1):
+    def sample_gps(self, groundtruth, noise_scale=0):
         coords = groundtruth[['x', 'y']]
         x_scale = self.meta_df.x.max() - self.meta_df.x.min()
         y_scale = self.meta_df.y.max() - self.meta_df.y.min()
-        x = (coords.at[0, 'x'] + np.random.normal(loc=0.0, scale=5)) / x_scale
-        y = (coords.at[0, 'y'] + np.random.normal(loc=0.0, scale=5)) / y_scale
+        x = (coords.at[0, 'x'] + np.random.normal(loc=0.0, scale=noise_scale)) / x_scale
+        y = (coords.at[0, 'y'] + np.random.normal(loc=0.0, scale=noise_scale)) / y_scale
         return (x, y)
 
     def reset(self):
@@ -245,9 +248,10 @@ class HyruleEnvShaped(gym.GoalEnv):
         self.prev_spl = len(self.shortest_path_length())
         self.start_spl = self.prev_spl
         self.agent_gps = self.sample_gps(self.meta_df.loc[self.agent_loc])
-        self.target_gps = self.sample_gps(self.meta_df.loc[self.goal_idx], scale=3.0)
+        self.target_gps = self.sample_gps(self.meta_df.loc[self.goal_idx])
         image, x, w = self._get_image()
-        rel_gps = [self.target_gps[0] - self.agent_gps[0], self.target_gps[1] - self.agent_gps[1]]
+        rel_gps = [self.target_gps[0] - self.agent_gps[0], self.target_gps[1] - self.agent_gps[1],
+                   self.target_gps[0], self.target_gps[1]]
         obs = {"image": image, "mission": self.goal_address, "rel_gps": rel_gps, "visible_text": self.get_visible_text(x, w)}
         obs = self.obs_wrap(obs)
         return obs
@@ -256,9 +260,8 @@ class HyruleEnvShaped(gym.GoalEnv):
         coord_holder = np.zeros((1, 84, 84), dtype=np.float32)
 
         if self.use_gps_obs:
-            coord_holder[0, 0, :2] = obs['rel_gps']
+            coord_holder[0, 0, :4] = obs['rel_gps']
 
-        coord_holder[0, 0, 3] = self.num_streets
         if self.use_visible_text_obs:
             coord_holder[0, 1, :2 * self.num_streets] = obs['visible_text']['street_names']
             coord_holder[0, 2, :] = obs['visible_text']['house_numbers'][:84]
@@ -343,8 +346,7 @@ class HyruleEnvShaped(gym.GoalEnv):
             reward = 1
         elif self.prev_spl - cur_spl <= 0:
             reward = -1
-        else:
-            reward = 0.0
+        assert reward
         self.prev_spl = cur_spl
         return reward
 
