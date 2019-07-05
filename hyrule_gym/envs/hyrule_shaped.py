@@ -57,7 +57,15 @@ class HyruleEnvShaped(gym.GoalEnv):
         assert street_name in self.all_street_names
         return (self.all_street_names == street_name).astype(int)
 
-    def __init__(self, path="/corl/processed/", obs_shape=(4, 84, 84), use_image_obs=False, use_gps_obs=False, use_visible_text_obs=False):
+    def __init__(self, obs_shape=(4, 84, 84), use_image_obs=False, use_gps_obs=False, use_visible_text_obs=False, use_full=False):
+        path = "/mini-corl/processed/"
+        self.max_num_steps = 272 + 6 # self.meta_df[self.meta_df.type == "street_segment"].groupby(self.meta_df.group).count()
+        if use_full:
+            path = "/corl/processed/"
+            self.max_num_steps = 399 + 6 # self.meta_df[self.meta_df.type == "street_segment"].groupby(self.meta_df.group).count()
+        path = _ROOT + path
+
+        print(f"Booting environment from {path} with shaped reward, image_obs: {use_image_obs}, gps: {use_gps_obs}, visible_text: {use_visible_text_obs}")
         self.viewer = None
         self.use_image_obs = use_image_obs
         self.use_gps_obs = use_gps_obs
@@ -66,7 +74,6 @@ class HyruleEnvShaped(gym.GoalEnv):
         self._action_set = HyruleEnvShaped.Actions
         self.action_space = spaces.Discrete(len(self._action_set))
         self.observation_space = spaces.Box(low=0, high=255, shape=obs_shape, dtype=np.float32) # spaces.dict goes here
-        path = _ROOT + path
         f = gzip.GzipFile(path + "images.pkl.gz", "r")
         self.images_df = pickle.load(f)
         f.close()
@@ -113,7 +120,6 @@ class HyruleEnvShaped(gym.GoalEnv):
             segment_group = self.meta_df[self.meta_df.frame == goal.frame.iloc[0]].group.iloc[0]
             segment_panos = self.meta_df[(self.meta_df.group == segment_group) & (self.meta_df.type == "street_segment")]
             G.remove_nodes_from(self.meta_df[~self.meta_df.index.isin(segment_panos.index)].index)
-            self.max_num_steps = self.meta_df[(self.meta_df.type == "street_segment") & (self.meta_df.group == segment_group)].shape[0]
         else:
             goal = goals.loc[np.random.choice(goals.frame.values.tolist())]
         goal_idx = self.meta_df[self.meta_df.frame == goal.frame.iloc[0]].frame.iloc[0]
