@@ -57,6 +57,14 @@ class HyruleEnvShaped(gym.GoalEnv):
         assert street_name in self.all_street_names
         return (self.all_street_names == street_name).astype(int)
 
+    def normalize_image(self, image):
+        # Values calculated for mini-corl: mean=[0.437, 0.452, 0.479], std=[0.2495, 0.2556, 0.2783]
+        normed_image = image / 255.0
+        normed_image[:, :, 0] = (normed_image[:, :, 0] - 0.437) / 0.2495
+        normed_image[:, :, 1] = (normed_image[:, :, 1] - 0.452) / 0.2556
+        normed_image[:, :, 2] = (normed_image[:, :, 2] - 0.479) / 0.2783
+        return normed_image
+
     def __init__(self, obs_shape=(4, 84, 84), use_image_obs=False, use_gps_obs=False, use_visible_text_obs=False, use_full=False):
         path = "/mini-corl/processed/"
         self.max_num_steps = 300 # self.meta_df[self.meta_df.type == "street_segment"].groupby(self.meta_df.group).count()
@@ -189,6 +197,7 @@ class HyruleEnvShaped(gym.GoalEnv):
 
     def _get_image(self, high_res=False, plot=False):
         img = self.images_df[self.meta_df.loc[self.agent_loc, 'frame'][0]]
+        img = self.normalize_image(img)
         obs_shape = self.observation_space.shape
 
         pano_rotation = self.norm_angle(self.meta_df.loc[self.agent_loc, 'angle'][0] + 90)
