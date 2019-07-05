@@ -10,6 +10,14 @@ from gym.envs.registration import register
 #     max_episode_steps=10000,
 # )
 
+register(
+    id='Hyrule-Pacman-v1',
+    entry_point='hyrule_gym.envs:HyrulePacman',
+    kwargs={},
+    max_episode_steps=10000,
+)
+
+
 for dataset in ["Full", "Mini"]:
     for modality in ["All", "NoImg", "NoGPS", "ImgOnly"]:
         for reward in ["Shaped", "Sparse"]:
