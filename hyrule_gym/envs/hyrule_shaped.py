@@ -80,12 +80,10 @@ class HyruleEnvShaped(gym.GoalEnv):
         self.meta_df = pd.read_hdf(path + "meta.hdf5", key='df', mode='r')
         self.G = nx.read_gpickle(path + "graph.pkl")
 
-        self.all_street_names = self.meta_df.street_name.unique()
+        self.all_street_names = self.meta_df.street_name.dropna().unique()
         self.num_streets = self.all_street_names.size
         self.agent_loc = np.random.choice(self.meta_df.frame)
         self.agent_dir = 0
-
-        self.max_num_steps = 100
         self.num_steps_taken = 0
 
     def turn(self, action):

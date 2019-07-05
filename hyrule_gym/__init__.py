@@ -23,7 +23,6 @@ register(
     max_episode_steps=10000,
 )
 
-# for loop w/ mini and full dataset Hyrule-{}-FullShaped-v1 (use f notation)
 for dataset in ["Full", "Mini"]:
     for modality in ["All", "NoImg", "NoGPS", "ImgOnly"]:
         for reward in ["Shaped", "Sparse"]:
