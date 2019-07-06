@@ -17,6 +17,13 @@ register(
     max_episode_steps=10000,
 )
 
+register(
+    id='Hyrule-Play-v1',
+    entry_point='hyrule_gym.envs:HyrulePlay',
+    kwargs={},
+    max_episode_steps=10000,
+)
+
 
 for dataset in ["Full", "Mini"]:
     for modality in ["All", "NoImg", "NoGPS", "ImgOnly"]:

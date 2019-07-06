@@ -38,61 +38,6 @@ def display_bb(screen, rel_coords, text, video_size):
     pygame.display.update()
 
 def play(env, transpose=True, fps=30, zoom=None, callback=None, keys_to_action=None):
-    """Allows one to play the game using keyboard.
-
-    To simply play the game use:
-
-        play(gym.make("Hyrule-v0"))
-
-    Above code works also if env is wrapped, so it's particularly useful in
-    verifying that the frame-level preprocessing does not render the game
-    unplayable.
-
-    If you wish to plot real time statistics as you play, you can use
-    gym.utils.play.PlayPlot. Here's a sample code for plotting the reward
-    for last 5 second of gameplay.
-
-        def callback(obs_t, obs_tp1, action, rew, done, info):
-            return [rew,]
-        plotter = PlayPlot(callback, 30 * 5, ["reward"])
-
-        env = gym.make("Pong-v4")
-        play(env, callback=plotter.callback)
-
-
-    Arguments
-    ---------
-    env: gym.Env
-        Environment to use for playing.
-    transpose: bool
-        If True the output of observation is transposed.
-        Defaults to true.
-    fps: int
-        Maximum number of steps of the environment to execute every second.
-        Defaults to 30.
-    zoom: float
-        Make screen edge this many times bigger
-    callback: lambda or None
-        Callback if a callback is provided it will be executed after
-        every step. It takes the following input:
-            obs_t: observation before performing action
-            obs_tp1: observation after performing action
-            action: action that was executed
-            rew: reward that was received
-            done: whether the environment is done or not
-            info: debug info
-    keys_to_action: dict: tuple(int) -> int or None
-        Mapping from keys pressed to action performed.
-        For example if pressed 'w' and space at the same time is supposed
-        to trigger action number 2 then key_to_action dict would look like this:
-
-            {
-                # ...
-                sorted(ord('w'), ord(' ')) -> 2
-                # ...
-            }
-        If None, default key_to_action mapping for that env is used, if provided.
-    """
     rendered = env.render(mode='rgb_array')
     if keys_to_action is None:
         if hasattr(env, 'get_keys_to_action'):
@@ -141,9 +86,6 @@ def play(env, transpose=True, fps=30, zoom=None, callback=None, keys_to_action=N
             display_arr(screen, rendered, transpose=transpose, video_size=video_size)
         if info is not None:
             achieved_goal = info.get('achieved_goal')
-            # text = achieved_goal.get('obj_type', [''])[0] + ": " + achieved_goal.get('house_number', [''])[0]
-            # rel_coords = achieved_goal.get('rel_coords', [1., 1., 1., 1.])
-            #display_bb(screen, rel_coords, text, video_size)
 
         # process pygame events
         for event in pygame.event.get():
@@ -202,11 +144,9 @@ class PlayPlot(object):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--env', type=str, default='Hyrule-noop-v1', help='Define Environment')
+    parser.add_argument('--env', type=str, default='Hyrule-Play-v1', help='Define Environment')
     args = parser.parse_args()
     env = gym.make(args.env)
-    # env.store_test = True
-    env.test_mode = True
     play(env, zoom=4, fps=6)
 
 
