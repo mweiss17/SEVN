@@ -18,6 +18,13 @@ register(
 )
 
 register(
+    id='Hyrule-DecreasingReward-v1',
+    entry_point='hyrule_gym.envs:HyruleDecreasingReward',
+    kwargs={},
+    max_episode_steps=10000,
+)
+
+register(
     id='Hyrule-Play-v1',
     entry_point='hyrule_gym.envs:HyrulePlay',
     kwargs={},
