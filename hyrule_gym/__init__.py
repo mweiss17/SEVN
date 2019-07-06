@@ -18,9 +18,16 @@ register(
 )
 
 register(
-    id='Hyrule-DecreasingReward-v1',
+    id='Hyrule-Mini-DecreasingReward-v1',
     entry_point='hyrule_gym.envs:HyruleDecreasingReward',
     kwargs={},
+    max_episode_steps=10000,
+)
+
+register(
+    id='Hyrule-Full-DecreasingReward-v1',
+    entry_point='hyrule_gym.envs:HyruleDecreasingReward',
+    kwargs={"use_full": True},
     max_episode_steps=10000,
 )
 
