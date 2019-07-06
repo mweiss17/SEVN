@@ -21,7 +21,7 @@ from hyrule_gym.envs.hyrule_base import HyruleBase
 class HyrulePacman(HyruleBase):
     def __init__(self, obs_shape=(4, 84, 84), use_image_obs=True, use_gps_obs=False, use_visible_text_obs=True, use_full=False, reward_type=None):
         super(HyrulePacman, self).__init__(obs_shape, use_image_obs, False, use_visible_text_obs, use_full, reward_type)
-        self.max_num_steps = 300 
+        self.max_num_steps = 300
         self.seen_house_nums = []
 
     def step(self, a):
@@ -78,10 +78,10 @@ class HyrulePacman(HyruleBase):
                 ob, reward, done, info = env.step()
                 assert reward == env.compute_reward(ob['achieved_goal'], ob['goal'], info)
         """
-        reward = 0 
-        house_numbers = info['visible_text']['house_numbers']
+        reward = 0
+        house_numbers = HyrulePacman.convert_house_vec_to_ints(info['visible_text']['house_numbers'])
         for num in house_numbers:
-            if not num in self.seen_house_nums:
+            if num not in self.seen_house_nums:
                 reward += 1
                 self.seen_house_nums.append(num)
         return reward
@@ -104,4 +104,3 @@ class HyrulePacman(HyruleBase):
 
         out = np.concatenate((obs['image'], coord_holder), axis=0)
         return out
-

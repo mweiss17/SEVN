@@ -52,6 +52,13 @@ class HyruleBase(gym.GoalEnv):
             res[col, int(row)] = 1
         return res.reshape(-1)
 
+    @classmethod
+    def convert_house_vec_to_ints(cls, vec):
+        numbers = []
+        for offset in range(0, 120, 10):
+            numbers.append(str(vec[offset:offset + 10].argmax()))
+        return (int("".join(numbers[:4])), int("".join(numbers[4:8])), int("".join(numbers[8:12])))
+
     def convert_street_name(self, street_name):
         assert street_name in self.all_street_names
         return (self.all_street_names == street_name).astype(int)
