@@ -32,6 +32,20 @@ register(
 )
 
 register(
+    id='Hyrule-Mini-NoisyGPS-1-v1',
+    entry_point='hyrule_gym.envs:HyruleNoisyGPS',
+    kwargs={"use_full": False, "noise_scale": 1},
+    max_episode_steps=10000,
+)
+
+register(
+    id='Hyrule-Mini-NoisyGPS-5-v1',
+    entry_point='hyrule_gym.envs:HyruleNoisyGPS',
+    kwargs={"use_full": False, "noise_scale": 5},
+    max_episode_steps=10000,
+)
+
+register(
     id='Hyrule-Play-v1',
     entry_point='hyrule_gym.envs:HyrulePlay',
     kwargs={},
