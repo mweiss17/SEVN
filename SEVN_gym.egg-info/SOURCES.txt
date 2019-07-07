@@ -1,0 +1,7 @@
+README.md
+setup.py
+SEVN_gym.egg-info/PKG-INFO
+SEVN_gym.egg-info/SOURCES.txt
+SEVN_gym.egg-info/dependency_links.txt
+SEVN_gym.egg-info/requires.txt
+SEVN_gym.egg-info/top_level.txt

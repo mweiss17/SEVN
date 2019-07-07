@@ -9,10 +9,7 @@ the dataset.
 '''
 
 region = "saint-urbain"
-path = "/home/rogerg/Documents/autonomous_pedestrian_project/navi/hyrule/hyrule_gym/data/mini-corl/processed/images.pkl.gz"
-#path = os.path.expanduser(
-#    "~/dev/hyrule-gym/data/data/mini-corl/processed/images.pkl.gz")
-# data_df = pd.read_hdf(path + "hyrule-gym/data/" + region + "/processed/data.hdf5", key='df', mode='r')
+path = "/SEVN_gym/data/SEVN-mini/processed/images.pkl.gz"
 
 f = gzip.GzipFile(path, "r")
 images_df = np.array(list(pickle.load(f).values())).astype(np.uint8)
