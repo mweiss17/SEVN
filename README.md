@@ -12,13 +12,19 @@ In order to install requirements, follow:
 # PyTorch
 conda install pytorch torchvision -c soumith
 
+pip install tensorflow
+
 # Baselines for Atari preprocessing
 git clone https://github.com/openai/baselines.git
 cd baselines
 pip install -e .
 
-# Other requirements
-pip install -r requirements.txt
+# Install env
+pip install -e .
 ```
 
+## To play
+```
+python scripts/01-play.py
+```
 
