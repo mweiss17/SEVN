@@ -3,7 +3,7 @@ import argparse
 import time
 import matplotlib
 import gym
-import hyrule_gym
+import SEVN_gym
 from gym import logger
 import pygame
 try:
@@ -144,7 +144,7 @@ class PlayPlot(object):
 
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--env', type=str, default='Hyrule-Play-v1', help='Define Environment')
+    parser.add_argument('--env', type=str, default='SEVN-Play-v1', help='Define Environment')
     args = parser.parse_args()
     env = gym.make(args.env)
     play(env, zoom=4, fps=6)
