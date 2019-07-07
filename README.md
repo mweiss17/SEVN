@@ -2,6 +2,8 @@
 
 SEVN: Sidewalk Simulator Environment for Visual Navigation. An outdoor environment simulator with real-world imagery for Deep Reinforcement Learning on navigation tasks.
 
+![game.png](game.png)
+
 ## Requirements
 
 In order to install requirements, follow:
@@ -18,4 +20,5 @@ pip install -e .
 # Other requirements
 pip install -r requirements.txt
 ```
+
 
