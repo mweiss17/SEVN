@@ -145,9 +145,10 @@ class PlayPlot(object):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--env', type=str, default='SEVN-Play-v1', help='Define Environment')
+    parser.add_argument('--zoom', type=float, default=4, help='Zoom')
     args = parser.parse_args()
     env = gym.make(args.env)
-    play(env, zoom=4, fps=6)
+    play(env, zoom=args.zoom, fps=6)
 
 
 if __name__ == '__main__':

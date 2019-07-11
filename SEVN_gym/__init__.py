@@ -52,6 +52,13 @@ register(
     max_episode_steps=10000,
 )
 
+register(
+    id='SEVN-Play-HighRes-v1',
+    entry_point='SEVN_gym.envs:SEVNPlay',
+    kwargs={'high_res': True},
+    max_episode_steps=10000,
+)
+
 
 for dataset in ["Full", "Mini"]:
     for modality in ["All", "NoImg", "NoGPS", "ImgOnly"]:
