@@ -140,8 +140,8 @@ class SEVNBase(gym.GoalEnv):
         label = self.meta_df[self.meta_df.frame == int(self.meta_df.loc[goal_idx].frame.iloc[0])]
         label = label[label.is_goal]
         pano_rotation = self.norm_angle(self.meta_df.loc[goal_idx].angle.iloc[0])
-        label_dir = self.norm_angle(360 * (label.x_min.values[0] + label.x_max.values[0]) / 2 / 224)
-        goal_dir = self.norm_angle(-label_dir + pano_rotation)
+        label_dir = self.norm_angle(360 * (label.x_min.values[0] + label.x_max.values[0])/2 / 224)
+        goal_dir = self.norm_angle(pano_rotation - label_dir - 90 + 67.5)
         self.agent_dir = 22.5 * np.random.choice(range(-8, 8))
         self.agent_loc = np.random.choice(segment_panos.frame.unique())
         goal_address = {"house_numbers": self.convert_house_numbers(int(goal.house_number.iloc[0])),
@@ -165,16 +165,21 @@ class SEVNBase(gym.GoalEnv):
     def step(self, a):
         done = False
         was_successful_trajectory = False
-        oracle = False
+        oracle = True
 
         reward = 0.0
         self.num_steps_taken += 1
         action = self._action_set(a)
         if oracle:
             shortest_path = self.shortest_path_length()
-            action = shortest_path[0]
+            try:
+                action = shortest_path[0]
+            except Exception:
+                shortest_path = self.shortest_path_length()
+                pass
         image, x, w = self._get_image()
         visible_text = self.get_visible_text(x, w)
+        print("is_successful_trajectory: " + str(self.is_successful_trajectory(x)))
 
         if self.is_successful_trajectory(x):
             done = True
@@ -185,6 +190,10 @@ class SEVNBase(gym.GoalEnv):
             self.transition()
         else:
             self.turn(action)
+        # if len(self.shortest_path_length()) > self.prev_spl:
+        #     import pdb;pdb.set_trace()
+        #     self.shortest_path_length()
+
         reward = self.compute_reward(x, {}, done)
 
         self.agent_gps = self.sample_gps(self.meta_df.loc[self.agent_loc])
@@ -210,7 +219,7 @@ class SEVNBase(gym.GoalEnv):
         w = obs_shape[1]
         y = img.shape[0] - obs_shape[1]
         h = obs_shape[2]
-        x = int((self.norm_angle(-self.agent_dir + pano_rotation) + 180)/360 * img.shape[1])
+        x = int((self.norm_angle(pano_rotation - self.agent_dir) + 180)/360 * img.shape[1])
         img = img.transpose()
         if (x + w) % img.shape[1] != (x + w):
             res_img = np.zeros((3, 84, 84))
@@ -301,8 +310,8 @@ class SEVNBase(gym.GoalEnv):
         while np.abs(target - cur) > 22.5:
             cur = (cur - 22.5) % 360
             go_right.append(self.Actions.RIGHT_SMALL)
+        final_right = cur
         cur = temp
-
         while np.abs(target - cur) > 67.5:
             cur = (cur + 67.5) % 360
             go_left.append(self.Actions.LEFT_BIG)
@@ -310,10 +319,11 @@ class SEVNBase(gym.GoalEnv):
         while np.abs(target - cur) > 22.5:
             cur = (cur + 22.5) % 360
             go_left.append(self.Actions.LEFT_SMALL)
+        final_left = cur
 
         if len(go_left) > len(go_right):
-            return go_right
-        return go_left
+            return go_right, final_right
+        return go_left, final_left
 
     def shortest_path_length(self):
         # finds a minimal trajectory to navigate to the target pose
@@ -326,11 +336,14 @@ class SEVNBase(gym.GoalEnv):
         for idx, node in enumerate(path):
             if idx + 1 != len(path):
                 target_dir = self.get_angle_between_nodes(node, path[idx + 1], use_agent_dir=False)
-                actions.extend(self.angles_to_turn(cur_dir, target_dir))
-                cur_dir = target_dir
+                new_action, final_dir = self.angles_to_turn(cur_dir, target_dir)
+                actions.extend(new_action)
+                cur_dir = final_dir
                 actions.append(self.Actions.FORWARD)
             else:
-                actions.extend(self.angles_to_turn(cur_dir, self.goal_dir + 180))
+                new_action, final_dir = self.angles_to_turn(cur_dir, self.goal_dir + 180)
+                actions.extend(new_action)
+        print(len(actions))
         return actions
 
 
@@ -370,11 +383,12 @@ class SEVNBase(gym.GoalEnv):
     def is_successful_trajectory(self, x):
         subset = self.meta_df.loc[self.agent_loc, ["frame", "obj_type", "house_number", "x_min", "x_max"]]
         label = subset[(subset.house_number == self.goal_id.iloc[0]) & (subset.obj_type == "door")]
-        x_min = label.x_min.get(0, 0) if type(label.x_min) == pd.Series else label.x_min
-        x_max = label.x_max.get(0, 0) if type(label.x_max) == pd.Series else label.x_max
-        if label.any().any() and x < x_min and x + 84 > x_max:
-            return True
-        return False
+        if len(label) > 1:
+            import pdb;pdb.set_trace()
+        try:
+            return x < label.x_min.iloc[0] and x + 84 > label.x_max.iloc[0]
+        except Exception:
+            return False
 
     def render(self, mode='human'):
         img, x, w = self._get_image()
