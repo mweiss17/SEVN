@@ -29,9 +29,12 @@ class SEVNPlay(SEVNBase):
         DONE = 5
         NOOP = 6
 
-    def __init__(self, obs_shape=(84, 84, 3), use_image_obs=True, use_gps_obs=False, use_visible_text_obs=True, use_full=False, reward_type=None):
+    def __init__(self, obs_shape=(84, 84, 3), use_image_obs=True, use_gps_obs=False, use_visible_text_obs=True, use_full=False, reward_type=None, high_res=False):
         super(SEVNPlay, self).__init__(obs_shape, use_image_obs, use_gps_obs, use_visible_text_obs, use_full, reward_type)
         self.max_num_steps = 100000 
+        self.total_reward = 0 
+        self.prev_rel_gps = [0, 0, 0, 0]
+        self.high_res = high_res
         self._action_set = SEVNPlay.Actions
 
 
@@ -53,18 +56,27 @@ class SEVNPlay(SEVNBase):
         elif action == self.Actions.DONE:
             done = True
             reward = self.compute_reward(x, {}, done)
-            print("Total Mission Reward: " + str(reward))
+            print("\n----- Finished -----\nTotal Mission Reward: " + str(reward + self.total_reward) + "\n--------------------\n")
         else:
             self.turn(action)
 
         reward = self.compute_reward(x, {}, done)
-        
-        obs = {"image": image, "mission": self.goal_address, "visible_text": visible_text}
+        self.agent_gps = self.sample_gps(self.meta_df.loc[self.agent_loc])
+        rel_gps = [self.target_gps[0] - self.agent_gps[0], self.target_gps[1] - self.agent_gps[1],
+                   self.target_gps[0], self.target_gps[1]]
+        obs = {"image": image, "mission": self.goal_address, "rel_gps": rel_gps, "visible_text": visible_text}
         self.num_steps_taken += 1
         s = "obs: "
         for k, v in obs.items():
             if k != "image":
                 s = s + ", " + str(k) + ": " + str(v)
+
+        self.total_reward += reward
+        if not reward == 0 and not done:
+            if not self.prev_rel_gps == rel_gps: 
+                print("Rel GPS: " + str(rel_gps[0]) + ', ' + str(rel_gps[1])) 
+                self.prev_rel_gps = rel_gps
+            print("Reward: " + str(reward))
         return obs, reward, done, {}
 
     def render(self, mode='human'):
@@ -79,14 +91,16 @@ class SEVNPlay(SEVNBase):
             return self.viewer.isopen
 
     def _get_image(self, high_res=False, plot=False):
-        # TODO: High res env variant
-        # if high_res:
-        #     path = "data/data/SEVN-mini/panos/pano_"+ str(int(30*self.G.nodes[self.agent_loc]['timestamp'])).zfill(6) + ".png"
-        #     img = cv2.resize(cv2.imread(path)[:, :, ::-1], (960, 480))
-        #     obs_shape = (480, 480, 3)
-        
-        img = self.images_df[self.meta_df.loc[self.agent_loc, 'frame'][0]]
-        obs_shape = self.observation_space.shape
+        if self.high_res:
+            path = "./SEVN_gym/data/SEVN-mini/panos/pano_"+ str(int(30*self.G.nodes[self.agent_loc]['timestamp'])).zfill(6) + ".png"
+            img = cv2.imread(path)[:, :, ::-1]
+            height = 1920
+            crop_margin = int(height * (1/6))
+            img = img[crop_margin:height - crop_margin]
+            obs_shape = (1280, 1280, 3)
+        else:
+            img = self.images_df[self.meta_df.loc[self.agent_loc, 'frame'][0]]
+            obs_shape = self.observation_space.shape
 
         pano_rotation = self.norm_angle(self.meta_df.loc[self.agent_loc, 'angle'][0] + 90)
         w = obs_shape[0]
@@ -127,7 +141,7 @@ class SEVNPlay(SEVNBase):
             reward = -2.0
         elif self.prev_spl - cur_spl > 0:
             reward = 1 
-        elif self.prev_spl - cur_spl <= 0:
+        elif self.prev_spl - cur_spl < 0:
             reward = -1
         else:
             reward = 0.0
@@ -194,7 +208,14 @@ class SEVNPlay(SEVNBase):
         street_signs = []
         subset = self.meta_df.loc[self.agent_loc, ["house_number", "street_name", "obj_type", "x_min", "x_max"]]
         for idx, row in subset.iterrows():
-            if x < row.x_min and x + w > row.x_max:
+            if self.high_res:
+                x_min = row.x_min * 3840 / 224
+                x_max = row.x_max * 3840 / 224
+            else:
+                x_min = row.x_min
+                x_max = row.x_max
+
+            if x < x_min and x + w > x_max:
                 if row.obj_type == "house_number":
                     house_numbers.append(row.house_number)
                 elif row.obj_type == "street_sign":
