@@ -16,6 +16,7 @@ import h5py
 import pickle
 from SEVN_gym.data import _ROOT
 from SEVN_gym.envs.SEVN_base import SEVNBase, ACTION_MEANING
+from SEVN_gym.envs import utils
 
 
 class SEVNPlay(SEVNBase):
@@ -31,8 +32,8 @@ class SEVNPlay(SEVNBase):
 
     def __init__(self, obs_shape=(84, 84, 3), use_image_obs=True, use_gps_obs=False, use_visible_text_obs=True, use_full=False, reward_type=None, high_res=False):
         super(SEVNPlay, self).__init__(obs_shape, use_image_obs, use_gps_obs, use_visible_text_obs, use_full, reward_type)
-        self.max_num_steps = 100000 
-        self.total_reward = 0 
+        self.max_num_steps = 100000
+        self.total_reward = 0
         self.prev_rel_gps = [0, 0, 0, 0]
         self.high_res = high_res
         self._action_set = SEVNPlay.Actions
@@ -73,8 +74,8 @@ class SEVNPlay(SEVNBase):
 
         self.total_reward += reward
         if not reward == 0 and not done:
-            if not self.prev_rel_gps == rel_gps: 
-                print("Rel GPS: " + str(rel_gps[0]) + ', ' + str(rel_gps[1])) 
+            if not self.prev_rel_gps == rel_gps:
+                print("Rel GPS: " + str(rel_gps[0]) + ', ' + str(rel_gps[1]))
                 self.prev_rel_gps = rel_gps
             print("Reward: " + str(reward))
         return obs, reward, done, {}
@@ -102,11 +103,11 @@ class SEVNPlay(SEVNBase):
             img = self.images_df[self.meta_df.loc[self.agent_loc, 'frame'][0]]
             obs_shape = self.observation_space.shape
 
-        pano_rotation = self.norm_angle(self.meta_df.loc[self.agent_loc, 'angle'][0] + 90)
+        pano_rotation = utils.norm_angle(self.meta_df.loc[self.agent_loc, 'angle'][0] + 90)
         w = obs_shape[0]
         y = img.shape[0] - obs_shape[0]
         h = obs_shape[0]
-        x = int((self.norm_angle(-self.agent_dir + pano_rotation) + 180)/360 * img.shape[1])
+        x = int((utils.norm_angle(-self.agent_dir + pano_rotation) + 180)/360 * img.shape[1])
 
         if (x + w) % img.shape[1] != (x + w):
             res_img = np.zeros(obs_shape)
@@ -140,7 +141,7 @@ class SEVNPlay(SEVNBase):
         elif done and not self.is_successful_trajectory(x):
             reward = -2.0
         elif self.prev_spl - cur_spl > 0:
-            reward = 1 
+            reward = 1
         elif self.prev_spl - cur_spl < 0:
             reward = -1
         else:
@@ -165,14 +166,14 @@ class SEVNPlay(SEVNBase):
         self.goal_id = goal.house_number
         label = self.meta_df[self.meta_df.frame == int(self.meta_df.loc[goal_idx].frame.iloc[0])]
         label = label[label.is_goal]
-        pano_rotation = self.norm_angle(self.meta_df.loc[goal_idx].angle.iloc[0])
-        label_dir = self.norm_angle(360 * (label.x_min.values[0] + label.x_max.values[0]) / 2 / 224)
-        goal_dir = self.norm_angle(-label_dir + pano_rotation)
+        pano_rotation = utils.norm_angle(self.meta_df.loc[goal_idx].angle.iloc[0])
+        label_dir = utils.norm_angle(360 * (label.x_min.values[0] + label.x_max.values[0]) / 2 / 224)
+        goal_dir = utils.norm_angle(-label_dir + pano_rotation)
         self.agent_dir = 22.5 * np.random.choice(range(-8, 8))
         self.agent_loc =  np.random.choice(segment_panos.frame.unique())
 
-        goal_address = {"house_numbers": self.convert_house_numbers(int(goal.house_number.iloc[0])),
-                        "street_names": self.convert_street_name(goal.street_name.iloc[0])}
+        goal_address = {"house_numbers": utils.convert_house_numbers(int(goal.house_number.iloc[0])),
+                        "street_names": utils.convert_street_name(goal.street_name.iloc[0], self.all_street_names)}
 
         print('GOAL: ' + str(goal.house_number.iloc[0]) + ', ' + str(goal.street_name.iloc[0]) + ' street')
         return goal_idx, goal_address, goal_dir

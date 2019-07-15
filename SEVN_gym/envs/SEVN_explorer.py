@@ -16,6 +16,7 @@ import h5py
 import pickle
 from SEVN_gym.data import _ROOT
 from SEVN_gym.envs.SEVN_base import SEVNBase
+from SEVN_gym.envs import utils
 
 
 class SEVNExplorer(SEVNBase):
@@ -79,7 +80,7 @@ class SEVNExplorer(SEVNBase):
                 assert reward == env.compute_reward(ob['achieved_goal'], ob['goal'], info)
         """
         reward = 0
-        house_numbers = SEVNExplorer.convert_house_vec_to_ints(info['visible_text']['house_numbers'])
+        house_numbers = utils.convert_house_vec_to_ints(info['visible_text']['house_numbers'])
         for num in house_numbers:
             if num not in self.seen_house_nums:
                 reward += 1

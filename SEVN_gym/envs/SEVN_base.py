@@ -1,20 +1,16 @@
 from __future__ import print_function, division
 import enum
 import math
-import os
+import pickle
 import numpy as np
 import pandas as pd
 import networkx as nx
-from collections import defaultdict
-from matplotlib import pyplot as plt
-import cv2
 import gym
 import gzip
-import time
 from gym import spaces
-import h5py
-import pickle
 from SEVN_gym.data import _ROOT
+from SEVN_gym.envs import utils
+
 
 ACTION_MEANING = {
     0: 'LEFT_BIG',
@@ -36,47 +32,13 @@ class SEVNBase(gym.GoalEnv):
         RIGHT_SMALL = 3
         RIGHT_BIG = 4
 
-    @classmethod
-    def norm_angle(cls, x):
-        # Utility function to keep some angles in the space of -180 to 180 degrees
-        if x > 180:
-            x = -360 + x
-        elif x < -180:
-            x = 360 + x
-        return x
-
-    @classmethod
-    def convert_house_numbers(cls, num):
-        res = np.zeros((4, 10))
-        for col, row in enumerate(str(num)):
-            res[col, int(row)] = 1
-        return res.reshape(-1)
-
-    @classmethod
-    def convert_house_vec_to_ints(cls, vec):
-        numbers = []
-        for offset in range(0, 120, 10):
-            numbers.append(str(vec[offset:offset + 10].argmax()))
-        return (int("".join(numbers[:4])), int("".join(numbers[4:8])), int("".join(numbers[8:12])))
-
-    def convert_street_name(self, street_name):
-        assert street_name in self.all_street_names
-        return (self.all_street_names == street_name).astype(int)
-
-    def normalize_image(self, image):
-        # Values calculated for SEVN-mini: mean=[0.437, 0.452, 0.479], std=[0.2495, 0.2556, 0.2783]
-        normed_image = image / 255.0
-        normed_image[:, :, 0] = (normed_image[:, :, 0] - 0.437) / 0.2495
-        normed_image[:, :, 1] = (normed_image[:, :, 1] - 0.452) / 0.2556
-        normed_image[:, :, 2] = (normed_image[:, :, 2] - 0.479) / 0.2783
-        return normed_image
-
     def __init__(self, obs_shape=(4, 84, 84), use_image_obs=False, use_gps_obs=False, use_visible_text_obs=False, use_full=False, reward_type=None):
+        # self.meta_df[self.meta_df.type == "street_segment"].groupby(self.meta_df.group).count()
         path = "/SEVN-mini/processed/"
-        self.max_num_steps = 300 # self.meta_df[self.meta_df.type == "street_segment"].groupby(self.meta_df.group).count()
+        self.max_num_steps = 200
         if use_full:
             path = "/SEVN/processed/"
-            self.max_num_steps = 420 # self.meta_df[self.meta_df.type == "street_segment"].groupby(self.meta_df.group).count()
+            self.max_num_steps = 420
         path = _ROOT + path
 
         print(f"Booting environment from {path} with shaped reward, image_obs: {use_image_obs}, gps: {use_gps_obs}, visible_text: {use_visible_text_obs}")
@@ -88,7 +50,8 @@ class SEVNBase(gym.GoalEnv):
         self.needs_reset = True
         self._action_set = SEVNBase.Actions
         self.action_space = spaces.Discrete(len(self._action_set))
-        self.observation_space = spaces.Box(low=0, high=255, shape=obs_shape, dtype=np.float32) # spaces.dict goes here
+        # spaces.dict goes here
+        self.observation_space = spaces.Box(low=0, high=255, shape=obs_shape, dtype=np.float32)
         f = gzip.GzipFile(path + "images.pkl.gz", "r")
         self.images_df = pickle.load(f)
         f.close()
@@ -111,7 +74,7 @@ class SEVNBase(gym.GoalEnv):
             self.agent_dir -= 22.5
         if action == self.Actions.RIGHT_BIG:
             self.agent_dir -= 67.5
-        self.agent_dir = self.norm_angle(self.agent_dir)
+        self.agent_dir = utils.norm_angle(self.agent_dir)
 
 
     def get_angle_between_nodes(self, n1, n2, use_agent_dir=True):
@@ -119,7 +82,7 @@ class SEVNBase(gym.GoalEnv):
         y = self.G.nodes[n1]['coords'][1] - self.G.nodes[n2]['coords'][1]
         angle = (math.atan2(y, x) * 180 / np.pi) + 180
         if use_agent_dir:
-            return np.abs(self.norm_angle(angle - self.agent_dir))
+            return np.abs(utils.norm_angle(angle - self.agent_dir))
         else:
             return angle
 
@@ -139,13 +102,13 @@ class SEVNBase(gym.GoalEnv):
         self.goal_id = goal.house_number
         label = self.meta_df[self.meta_df.frame == int(self.meta_df.loc[goal_idx].frame.iloc[0])]
         label = label[label.is_goal]
-        pano_rotation = self.norm_angle(self.meta_df.loc[goal_idx].angle.iloc[0])
-        label_dir = self.norm_angle(360 * (label.x_min.values[0] + label.x_max.values[0])/2 / 224)
-        goal_dir = self.norm_angle(pano_rotation - label_dir - 90 + 67.5)
+        pano_rotation = utils.norm_angle(self.meta_df.loc[goal_idx].angle.iloc[0])
+        label_dir = utils.norm_angle(360 * (label.x_min.values[0] + label.x_max.values[0])/2 / 224)
+        goal_dir = utils.norm_angle(pano_rotation - label_dir - 90 + 67.5)
         self.agent_dir = 22.5 * np.random.choice(range(-8, 8))
         self.agent_loc = np.random.choice(segment_panos.frame.unique())
-        goal_address = {"house_numbers": self.convert_house_numbers(int(goal.house_number.iloc[0])),
-                        "street_names": self.convert_street_name(goal.street_name.iloc[0])}
+        goal_address = {"house_numbers": utils.convert_house_numbers(int(goal.house_number.iloc[0])),
+                        "street_names": utils.convert_street_name(goal.street_name.iloc[0], self.all_street_names)}
         return goal_idx, goal_address, goal_dir
 
     def transition(self):
@@ -171,15 +134,9 @@ class SEVNBase(gym.GoalEnv):
         self.num_steps_taken += 1
         action = self._action_set(a)
         if oracle:
-            shortest_path = self.shortest_path_length()
-            try:
-                action = shortest_path[0]
-            except Exception:
-                shortest_path = self.shortest_path_length()
-                pass
+            action = next(iter(self.shortest_path_length()), None)
         image, x, w = self._get_image()
         visible_text = self.get_visible_text(x, w)
-        print("is_successful_trajectory: " + str(self.is_successful_trajectory(x)))
 
         if self.is_successful_trajectory(x):
             done = True
@@ -190,9 +147,6 @@ class SEVNBase(gym.GoalEnv):
             self.transition()
         else:
             self.turn(action)
-        # if len(self.shortest_path_length()) > self.prev_spl:
-        #     import pdb;pdb.set_trace()
-        #     self.shortest_path_length()
 
         reward = self.compute_reward(x, {}, done)
 
@@ -210,16 +164,16 @@ class SEVNBase(gym.GoalEnv):
         return obs, reward, done, info
 
 
-    def _get_image(self, high_res=False, plot=False):
+    def _get_image(self):
         img = self.images_df[self.meta_df.loc[self.agent_loc, 'frame'][0]]
-        img = self.normalize_image(img)
+        img = utils.normalize_image(img)
         obs_shape = self.observation_space.shape
 
-        pano_rotation = self.norm_angle(self.meta_df.loc[self.agent_loc, 'angle'][0] + 90)
+        pano_rotation = utils.norm_angle(self.meta_df.loc[self.agent_loc, 'angle'][0] + 90)
         w = obs_shape[1]
         y = img.shape[0] - obs_shape[1]
         h = obs_shape[2]
-        x = int((self.norm_angle(pano_rotation - self.agent_dir) + 180)/360 * img.shape[1])
+        x = int((utils.norm_angle(pano_rotation - self.agent_dir) + 180)/360 * img.shape[1])
         img = img.transpose()
         if (x + w) % img.shape[1] != (x + w):
             res_img = np.zeros((3, 84, 84))
@@ -239,9 +193,9 @@ class SEVNBase(gym.GoalEnv):
         for idx, row in subset.iterrows():
             if x < row.x_min and x + w > row.x_max:
                 if row.obj_type == "house_number":
-                    house_numbers.append(self.convert_house_numbers(row.house_number))
+                    house_numbers.append(utils.convert_house_numbers(row.house_number))
                 elif row.obj_type == "street_sign":
-                    street_signs.append(self.convert_street_name(row.street_name))
+                    street_signs.append(utils.convert_street_name(row.street_name, self.all_street_names))
 
         temp = np.zeros(120)
         if len(house_numbers) != 0:
@@ -383,8 +337,6 @@ class SEVNBase(gym.GoalEnv):
     def is_successful_trajectory(self, x):
         subset = self.meta_df.loc[self.agent_loc, ["frame", "obj_type", "house_number", "x_min", "x_max"]]
         label = subset[(subset.house_number == self.goal_id.iloc[0]) & (subset.obj_type == "door")]
-        if len(label) > 1:
-            import pdb;pdb.set_trace()
         try:
             return x < label.x_min.iloc[0] and x + 84 > label.x_max.iloc[0]
         except Exception:

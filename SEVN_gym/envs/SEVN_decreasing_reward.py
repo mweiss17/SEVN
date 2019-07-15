@@ -16,6 +16,7 @@ import h5py
 import pickle
 from SEVN_gym.data import _ROOT
 from SEVN_gym.envs.SEVN_base import SEVNBase
+from SEVN_gym.envs import utils
 
 ACTION_MEANING = {
     0: 'LEFT_BIG',
