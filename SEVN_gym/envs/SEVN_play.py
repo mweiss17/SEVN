@@ -205,23 +205,8 @@ class SEVNPlay(SEVNBase):
 
     def get_visible_text(self, x, w):
         visible_text = {}
-        house_numbers = []
-        street_signs = []
         subset = self.meta_df.loc[self.agent_loc, ["house_number", "street_name", "obj_type", "x_min", "x_max"]]
-        for idx, row in subset.iterrows():
-            if self.high_res:
-                x_min = row.x_min * 3840 / 224
-                x_max = row.x_max * 3840 / 224
-            else:
-                x_min = row.x_min
-                x_max = row.x_max
-
-            if x < x_min and x + w > x_max:
-                if row.obj_type == "house_number":
-                    house_numbers.append(row.house_number)
-                elif row.obj_type == "street_sign":
-                    street_signs.append(row.street_name)
-
+        house_numbers, street_signs = utils.extract_text(x, w, subset, self.high_res)
         visible_text["house_numbers"] = house_numbers
         visible_text["street_names"] = street_signs
         return visible_text

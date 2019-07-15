@@ -43,6 +43,7 @@ class SEVNBase(gym.GoalEnv):
 
         print(f"Booting environment from {path} with shaped reward, image_obs: {use_image_obs}, gps: {use_gps_obs}, visible_text: {use_visible_text_obs}")
         self.viewer = None
+        self.high_res = False
         self.use_image_obs = use_image_obs
         self.use_gps_obs = use_gps_obs
         self.use_visible_text_obs = use_visible_text_obs
@@ -186,29 +187,11 @@ class SEVNBase(gym.GoalEnv):
         return res_img, x, w
 
     def get_visible_text(self, x, w):
-        visible_text = {}
-        house_numbers = []
-        street_signs = []
         subset = self.meta_df.loc[self.agent_loc, ["house_number", "street_name", "obj_type", "x_min", "x_max"]]
-        for idx, row in subset.iterrows():
-            if x < row.x_min and x + w > row.x_max:
-                if row.obj_type == "house_number":
-                    house_numbers.append(utils.convert_house_numbers(row.house_number))
-                elif row.obj_type == "street_sign":
-                    street_signs.append(utils.convert_street_name(row.street_name, self.all_street_names))
-
-        temp = np.zeros(120)
-        if len(house_numbers) != 0:
-            nums = np.hstack(house_numbers)[:120]
-            temp[:nums.size] = nums
-        visible_text["house_numbers"] = temp
-
-        vec_size = 2 * self.num_streets
-        temp = np.zeros(vec_size)
-        if len(street_signs) != 0:
-            nums = np.hstack(street_signs)[:vec_size]
-            temp[:nums.size] = nums
-        visible_text["street_names"] = temp
+        house_numbers, street_names = utils.extract_text(x, w, subset, self.high_res)
+        house_numbers = [utils.convert_house_numbers(num) for num in house_numbers]
+        street_names = [utils.convert_street_name(name, self.all_street_names) for name in street_names]
+        visible_text = utils.stack_text(house_numbers, street_names, self.num_streets)
         return visible_text
 
     def sample_gps(self, groundtruth, noise_scale=0):
