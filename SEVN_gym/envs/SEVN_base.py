@@ -9,7 +9,7 @@ import gym
 import gzip
 from gym import spaces
 from SEVN_gym.data import _ROOT
-from SEVN_gym.envs import utils
+from SEVN_gym.envs import utils, wrappers
 
 
 ACTION_MEANING = {
@@ -155,7 +155,7 @@ class SEVNBase(gym.GoalEnv):
         rel_gps = [self.target_gps[0] - self.agent_gps[0], self.target_gps[1] - self.agent_gps[1],
                    self.target_gps[0], self.target_gps[1]]
         obs = {"image": image, "mission": self.goal_address, "rel_gps": rel_gps, "visible_text": visible_text}
-        obs = self.obs_wrap(obs)
+        obs = wrappers.wrap_obs(obs, self.use_gps_obs, self.use_visible_text_obs, self.use_image_obs, self.num_streets)
 
         info = {}
         if done:
@@ -214,27 +214,8 @@ class SEVNBase(gym.GoalEnv):
         rel_gps = [self.target_gps[0] - self.agent_gps[0], self.target_gps[1] - self.agent_gps[1],
                    self.target_gps[0], self.target_gps[1]]
         obs = {"image": image, "mission": self.goal_address, "rel_gps": rel_gps, "visible_text": self.get_visible_text(x, w)}
-        obs = self.obs_wrap(obs)
+        obs = wrappers.wrap_obs(obs, self.use_gps_obs, self.use_visible_text_obs, self.use_image_obs, self.num_streets, True)
         return obs
-
-    def obs_wrap(self, obs):
-        coord_holder = np.zeros((1, 84, 84), dtype=np.float32)
-
-        if self.use_gps_obs:
-            coord_holder[0, 0, :4] = obs['rel_gps']
-
-        if self.use_visible_text_obs:
-            coord_holder[0, 1, :2 * self.num_streets] = obs['visible_text']['street_names']
-            coord_holder[0, 2, :] = obs['visible_text']['house_numbers'][:84]
-            coord_holder[0, 3, :36] = obs['visible_text']['house_numbers'][84:120]
-        if not self.use_image_obs:
-            obs['image'] = np.zeros((3, 84, 84))
-
-        coord_holder[0, 4, :40] = obs['mission']['house_numbers']
-        coord_holder[0, 4, 40:40 + self.num_streets] = obs['mission']["street_names"]
-
-        out = np.concatenate((obs['image'], coord_holder), axis=0)
-        return out
 
     def angles_to_turn(self, cur, target):
         go_left = []
