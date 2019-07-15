@@ -8,6 +8,17 @@ def norm_angle(x):
         x = 360 + x
     return x
 
+def norm_angle_360(x):
+    # Utility function to go from -180/180 degrees to 0/360
+    if x < 0:
+        x = 360 + x
+    return x
+
+def smallest_angle(a1, a2):
+    # Utility function to find smallest angle between two angles in the space of -180 to 180 degrees
+    angle = a2 - a1
+    return (angle + 180) % 360 - 180
+
 def normalize_image(image):
     # Values calculated for SEVN-mini: mean=[0.437, 0.452, 0.479], std=[0.2495, 0.2556, 0.2783]
     normed_image = image / 255.0
