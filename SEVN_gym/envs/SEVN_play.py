@@ -56,8 +56,6 @@ class SEVNPlay(SEVNBase):
             self.transition()
         elif action == self.Actions.DONE:
             done = True
-            reward = self.compute_reward(x, {}, done)
-            print("\n----- Finished -----\nTotal Mission Reward: " + str(reward + self.total_reward) + "\n--------------------\n")
         else:
             self.turn(action)
 
@@ -103,11 +101,13 @@ class SEVNPlay(SEVNBase):
             img = self.images_df[self.meta_df.loc[self.agent_loc, 'frame'][0]]
             obs_shape = self.observation_space.shape
 
-        pano_rotation = utils.norm_angle(self.meta_df.loc[self.agent_loc, 'angle'][0] + 90)
+        pano_rotation = self.meta_df.loc[self.agent_loc, 'angle'][0]
+        agent_dir = utils.norm_angle_360(self.agent_dir)
+        normed_ang = ((agent_dir - pano_rotation) % 360)/360
         w = obs_shape[0]
         y = img.shape[0] - obs_shape[0]
         h = obs_shape[0]
-        x = int((utils.norm_angle(-self.agent_dir + pano_rotation) + 180)/360 * img.shape[1])
+        x = int(img.shape[1] - ((normed_ang * img.shape[1]) + img.shape[1]/2 + obs_shape[0]/2) % img.shape[1])
 
         if (x + w) % img.shape[1] != (x + w):
             res_img = np.zeros(obs_shape)
@@ -147,6 +147,11 @@ class SEVNPlay(SEVNBase):
         else:
             reward = 0.0
         self.prev_spl = cur_spl
+        if done:
+            print("\n----- Finished -----\nTotal Mission Reward: " 
+                  + str(reward + self.total_reward) \
+                  + "\n Success: " + str(self.is_successful_trajectory(x))
+                  + "\n--------------------\n")
         return reward
 
     def select_goal(self, same_segment=True, difficulty=0):
@@ -167,8 +172,8 @@ class SEVNPlay(SEVNBase):
         label = self.meta_df[self.meta_df.frame == int(self.meta_df.loc[goal_idx].frame.iloc[0])]
         label = label[label.is_goal]
         pano_rotation = utils.norm_angle(self.meta_df.loc[goal_idx].angle.iloc[0])
-        label_dir = utils.norm_angle(360 * (label.x_min.values[0] + label.x_max.values[0]) / 2 / 224)
-        goal_dir = utils.norm_angle(-label_dir + pano_rotation)
+        label_dir = (224 - (label.x_min.values[0] + label.x_max.values[0]) / 2) * 360 / 224 - 180
+        goal_dir = utils.norm_angle(label_dir + pano_rotation)
         self.agent_dir = 22.5 * np.random.choice(range(-8, 8))
         self.agent_loc =  np.random.choice(segment_panos.frame.unique())
 

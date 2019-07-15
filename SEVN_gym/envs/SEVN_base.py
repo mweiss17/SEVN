@@ -79,13 +79,10 @@ class SEVNBase(gym.GoalEnv):
 
 
     def get_angle_between_nodes(self, n1, n2, use_agent_dir=True):
-        x = self.G.nodes[n1]['coords'][0] - self.G.nodes[n2]['coords'][0]
-        y = self.G.nodes[n1]['coords'][1] - self.G.nodes[n2]['coords'][1]
-        angle = (math.atan2(y, x) * 180 / np.pi) + 180
-        if use_agent_dir:
-            return np.abs(utils.norm_angle(angle - self.agent_dir))
-        else:
-            return angle
+        x = self.G.nodes[n2]['coords'][0] - self.G.nodes[n1]['coords'][0]
+        y = self.G.nodes[n2]['coords'][1] - self.G.nodes[n1]['coords'][1]
+        angle = (math.atan2(y, x) * 180 / np.pi)
+        return angle
 
     def select_goal(self, same_segment=True):
         goals = self.meta_df[self.meta_df.is_goal == True]
@@ -104,8 +101,8 @@ class SEVNBase(gym.GoalEnv):
         label = self.meta_df[self.meta_df.frame == int(self.meta_df.loc[goal_idx].frame.iloc[0])]
         label = label[label.is_goal]
         pano_rotation = utils.norm_angle(self.meta_df.loc[goal_idx].angle.iloc[0])
-        label_dir = utils.norm_angle(360 * (label.x_min.values[0] + label.x_max.values[0])/2 / 224)
-        goal_dir = utils.norm_angle(pano_rotation - label_dir - 90 + 67.5)
+        label_dir = (224 - (label.x_min.values[0] + label.x_max.values[0]) / 2) * 360 / 224 - 180
+        goal_dir = utils.norm_angle(label_dir + pano_rotation)
         self.agent_dir = 22.5 * np.random.choice(range(-8, 8))
         self.agent_loc = np.random.choice(segment_panos.frame.unique())
         goal_address = {"house_numbers": utils.convert_house_numbers(int(goal.house_number.iloc[0])),
@@ -119,7 +116,7 @@ class SEVNBase(gym.GoalEnv):
         """
         neighbors = {}
         for n in [edge[1] for edge in list(self.G.edges(self.agent_loc))]:
-            neighbors[n] = self.get_angle_between_nodes(n, self.agent_loc)
+            neighbors[n] = np.abs(utils.norm_angle(self.get_angle_between_nodes(self.agent_loc, n) - self.agent_dir))
 
         if neighbors[min(neighbors, key=neighbors.get)] > 45:
             return
@@ -170,11 +167,13 @@ class SEVNBase(gym.GoalEnv):
         img = utils.normalize_image(img)
         obs_shape = self.observation_space.shape
 
-        pano_rotation = utils.norm_angle(self.meta_df.loc[self.agent_loc, 'angle'][0] + 90)
-        w = obs_shape[1]
-        y = img.shape[0] - obs_shape[1]
-        h = obs_shape[2]
-        x = int((utils.norm_angle(pano_rotation - self.agent_dir) + 180)/360 * img.shape[1])
+        pano_rotation = self.meta_df.loc[self.agent_loc, 'angle'][0]
+        agent_dir = utils.norm_angle_360(self.agent_dir)
+        normed_ang = ((agent_dir - pano_rotation) % 360)/360
+        w = obs_shape[0]
+        y = img.shape[0] - obs_shape[0]
+        h = obs_shape[0]
+        x = int(img.shape[1] - ((normed_ang * img.shape[1]) + img.shape[1]/2 + obs_shape[0]/2) % img.shape[1])
         img = img.transpose()
         if (x + w) % img.shape[1] != (x + w):
             res_img = np.zeros((3, 84, 84))
@@ -210,50 +209,43 @@ class SEVNBase(gym.GoalEnv):
         return obs
 
     def angles_to_turn(self, cur, target):
-        go_left = []
-        go_right = []
-        temp = cur
-        while np.abs(target - cur) > 67.5:
-            cur = (cur - 67.5) % 360
-            go_right.append(self.Actions.RIGHT_BIG)
-
-        while np.abs(target - cur) > 22.5:
-            cur = (cur - 22.5) % 360
-            go_right.append(self.Actions.RIGHT_SMALL)
-        final_right = cur
-        cur = temp
-        while np.abs(target - cur) > 67.5:
-            cur = (cur + 67.5) % 360
-            go_left.append(self.Actions.LEFT_BIG)
-
-        while np.abs(target - cur) > 22.5:
-            cur = (cur + 22.5) % 360
-            go_left.append(self.Actions.LEFT_SMALL)
-        final_left = cur
-
-        if len(go_left) > len(go_right):
-            return go_right, final_right
-        return go_left, final_left
+        angle = utils.smallest_angle(cur, target)
+        turns = []
+        if (np.sign(angle)) == 1:
+            big_turns = int(angle / 67.5)
+            turns.extend([self.Actions.LEFT_BIG for i in range(big_turns)])
+            cur = utils.norm_angle(cur + big_turns * 67.5)
+            small_turns = int((angle - big_turns * 67.5) / 22.5)
+            turns.extend([self.Actions.LEFT_SMALL for i in range(small_turns)])
+            cur = utils.norm_angle(cur + small_turns * 22.5)
+        else:
+            angle = np.abs(angle)
+            big_turns = int(angle / 67.5)
+            turns.extend([self.Actions.RIGHT_BIG for i in range(big_turns)])
+            cur = utils.norm_angle(cur - big_turns * 67.5)
+            small_turns = int((angle - big_turns * 67.5) / 22.5)
+            turns.extend([self.Actions.RIGHT_SMALL for i in range(small_turns)])
+            cur = utils.norm_angle(cur - small_turns * 22.5)
+        return turns, cur
 
     def shortest_path_length(self):
         # finds a minimal trajectory to navigate to the target pose
         # target_index = self.coords_df[self.coords_df.frame == int(target_node_info['timestamp'] * 30)].index.values[0]
         cur_node = self.agent_loc
-        cur_dir = self.agent_dir + 180
+        cur_dir = self.agent_dir
         target_node = self.goal_idx
         path = nx.shortest_path(self.G, cur_node, target=target_node)
         actions = []
         for idx, node in enumerate(path):
             if idx + 1 != len(path):
-                target_dir = self.get_angle_between_nodes(node, path[idx + 1], use_agent_dir=False)
+                target_dir = self.get_angle_between_nodes(node, path[idx + 1])
                 new_action, final_dir = self.angles_to_turn(cur_dir, target_dir)
                 actions.extend(new_action)
                 cur_dir = final_dir
                 actions.append(self.Actions.FORWARD)
             else:
-                new_action, final_dir = self.angles_to_turn(cur_dir, self.goal_dir + 180)
+                new_action, final_dir = self.angles_to_turn(cur_dir, self.goal_dir)
                 actions.extend(new_action)
-        print(len(actions))
         return actions
 
 
