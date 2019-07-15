@@ -33,12 +33,7 @@ class SEVNBase(gym.GoalEnv):
         RIGHT_BIG = 4
 
     def __init__(self, obs_shape=(4, 84, 84), use_image_obs=False, use_gps_obs=False, use_visible_text_obs=False, use_full=False, reward_type=None):
-        # self.meta_df[self.meta_df.type == "street_segment"].groupby(self.meta_df.group).count()
-        path = "/SEVN-mini/processed/"
-        self.max_num_steps = 200
-        if use_full:
-            path = "/SEVN/processed/"
-            self.max_num_steps = 420
+        path = "/SEVN-mini/processed/" if use_full else "/SEVN/processed/"
         path = _ROOT + path
 
         print(f"Booting environment from {path} with shaped reward, image_obs: {use_image_obs}, gps: {use_gps_obs}, visible_text: {use_visible_text_obs}")
@@ -59,11 +54,16 @@ class SEVNBase(gym.GoalEnv):
         self.meta_df = pd.read_hdf(path + "meta.hdf5", key='df', mode='r')
         self.G = nx.read_gpickle(path + "graph.pkl")
 
+        self.max_num_steps = self.meta_df[self.meta_df.type == "street_segment"].groupby(self.meta_df.group).count()
         self.all_street_names = self.meta_df.street_name.dropna().unique()
         self.num_streets = self.all_street_names.size
+        self.x_scale = self.meta_df.x.max() - self.meta_df.x.min()
+        self.y_scale = self.meta_df.y.max() - self.meta_df.y.min()
         self.agent_loc = np.random.choice(self.meta_df.frame)
         self.agent_dir = 0
         self.num_steps_taken = 0
+        self.prev_spl = 100000
+        self.goal_id = -1
 
     def turn(self, action):
         action = self._action_set(action)
@@ -151,11 +151,11 @@ class SEVNBase(gym.GoalEnv):
 
         reward = self.compute_reward(x, {}, done)
 
-        self.agent_gps = self.sample_gps(self.meta_df.loc[self.agent_loc])
+        self.agent_gps = utils.sample_gps(self.meta_df.loc[self.agent_loc], self.x_scale, self.y_scale)
         rel_gps = [self.target_gps[0] - self.agent_gps[0], self.target_gps[1] - self.agent_gps[1],
                    self.target_gps[0], self.target_gps[1]]
         obs = {"image": image, "mission": self.goal_address, "rel_gps": rel_gps, "visible_text": visible_text}
-        obs = wrappers.wrap_obs(obs, self.use_gps_obs, self.use_visible_text_obs, self.use_image_obs, self.num_streets)
+        obs = wrappers.wrap_obs(obs, self.use_gps_obs, self.use_visible_text_obs, self.use_image_obs, self.num_streets, True)
 
         info = {}
         if done:
@@ -194,22 +194,14 @@ class SEVNBase(gym.GoalEnv):
         visible_text = utils.stack_text(house_numbers, street_names, self.num_streets)
         return visible_text
 
-    def sample_gps(self, groundtruth, noise_scale=0):
-        coords = groundtruth[['x', 'y']]
-        x_scale = self.meta_df.x.max() - self.meta_df.x.min()
-        y_scale = self.meta_df.y.max() - self.meta_df.y.min()
-        x = (coords.at[0, 'x'] + np.random.normal(loc=0.0, scale=noise_scale)) / x_scale
-        y = (coords.at[0, 'y'] + np.random.normal(loc=0.0, scale=noise_scale)) / y_scale
-        return (x, y)
-
     def reset(self):
         self.needs_reset = False
         self.num_steps_taken = 0
         self.goal_idx, self.goal_address, self.goal_dir = self.select_goal(same_segment=True)
         self.prev_spl = len(self.shortest_path_length())
         self.start_spl = self.prev_spl
-        self.agent_gps = self.sample_gps(self.meta_df.loc[self.agent_loc])
-        self.target_gps = self.sample_gps(self.meta_df.loc[self.goal_idx])
+        self.agent_gps = utils.sample_gps(self.meta_df.loc[self.agent_loc], self.x_scale, self.y_scale)
+        self.target_gps = utils.sample_gps(self.meta_df.loc[self.goal_idx], self.x_scale, self.y_scale)
         image, x, w = self._get_image()
         rel_gps = [self.target_gps[0] - self.agent_gps[0], self.target_gps[1] - self.agent_gps[1],
                    self.target_gps[0], self.target_gps[1]]
@@ -266,23 +258,6 @@ class SEVNBase(gym.GoalEnv):
 
 
     def compute_reward(self, x, info, done):
-        """Compute the step reward. This externalizes the reward function and makes
-        it dependent on an a desired goal and the one that was achieved. If you wish to include
-        additional rewards that are independent of the goal, you can include the necessary values
-        to derive it in info and compute it accordingly.
-
-        Args:
-            achieved_goal (object): the goal that was achieved during execution
-            desired_goal (object): the desired goal that we asked the agent to attempt to achieve
-            info (dict): an info dictionary with additional information
-
-        Returns:
-            float: The reward that corresponds to the provided achieved goal w.r.t. to the desired
-            goal. Note that the following should always hold true:
-
-                ob, reward, done, info = env.step()
-                assert reward == env.compute_reward(ob['achieved_goal'], ob['goal'], info)
-        """
         cur_spl = len(self.shortest_path_length())
         if done and self.is_successful_trajectory(x):
             reward = 2.0

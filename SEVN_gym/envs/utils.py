@@ -32,6 +32,13 @@ def convert_street_name(street_name, all_street_names):
     assert street_name in all_street_names
     return (all_street_names == street_name).astype(int)
 
+def sample_gps( groundtruth, x_scale, y_scale, noise_scale=0):
+    coords = groundtruth[['x', 'y']]
+    x = (coords.at[0, 'x'] + np.random.normal(loc=0.0, scale=noise_scale)) / x_scale
+    y = (coords.at[0, 'y'] + np.random.normal(loc=0.0, scale=noise_scale)) / y_scale
+    return (x, y)
+
+
 def extract_text(x, w, subset, high_res):
     house_numbers = []
     street_signs = []

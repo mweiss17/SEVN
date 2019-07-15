@@ -1,6 +1,5 @@
 import numpy as np
 
-
 def wrap_obs(obs, use_gps_obs, use_visible_text_obs, use_image_obs, use_goal, num_streets):
     coord_holder = np.zeros((1, 84, 84), dtype=np.float32)
 

@@ -62,7 +62,7 @@ class SEVNPlay(SEVNBase):
             self.turn(action)
 
         reward = self.compute_reward(x, {}, done)
-        self.agent_gps = self.sample_gps(self.meta_df.loc[self.agent_loc])
+        self.agent_gps = utils.sample_gps(self.meta_df.loc[self.agent_loc], self.x_scale, self.y_scale)
         rel_gps = [self.target_gps[0] - self.agent_gps[0], self.target_gps[1] - self.agent_gps[1],
                    self.target_gps[0], self.target_gps[1]]
         obs = {"image": image, "mission": self.goal_address, "rel_gps": rel_gps, "visible_text": visible_text}
@@ -128,8 +128,8 @@ class SEVNPlay(SEVNBase):
         self.goal_idx, self.goal_address, self.goal_dir = self.select_goal(same_segment=True, difficulty=0)
         self.prev_spl = len(self.shortest_path_length())
         self.start_spl = self.prev_spl
-        self.agent_gps = self.sample_gps(self.meta_df.loc[self.agent_loc])
-        self.target_gps = self.sample_gps(self.meta_df.loc[self.goal_idx])
+        self.agent_gps = self.sample_gps(self.meta_df.loc[self.agent_loc], self.x_scale, self.y_scale)
+        self.target_gps = self.sample_gps(self.meta_df.loc[self.goal_idx], self.x_scale, self.y_scale)
         image, x, w = self._get_image()
         rel_gps = [self.target_gps[0] - self.agent_gps[0], self.target_gps[1] - self.agent_gps[1]]
         return {"image": image, "mission": self.goal_address, "rel_gps": rel_gps, "visible_text": self.get_visible_text(x, w)}
