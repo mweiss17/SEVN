@@ -118,7 +118,7 @@ class SEVNBase(gym.GoalEnv):
         for n in [edge[1] for edge in list(self.G.edges(self.agent_loc))]:
             neighbors[n] = np.abs(utils.norm_angle(self.get_angle_between_nodes(self.agent_loc, n) - self.agent_dir))
 
-        if neighbors[min(neighbors, key=neighbors.get)] > 45:
+        if neighbors[min(neighbors, key=neighbors.get)] > 22.5:
             return
 
         self.agent_loc = min(neighbors, key=neighbors.get)
