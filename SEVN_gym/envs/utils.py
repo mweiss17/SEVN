@@ -19,6 +19,13 @@ def smallest_angle(a1, a2):
     angle = a2 - a1
     return (angle + 180) % 360 - 180
 
+def smallest_angles(a1, a2):
+    angles = []
+    for a in a2:
+        angle = a - a1
+        angles.append(np.abs((angle + 180) % 360 - 180))
+    return angles
+
 def normalize_image(image):
     # Values calculated for SEVN-mini: mean=[0.437, 0.452, 0.479], std=[0.2495, 0.2556, 0.2783]
     normed_image = image / 255.0

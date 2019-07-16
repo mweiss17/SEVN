@@ -26,7 +26,7 @@ class SEVNExplorer(SEVNBase):
             self.turn(action)
         reward = self.compute_reward(x, {'visible_text':visible_text}, done)
         obs = {"image": image, "visible_text": visible_text}
-        obs = wrappers.wrap_obs(obs, self.use_gps_obs, self.use_visible_text_obs, self.use_image_obs, self.num_streets, False)
+        obs = wrappers.wrap_obs(obs, self.use_gps_obs, self.use_visible_text_obs, self.use_image_obs, False, self.num_streets)
 
         info = {}
         if done:
@@ -40,7 +40,7 @@ class SEVNExplorer(SEVNBase):
         self.seen_house_nums = []
         image, x, w = self._get_image()
         obs = {"image": image, "visible_text": self.get_visible_text(x, w)}
-        obs = wrappers.wrap_obs(obs, self.use_gps_obs, self.use_visible_text_obs, self.use_image_obs, self.num_streets, False)
+        obs = wrappers.wrap_obs(obs, self.use_gps_obs, self.use_visible_text_obs, self.use_image_obs, False, self.num_streets)
         return obs
 
     def compute_reward(self, x, info, done):

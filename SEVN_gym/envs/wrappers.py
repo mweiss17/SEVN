@@ -16,6 +16,5 @@ def wrap_obs(obs, use_gps_obs, use_visible_text_obs, use_image_obs, use_goal, nu
     if use_goal:
         coord_holder[0, 4, :40] = obs['mission']['house_numbers']
         coord_holder[0, 4, 40:40 + num_streets] = obs['mission']["street_names"]
-
     out = np.concatenate((obs['image'], coord_holder), axis=0)
     return out

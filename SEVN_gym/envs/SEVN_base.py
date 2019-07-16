@@ -33,7 +33,7 @@ class SEVNBase(gym.GoalEnv):
         RIGHT_BIG = 4
 
     def __init__(self, obs_shape=(4, 84, 84), use_image_obs=False, use_gps_obs=False, use_visible_text_obs=False, use_full=False, reward_type=None):
-        path = "/SEVN-mini/processed/" if use_full else "/SEVN/processed/"
+        path = "/SEVN/processed/" if use_full else "/SEVN-mini/processed/"
         path = _ROOT + path
 
         print(f"Booting environment from {path} with shaped reward, image_obs: {use_image_obs}, gps: {use_gps_obs}, visible_text: {use_visible_text_obs}")
@@ -53,8 +53,7 @@ class SEVNBase(gym.GoalEnv):
         f.close()
         self.meta_df = pd.read_hdf(path + "meta.hdf5", key='df', mode='r')
         self.G = nx.read_gpickle(path + "graph.pkl")
-
-        self.max_num_steps = self.meta_df[self.meta_df.type == "street_segment"].groupby(self.meta_df.group).count()
+        self.max_num_steps = self.meta_df[self.meta_df.type == "street_segment"].groupby(self.meta_df.group).count().max().frame
         self.all_street_names = self.meta_df.street_name.dropna().unique()
         self.num_streets = self.all_street_names.size
         self.x_scale = self.meta_df.x.max() - self.meta_df.x.min()
@@ -78,7 +77,7 @@ class SEVNBase(gym.GoalEnv):
         self.agent_dir = utils.norm_angle(self.agent_dir)
 
 
-    def get_angle_between_nodes(self, n1, n2, use_agent_dir=True):
+    def get_angle_between_nodes(self, n1, n2):
         x = self.G.nodes[n2]['coords'][0] - self.G.nodes[n1]['coords'][0]
         y = self.G.nodes[n2]['coords'][1] - self.G.nodes[n1]['coords'][1]
         angle = (math.atan2(y, x) * 180 / np.pi)
@@ -152,7 +151,7 @@ class SEVNBase(gym.GoalEnv):
         rel_gps = [self.target_gps[0] - self.agent_gps[0], self.target_gps[1] - self.agent_gps[1],
                    self.target_gps[0], self.target_gps[1]]
         obs = {"image": image, "mission": self.goal_address, "rel_gps": rel_gps, "visible_text": visible_text}
-        obs = wrappers.wrap_obs(obs, self.use_gps_obs, self.use_visible_text_obs, self.use_image_obs, self.num_streets, True)
+        obs = wrappers.wrap_obs(obs, self.use_gps_obs, self.use_visible_text_obs, self.use_image_obs, True, self.num_streets)
 
         info = {}
         if done:
@@ -170,9 +169,9 @@ class SEVNBase(gym.GoalEnv):
         pano_rotation = self.meta_df.loc[self.agent_loc, 'angle'][0]
         agent_dir = utils.norm_angle_360(self.agent_dir)
         normed_ang = ((agent_dir - pano_rotation) % 360)/360
-        w = obs_shape[0]
-        y = img.shape[0] - obs_shape[0]
-        h = obs_shape[0]
+        w = obs_shape[1]
+        y = img.shape[0] - obs_shape[1]
+        h = obs_shape[2]
         x = int(img.shape[1] - ((normed_ang * img.shape[1]) + img.shape[1]/2 + obs_shape[0]/2) % img.shape[1])
         img = img.transpose()
         if (x + w) % img.shape[1] != (x + w):
@@ -205,7 +204,7 @@ class SEVNBase(gym.GoalEnv):
         rel_gps = [self.target_gps[0] - self.agent_gps[0], self.target_gps[1] - self.agent_gps[1],
                    self.target_gps[0], self.target_gps[1]]
         obs = {"image": image, "mission": self.goal_address, "rel_gps": rel_gps, "visible_text": self.get_visible_text(x, w)}
-        obs = wrappers.wrap_obs(obs, self.use_gps_obs, self.use_visible_text_obs, self.use_image_obs, self.num_streets, True)
+        obs = wrappers.wrap_obs(obs, self.use_gps_obs, self.use_visible_text_obs, self.use_image_obs, True, self.num_streets)
         return obs
 
     def angles_to_turn(self, cur, target):
@@ -238,7 +237,8 @@ class SEVNBase(gym.GoalEnv):
         actions = []
         for idx, node in enumerate(path):
             if idx + 1 != len(path):
-                target_dir = self.get_angle_between_nodes(node, path[idx + 1])
+                # target_dir = self.get_angle_between_nodes(node, path[idx + 1])
+                target_dir = self.angle_to_node(node, path[idx + 1])
                 new_action, final_dir = self.angles_to_turn(cur_dir, target_dir)
                 actions.extend(new_action)
                 cur_dir = final_dir
@@ -248,6 +248,30 @@ class SEVNBase(gym.GoalEnv):
                 actions.extend(new_action)
         return actions
 
+    def angle_to_node(self, n1, n2):
+        node_dir = self.get_angle_between_nodes(n1, n2)
+        neighbors = [edge[1] for edge in list(self.G.edges(n1))]
+        neighbor_angles = []
+        for neighbor in neighbors:
+            neighbor_angles.append(self.get_angle_between_nodes(n1, neighbor))
+ 
+        dest_nodes = {}
+        for direction in [x*22.5 for x in range(-8, 8)]:
+            angles = utils.smallest_angles(direction, neighbor_angles)
+            min_angle_node = neighbors[angles.index(min(angles))]
+            if min(angles) < 22.5: 
+                dest_nodes[direction] = min_angle_node
+            else:
+                dest_nodes[direction] = None
+
+        valid_angles = []
+        dist = []
+        for k, v in dest_nodes.items():
+            if v == n2: 
+                valid_angles.append(k)
+                dist.append(np.abs(utils.smallest_angle(k, node_dir)))
+
+        return valid_angles[dist.index(min(dist))]
 
     def compute_reward(self, x, info, done):
         cur_spl = len(self.shortest_path_length())
