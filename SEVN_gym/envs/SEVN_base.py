@@ -134,16 +134,19 @@ class SEVNBase(gym.GoalEnv):
             action = next(iter(self.shortest_path_length()), None)
         image, x, w = self._get_image()
         visible_text = self.get_visible_text(x, w)
-
-        if self.is_successful_trajectory(x):
-            done = True
-            was_successful_trajectory = True
-        elif self.num_steps_taken >= self.max_num_steps and done == False:
-            done = True
-        elif action == self.Actions.FORWARD:
-            self.transition()
-        else:
-            self.turn(action)
+        try:
+            if self.is_successful_trajectory(x):
+                done = True
+                was_successful_trajectory = True
+            elif self.num_steps_taken >= self.max_num_steps and done == False:
+                done = True
+            elif action == self.Actions.FORWARD:
+                self.transition()
+            else:
+                self.turn(action)
+        except Exception:
+            import pdb; pdb.set_trace()
+            self.is_successful_trajectory(x)
 
         reward = self.compute_reward(x, {}, done)
 
@@ -172,7 +175,7 @@ class SEVNBase(gym.GoalEnv):
         w = obs_shape[1]
         y = img.shape[0] - obs_shape[1]
         h = obs_shape[2]
-        x = int(img.shape[1] - ((normed_ang * img.shape[1]) + img.shape[1]/2 + obs_shape[0]/2) % img.shape[1])
+        x = int(img.shape[1] - ((normed_ang * img.shape[1]) + img.shape[1]/2 + obs_shape[1]/2) % img.shape[1])
         img = img.transpose()
         if (x + w) % img.shape[1] != (x + w):
             res_img = np.zeros((3, 84, 84))
@@ -254,12 +257,12 @@ class SEVNBase(gym.GoalEnv):
         neighbor_angles = []
         for neighbor in neighbors:
             neighbor_angles.append(self.get_angle_between_nodes(n1, neighbor))
- 
+
         dest_nodes = {}
         for direction in [x*22.5 for x in range(-8, 8)]:
             angles = utils.smallest_angles(direction, neighbor_angles)
             min_angle_node = neighbors[angles.index(min(angles))]
-            if min(angles) < 22.5: 
+            if min(angles) < 22.5:
                 dest_nodes[direction] = min_angle_node
             else:
                 dest_nodes[direction] = None
@@ -267,7 +270,7 @@ class SEVNBase(gym.GoalEnv):
         valid_angles = []
         dist = []
         for k, v in dest_nodes.items():
-            if v == n2: 
+            if v == n2:
                 valid_angles.append(k)
                 dist.append(np.abs(utils.smallest_angle(k, node_dir)))
 
