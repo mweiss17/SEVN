@@ -1,21 +1,6 @@
 from __future__ import print_function, division
-import enum
-import math
-import os
-import numpy as np
-import pandas as pd
-import networkx as nx
-from collections import defaultdict
-from matplotlib import pyplot as plt
-import cv2
-import gym
-import gzip
-import time
-from gym import spaces
-import h5py
-import pickle
-from SEVN_gym.data import _ROOT
 from SEVN_gym.envs.SEVN_base import SEVNBase
+from SEVN_gym.envs import utils, wrappers
 
 
 class SEVNExplorer(SEVNBase):
@@ -26,8 +11,6 @@ class SEVNExplorer(SEVNBase):
 
     def step(self, a):
         done = False
-        was_successful_trajectory = False
-        oracle = False
 
         reward = 0.0
         self.num_steps_taken += 1
@@ -43,7 +26,7 @@ class SEVNExplorer(SEVNBase):
             self.turn(action)
         reward = self.compute_reward(x, {'visible_text':visible_text}, done)
         obs = {"image": image, "visible_text": visible_text}
-        obs = self.obs_wrap(obs)
+        obs = wrappers.wrap_obs(obs, self.use_gps_obs, self.use_visible_text_obs, self.use_image_obs, False, self.num_streets)
 
         info = {}
         if done:
@@ -57,7 +40,7 @@ class SEVNExplorer(SEVNBase):
         self.seen_house_nums = []
         image, x, w = self._get_image()
         obs = {"image": image, "visible_text": self.get_visible_text(x, w)}
-        obs = self.obs_wrap(obs)
+        obs = wrappers.wrap_obs(obs, self.use_gps_obs, self.use_visible_text_obs, self.use_image_obs, False, self.num_streets)
         return obs
 
     def compute_reward(self, x, info, done):
@@ -79,28 +62,9 @@ class SEVNExplorer(SEVNBase):
                 assert reward == env.compute_reward(ob['achieved_goal'], ob['goal'], info)
         """
         reward = 0
-        house_numbers = SEVNExplorer.convert_house_vec_to_ints(info['visible_text']['house_numbers'])
+        house_numbers = utils.convert_house_vec_to_ints(info['visible_text']['house_numbers'])
         for num in house_numbers:
             if num not in self.seen_house_nums:
                 reward += 1
                 self.seen_house_nums.append(num)
         return reward
-
-    def obs_wrap(self, obs):
-        coord_holder = np.zeros((1, 84, 84), dtype=np.float32)
-
-        if self.use_gps_obs:
-            coord_holder[0, 0, :4] = obs['rel_gps']
-
-        if self.use_visible_text_obs:
-            coord_holder[0, 1, :2 * self.num_streets] = obs['visible_text']['street_names']
-            coord_holder[0, 2, :] = obs['visible_text']['house_numbers'][:84]
-            coord_holder[0, 3, :36] = obs['visible_text']['house_numbers'][84:120]
-        if not self.use_image_obs:
-            obs['image'] = np.zeros((3, 84, 84))
-
-        coord_holder[0, 4, :40] = np.zeros(coord_holder[0, 4, :40].shape)
-        coord_holder[0, 4, 40:40 + self.num_streets] = np.zeros(coord_holder[0, 4, 40:40 + self.num_streets].shape)
-
-        out = np.concatenate((obs['image'], coord_holder), axis=0)
-        return out

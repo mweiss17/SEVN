@@ -16,6 +16,7 @@ import h5py
 import pickle
 from SEVN_gym.data import _ROOT
 from SEVN_gym.envs.SEVN_base import SEVNBase, ACTION_MEANING
+from SEVN_gym.envs import utils
 
 
 class SEVNPlay(SEVNBase):
@@ -31,8 +32,8 @@ class SEVNPlay(SEVNBase):
 
     def __init__(self, obs_shape=(84, 84, 3), use_image_obs=True, use_gps_obs=False, use_visible_text_obs=True, use_full=False, reward_type=None, high_res=False):
         super(SEVNPlay, self).__init__(obs_shape, use_image_obs, use_gps_obs, use_visible_text_obs, use_full, reward_type)
-        self.max_num_steps = 100000 
-        self.total_reward = 0 
+        self.max_num_steps = 100000
+        self.total_reward = 0
         self.prev_rel_gps = [0, 0, 0, 0]
         self.high_res = high_res
         self._action_set = SEVNPlay.Actions
@@ -55,13 +56,11 @@ class SEVNPlay(SEVNBase):
             self.transition()
         elif action == self.Actions.DONE:
             done = True
-            reward = self.compute_reward(x, {}, done)
-            print("\n----- Finished -----\nTotal Mission Reward: " + str(reward + self.total_reward) + "\n--------------------\n")
         else:
             self.turn(action)
 
         reward = self.compute_reward(x, {}, done)
-        self.agent_gps = self.sample_gps(self.meta_df.loc[self.agent_loc])
+        self.agent_gps = utils.sample_gps(self.meta_df.loc[self.agent_loc], self.x_scale, self.y_scale)
         rel_gps = [self.target_gps[0] - self.agent_gps[0], self.target_gps[1] - self.agent_gps[1],
                    self.target_gps[0], self.target_gps[1]]
         obs = {"image": image, "mission": self.goal_address, "rel_gps": rel_gps, "visible_text": visible_text}
@@ -73,8 +72,8 @@ class SEVNPlay(SEVNBase):
 
         self.total_reward += reward
         if not reward == 0 and not done:
-            if not self.prev_rel_gps == rel_gps: 
-                print("Rel GPS: " + str(rel_gps[0]) + ', ' + str(rel_gps[1])) 
+            if not self.prev_rel_gps == rel_gps:
+                print("Rel GPS: " + str(rel_gps[0]) + ', ' + str(rel_gps[1]))
                 self.prev_rel_gps = rel_gps
             print("Reward: " + str(reward))
         return obs, reward, done, {}
@@ -102,11 +101,13 @@ class SEVNPlay(SEVNBase):
             img = self.images_df[self.meta_df.loc[self.agent_loc, 'frame'][0]]
             obs_shape = self.observation_space.shape
 
-        pano_rotation = self.norm_angle(self.meta_df.loc[self.agent_loc, 'angle'][0] + 90)
+        pano_rotation = self.meta_df.loc[self.agent_loc, 'angle'][0]
+        agent_dir = utils.norm_angle_360(self.agent_dir)
+        normed_ang = ((agent_dir - pano_rotation) % 360)/360
         w = obs_shape[0]
         y = img.shape[0] - obs_shape[0]
         h = obs_shape[0]
-        x = int((self.norm_angle(-self.agent_dir + pano_rotation) + 180)/360 * img.shape[1])
+        x = int(img.shape[1] - ((normed_ang * img.shape[1]) + img.shape[1]/2 + obs_shape[0]/2) % img.shape[1])
 
         if (x + w) % img.shape[1] != (x + w):
             res_img = np.zeros(obs_shape)
@@ -127,8 +128,8 @@ class SEVNPlay(SEVNBase):
         self.goal_idx, self.goal_address, self.goal_dir = self.select_goal(same_segment=True, difficulty=0)
         self.prev_spl = len(self.shortest_path_length())
         self.start_spl = self.prev_spl
-        self.agent_gps = self.sample_gps(self.meta_df.loc[self.agent_loc])
-        self.target_gps = self.sample_gps(self.meta_df.loc[self.goal_idx])
+        self.agent_gps = utils.sample_gps(self.meta_df.loc[self.agent_loc], self.x_scale, self.y_scale)
+        self.target_gps = utils.sample_gps(self.meta_df.loc[self.goal_idx], self.x_scale, self.y_scale)
         image, x, w = self._get_image()
         rel_gps = [self.target_gps[0] - self.agent_gps[0], self.target_gps[1] - self.agent_gps[1]]
         return {"image": image, "mission": self.goal_address, "rel_gps": rel_gps, "visible_text": self.get_visible_text(x, w)}
@@ -140,12 +141,17 @@ class SEVNPlay(SEVNBase):
         elif done and not self.is_successful_trajectory(x):
             reward = -2.0
         elif self.prev_spl - cur_spl > 0:
-            reward = 1 
+            reward = 1
         elif self.prev_spl - cur_spl < 0:
             reward = -1
         else:
             reward = 0.0
         self.prev_spl = cur_spl
+        if done:
+            print("\n----- Finished -----\nTotal Mission Reward: " 
+                  + str(reward + self.total_reward) \
+                  + "\n Success: " + str(self.is_successful_trajectory(x))
+                  + "\n--------------------\n")
         return reward
 
     def select_goal(self, same_segment=True, difficulty=0):
@@ -165,14 +171,14 @@ class SEVNPlay(SEVNBase):
         self.goal_id = goal.house_number
         label = self.meta_df[self.meta_df.frame == int(self.meta_df.loc[goal_idx].frame.iloc[0])]
         label = label[label.is_goal]
-        pano_rotation = self.norm_angle(self.meta_df.loc[goal_idx].angle.iloc[0])
-        label_dir = self.norm_angle(360 * (label.x_min.values[0] + label.x_max.values[0]) / 2 / 224)
-        goal_dir = self.norm_angle(-label_dir + pano_rotation)
+        pano_rotation = utils.norm_angle(self.meta_df.loc[goal_idx].angle.iloc[0])
+        label_dir = (224 - (label.x_min.values[0] + label.x_max.values[0]) / 2) * 360 / 224 - 180
+        goal_dir = utils.norm_angle(label_dir + pano_rotation)
         self.agent_dir = 22.5 * np.random.choice(range(-8, 8))
         self.agent_loc =  np.random.choice(segment_panos.frame.unique())
 
-        goal_address = {"house_numbers": self.convert_house_numbers(int(goal.house_number.iloc[0])),
-                        "street_names": self.convert_street_name(goal.street_name.iloc[0])}
+        goal_address = {"house_numbers": utils.convert_house_numbers(int(goal.house_number.iloc[0])),
+                        "street_names": utils.convert_street_name(goal.street_name.iloc[0], self.all_street_names)}
 
         print('GOAL: ' + str(goal.house_number.iloc[0]) + ', ' + str(goal.street_name.iloc[0]) + ' street')
         return goal_idx, goal_address, goal_dir
@@ -204,23 +210,8 @@ class SEVNPlay(SEVNBase):
 
     def get_visible_text(self, x, w):
         visible_text = {}
-        house_numbers = []
-        street_signs = []
         subset = self.meta_df.loc[self.agent_loc, ["house_number", "street_name", "obj_type", "x_min", "x_max"]]
-        for idx, row in subset.iterrows():
-            if self.high_res:
-                x_min = row.x_min * 3840 / 224
-                x_max = row.x_max * 3840 / 224
-            else:
-                x_min = row.x_min
-                x_max = row.x_max
-
-            if x < x_min and x + w > x_max:
-                if row.obj_type == "house_number":
-                    house_numbers.append(row.house_number)
-                elif row.obj_type == "street_sign":
-                    street_signs.append(row.street_name)
-
+        house_numbers, street_signs = utils.extract_text(x, w, subset, self.high_res)
         visible_text["house_numbers"] = house_numbers
         visible_text["street_names"] = street_signs
         return visible_text
