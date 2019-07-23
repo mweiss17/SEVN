@@ -2,11 +2,11 @@
 Bootstrap: docker
 
 # Here we ll build our container upon the pytorch container
-From: pytorch/pytorch:1.0.1-cuda10.0-cudnn7-runtime
+From: pytorch/pytorch:1.1.0-cuda10.0-cudnn7.5-runtime
 
 # Export global environment variables
 %environment
-        export PATH="/usr/local/anaconda3/bin:$PATH"
+        # export PATH="/usr/local/anaconda3/bin:$PATH"
         export SHELL=/bin/bash
         export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/bin
         export PATH=/Gym/gym/.tox/py3/bin:$PATH
@@ -14,11 +14,9 @@ From: pytorch/pytorch:1.0.1-cuda10.0-cudnn7-runtime
 # Then we put everything we need to install
 %post
         apt -y update && \
-#        apt install -y keyboard-configuration && \
         apt install -y \
         python3-setuptools \
         python3-dev \
-        python-pyglet \
         python3-opengl \
         libjpeg-dev \
         libboost-all-dev \
@@ -36,6 +34,10 @@ From: pytorch/pytorch:1.0.1-cuda10.0-cudnn7-runtime
         # export env vars
         . /environment
 
+        # get pip
+        curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
+        python3 get-pip.py
+
         # create default mount points
         echo "Creating mount points"
         mkdir /scratch
@@ -44,32 +46,16 @@ From: pytorch/pytorch:1.0.1-cuda10.0-cudnn7-runtime
         mkdir /tmp_log
         mkdir /final_log
 
-        # download and install Anaconda
-        CONDA_INSTALL_PATH="/usr/local/anaconda3"
-        wget https://repo.continuum.io/archive/Anaconda3-5.0.1-Linux-x86_64.sh
-        chmod +x Anaconda3-5.0.1-Linux-x86_64.sh
-        ./Anaconda3-5.0.1-Linux-x86_64.sh -b -p $CONDA_INSTALL_PATH
-
-        # Create and enter our conda environment
-        conda env create -n SENV
-        source activate SENV
-
-        # install conda packages
-        conda install torchvision -c soumith conda-forge tensorflow
+        pip install gym tensorflow pandas
 
         # Download Gym
-        mkdir /Gym && cd /Gym
         git clone https://github.com/openai/gym.git || true && \
-
-        # Install python dependencies
-        pip install -r requirements.txt
-
-        # Install Gym
-        cd /Gym/gym
-        pip install -e '.[all]'
+        cd gym
+        pip install -e .
+        cd ..
 
         # install SEVN and dependencies
-        cd /usr/local/
+        # cd /usr/local/
         git clone https://github.com/openai/baselines.git
         cd baselines
         pip install -e .
@@ -83,7 +69,7 @@ From: pytorch/pytorch:1.0.1-cuda10.0-cudnn7-runtime
         git clone https://github.com/simonchamorro/pytorch-a2c-ppo-acktr-gail.git
         cd pytorch-a2c-ppo-acktr-gail
         pip install -e .
-        pip install -r requirements.txt
+        # pip install -r requirements.txt
 
 %runscript
         exec /bin/bash "$@"
