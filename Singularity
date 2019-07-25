@@ -52,7 +52,7 @@ From: ubuntu:18.04
         mkdir /tmp_log
         mkdir /final_log
 
-        pip3 install matplotlib enum34 tensorflow gym pandas
+        pip3 install matplotlib enum34 tensorflow gym comet_ml pandas
 
         # Download Gym
         git clone https://github.com/openai/gym.git || true && \
