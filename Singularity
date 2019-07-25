@@ -68,7 +68,8 @@ From: ubuntu:18.04
         # Install pytorch-a2c-ppo-acktr
         git clone https://github.com/simonchamorro/pytorch-a2c-ppo-acktr-gail.git
         cd pytorch-a2c-ppo-acktr-gail
-        pip3 install -e .
+        mkdir trained_models/ppo 
+	pip3 install -e .
         # pip install -r requirements.txt
 
 %runscript
