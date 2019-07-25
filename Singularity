@@ -1,10 +1,8 @@
 #This is a dockerfile that sets up a full SEVN install
 Bootstrap: docker
 
-# Here we ll build our container upon the pytorch container
+# Here we ll build our container upon the ubuntu container
 From: ubuntu:18.04
-
-# pytorch/pytorch:1.1.0-cuda10.0-cudnn7.5-runtime
 
 # Export global environment variables
 %environment
@@ -35,14 +33,9 @@ From: ubuntu:18.04
         apt clean && \
         rm -rf /var/lib/apt/lists/*
 
-        cd /usr/local/
 
         # export env vars
         . /environment
-
-        # get pip
-        # curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py
-        # python3 get-pip.py
 
         # create default mount points
         echo "Creating mount points"
@@ -53,6 +46,7 @@ From: ubuntu:18.04
         mkdir /final_log
 
         pip3 install matplotlib enum34 tensorflow gym comet_ml pandas
+        cd scratch/
 
         # Download Gym
         git clone https://github.com/openai/gym.git || true && \
