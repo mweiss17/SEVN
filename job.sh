@@ -4,6 +4,9 @@
 #SBATCH --mem=10G                 # Ask for 10 GB of RAM
 #SBATCH --time=0:10:00            # The job will run for 10 minutes
 
+mkdir $SCRATCH/trained_models
+mkdir $SCRATCH/trained_models/ppo/
+
 # 1. Copy your container on the compute node
 rsync -avz $SCRATCH/SEVN_latest.sif $SLURM_TMPDIR
 # 2. Copy your code on the compute node
