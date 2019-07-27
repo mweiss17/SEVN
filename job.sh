@@ -9,6 +9,8 @@ rsync -avz $SCRATCH/SEVN_latest.sif $SLURM_TMPDIR
 # 2. Copy your code on the compute node
 rsync -avz $SCRATCH/pytorch-a2c-ppo-acktr-gail $SLURM_TMPDIR
 
+seed="$(find $SCRATCH/trained_models/ppo/ -maxdepth 0 -type d | wc -l)"
+
 # 3. Executing your code with singularity
 singularity exec --nv \
         -H $HOME:/home \
@@ -16,9 +18,23 @@ singularity exec --nv \
         -B $SLURM_TMPDIR:/tmp_log/ \
         -B $SCRATCH:/final_log/ \
         $SLURM_TMPDIR/SEVN_latest.sif \
-         python3 pytorch-a2c-ppo-acktr-gail/main.py --env-name "SEVN-Mini-All-Shaped-v1" --custom-gym SEVN_gym --algo ppo --use-gae --lr 5e-4 --clip-param 0.1 --val
-ue-loss-coef 0.5 --num-processes 4 --num-steps 128 --num-mini-batch 4 --log-interval 1 --use-linear-lr-decay --entropy-coe
-f 0.01 --comet mweiss17/navi-corl-2019/UcVgpp0wPaprHG4w8MFVMgq7j --seed 0 --num-env-steps 50000000
+        python3 pytorch-a2c-ppo-acktr-gail/main.py \
+          --env-name "SEVN-Mini-All-Shaped-v1" \
+          --custom-gym SEVN_gym \
+          --algo ppo \
+          --use-gae \
+          --lr 5e-4 \
+          --clip-param 0.1 \
+          --value-loss-coef 0.5 \
+          --num-processes 4 \
+          --num-steps 128 \
+          --num-mini-batch 4 \
+          --log-interval 1 \
+          --use-linear-lr-decay \
+          --entropy-coef 0.01 \
+          --comet mweiss17/navi-corl-2019/UcVgpp0wPaprHG4w8MFVMgq7j \
+          --seed $seed \
+          --num-env-steps 50000000
 
 # 4. Copy whatever you want to save on $SCRATCH
 rsync -avz $SLURM_TMPDIR/trained_models $SCRATCH
