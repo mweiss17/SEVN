@@ -14,6 +14,8 @@ rsync -avz $SCRATCH/pytorch-a2c-ppo-acktr-gail $SLURM_TMPDIR
 
 seed="$(find $SCRATCH/trained_models/ppo/ -maxdepth 0 -type d | wc -l)"
 
+echo "$(nvidia-smi)"
+
 # 3. Executing your code with singularity
 singularity exec --nv \
         -H $HOME:/home \
