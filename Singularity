@@ -2,7 +2,8 @@
 Bootstrap: docker
 
 # Here we ll build our container upon the ubuntu container
-From: ubuntu:18.04
+# From: ubuntu:18.04
+From: 1.1.0-cuda10.0-cudnn7.5-runtime
 
 # Export global environment variables
 %environment
