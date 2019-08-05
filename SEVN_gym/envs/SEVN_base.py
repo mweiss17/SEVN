@@ -20,6 +20,7 @@ ACTION_MEANING = {
     4: 'RIGHT_BIG',
     5: 'DONE',
     6: 'NOOP',
+    7: 'READ'
 }
 
 class SEVNBase(gym.GoalEnv):
@@ -31,6 +32,9 @@ class SEVNBase(gym.GoalEnv):
         FORWARD = 2
         RIGHT_SMALL = 3
         RIGHT_BIG = 4
+        DONE = 5
+        NOOP = 6
+        READ = 7
 
     def __init__(self, obs_shape=(4, 84, 84), use_image_obs=False, use_gps_obs=False, use_visible_text_obs=False, use_full=False, reward_type=None):
         path = "/SEVN/processed/" if use_full else "/SEVN-mini/processed/"
