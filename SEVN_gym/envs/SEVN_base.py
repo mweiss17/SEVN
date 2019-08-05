@@ -125,7 +125,7 @@ class SEVNBase(gym.GoalEnv):
     def step(self, a):
         done = False
         was_successful_trajectory = False
-        oracle = True
+        oracle = False 
 
         reward = 0.0
         self.num_steps_taken += 1

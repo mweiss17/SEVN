@@ -1,6 +1,5 @@
 gym>=0.2.3
 pybullet>=1.9.4
-torch
 scipy
 tqdm
 matplotlib
