@@ -9,6 +9,7 @@ ACTION_MEANING = {
     4: 'RIGHT_BIG',
     5: 'DONE',
     6: 'NOOP',
+    7: 'READ'
 }
 
 class SEVNDecreasingReward(SEVNBase):

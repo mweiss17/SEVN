@@ -18,6 +18,13 @@ register(
 )
 
 register(
+    id='SEVN-CostlyText-v1',
+    entry_point='SEVN_gym.envs:SEVNCostlyText',
+    kwargs={},
+    max_episode_steps=10000,
+)
+
+register(
     id='SEVN-Mini-DecreasingReward-v1',
     entry_point='SEVN_gym.envs:SEVNDecreasingReward',
     kwargs={},
