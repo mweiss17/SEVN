@@ -64,6 +64,11 @@ From: ubuntu:18.04
         cd SEVN
         pip3 install -e .
         cd ..
+        git clone https://github.com/simonchamorro/NAVI-STR
+        cd NAVI-STR
+        pip install -r requirements.txt
+        cd ..
+        mv NAVI-STR NAVI_STR
 
         # Install pytorch-a2c-ppo-acktr
         git clone https://github.com/simonchamorro/pytorch-a2c-ppo-acktr-gail.git
