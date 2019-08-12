@@ -80,6 +80,10 @@ class SEVNBase(gym.GoalEnv):
             self.agent_dir -= 67.5
         self.agent_dir = utils.norm_angle(self.agent_dir)
 
+    def sample_nearby(self):
+        house_numbers = self.meta_df['house_number'].dropna().unique().tolist()
+        street_names = self.meta_df['street_name'].dropna().unique().tolist()
+        return house_numbers, street_names
 
     def get_angle_between_nodes(self, n1, n2):
         x = self.G.nodes[n2]['coords'][0] - self.G.nodes[n1]['coords'][0]
@@ -129,7 +133,7 @@ class SEVNBase(gym.GoalEnv):
     def step(self, a):
         done = False
         was_successful_trajectory = False
-        oracle = False 
+        oracle = False
 
         reward = 0.0
         self.num_steps_taken += 1
