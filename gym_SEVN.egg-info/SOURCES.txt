@@ -1,6 +1,0 @@
-setup.py
-gym_SEVN.egg-info/PKG-INFO
-gym_SEVN.egg-info/SOURCES.txt
-gym_SEVN.egg-info/dependency_links.txt
-gym_SEVN.egg-info/requires.txt
-gym_SEVN.egg-info/top_level.txt
