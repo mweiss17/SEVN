@@ -7,3 +7,10 @@ colmap_workspace/*
 ubuntu
 *.egg-info/
 __pycache__/
+
+# Unnecessary data files
+SEVN_gym/data/SEVN-mini/processed/coords.hdf5
+SEVN_gym/data/SEVN-mini/processed/pos_ang.npy
+SEVN_gym/data/SEVN-mini/processed/test_task.npy
+SEVN_gym/data/SEVN/processed/coords.hdf5
+SEVN_gym/data/SEVN/processed/pos_ang.npy
