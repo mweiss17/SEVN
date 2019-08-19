@@ -5,3 +5,5 @@ data/
 colmap_workspace/*
 .DS_Store
 ubuntu
+*.egg-info/
+__pycache__/
