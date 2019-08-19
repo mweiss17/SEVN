@@ -2,7 +2,7 @@
 
 SEVN: Sidewalk Simulator Environment for Visual Navigation. An outdoor environment simulator with real-world imagery for Deep Reinforcement Learning on navigation tasks.
 
-![game.png](game.png)
+![game.png](img/game.png)
 
 ## Requirements
 
@@ -18,8 +18,11 @@ pip install tensorflow
 git clone https://github.com/openai/baselines.git
 cd baselines
 pip install -e .
+cd ..
 
 # Install env
+git clone https://github.com/mweiss17/SEVN.git
+cd SEVN
 pip install -e .
 ```
 
@@ -27,4 +30,3 @@ pip install -e .
 ```
 python scripts/01-play.py
 ```
-
