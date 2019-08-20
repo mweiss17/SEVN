@@ -321,9 +321,7 @@ class SEVNBase(gym.GoalEnv):
     #         self.viewer.imshow(img)
     #         return self.viewer.isopen
     def render(self, mode='human', clear=False, first_time=False):
-        _, x, w = self._get_image()
-        img = self.images_df[self.meta_df.loc[self.agent_loc, 'frame'][0]]
-        img = img[:, x:x + w]
+        img, x, w = self._get_image()
         if first_time:
             plt.ion()
             self.fig, self.ax = plt.subplots(nrows=1, ncols=2)
@@ -350,9 +348,10 @@ class SEVNBase(gym.GoalEnv):
             self.ax[1].scatter(self.corners[:, 0], self.corners[:, 1], c='#fde724')
             self.ax[1].scatter(self.streets[:, 0], self.streets[:, 1], c='#29788e')
             self.ax[1].add_collection(self.edge_collection)
-        angle_adj = 180
+        angle_adj = 270
         agent_loc = self.pos[self.agent_loc]
-        agent_dir = utils.norm_angle_360(self.agent_dir) - angle_adj
+        # agent_dir = utils.norm_angle_360(self.agent_dir) - angle_adj
+        agent_dir = self.agent_dir - angle_adj
         goal_loc = self.pos[self.goal_idx]
         goal_dir = self.goal_dir - angle_adj
         print("Agent Dir:", agent_dir)
@@ -365,8 +364,8 @@ class SEVNBase(gym.GoalEnv):
         self.ax[1].arrow(agent_loc[0], agent_loc[1], 5 * math.sin(math.degrees(agent_dir)),
                          5 * math.cos(math.degrees(agent_dir)), length_includes_head=True,
                          head_width=2.0, head_length=2.0, color='b')
-        self.ax[0].set_data(img/255.0)
-        plt.pause(0.001)
+        self.ax[0].set_data(utils.denormalize_image(img.transpose()))
+        plt.pause(0.01)
         if mode == 'rgb_array':
             return img
         elif mode == 'human':

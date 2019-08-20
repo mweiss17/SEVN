@@ -34,6 +34,13 @@ def normalize_image(image):
     normed_image[:, :, 2] = (normed_image[:, :, 2] - 0.479) / 0.2783
     return normed_image
 
+def denormalize_image(normed_image):
+    # Values calculated for SEVN-mini: mean=[0.437, 0.452, 0.479], std=[0.2495, 0.2556, 0.2783]
+    normed_image[:, :, 0] = (normed_image[:, :, 0] * 0.2495) + 0.437
+    normed_image[:, :, 1] = (normed_image[:, :, 1] * 0.2556) + 0.452
+    normed_image[:, :, 2] = (normed_image[:, :, 2] * 0.2783)  + 0.479
+    return normed_image
+
 def convert_house_numbers(num):
     res = np.zeros((4, 10))
     for col, row in enumerate(str(num)):
