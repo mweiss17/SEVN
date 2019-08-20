@@ -348,7 +348,7 @@ class SEVNBase(gym.GoalEnv):
             self.ax[1].scatter(self.corners[:, 0], self.corners[:, 1], c='#fde724')
             self.ax[1].scatter(self.streets[:, 0], self.streets[:, 1], c='#29788e')
             self.ax[1].add_collection(self.edge_collection)
-        angle_adj = 270
+        angle_adj = 0
         agent_loc = self.pos[self.agent_loc]
         # agent_dir = utils.norm_angle_360(self.agent_dir) - angle_adj
         agent_dir = self.agent_dir - angle_adj
@@ -358,14 +358,14 @@ class SEVNBase(gym.GoalEnv):
         print("Goal Dir:", self.goal_dir)
         self.agent_point = self.ax[1].plot(agent_loc[0], agent_loc[1], 'bo')
         self.ax[1].plot(goal_loc[0], goal_loc[1], 'ro')
-        self.ax[1].arrow(goal_loc[0], goal_loc[1], 5*math.sin(math.degrees(goal_dir)),
-                         5 * math.cos(math.degrees(goal_dir)), length_includes_head=True,
+        self.ax[1].arrow(goal_loc[0], goal_loc[1], 5*math.cos(math.radians(goal_dir)),
+                         5 * math.sin(math.radians(goal_dir)), length_includes_head=True,
                          head_width=2.0, head_length=2.0, color='r')
-        self.agent_arrow = self.ax[1].arrow(agent_loc[0], agent_loc[1], 5 * math.sin(math.degrees(agent_dir)),
-                                            5 * math.cos(math.degrees(agent_dir)), length_includes_head=True,
+        self.agent_arrow = self.ax[1].arrow(agent_loc[0], agent_loc[1], 5 * math.cos(math.radians(agent_dir)),
+                                            5 * math.sin(math.radians(agent_dir)), length_includes_head=True,
                                             head_width=2.0, head_length=2.0, color='b')
         self.ax[0].set_data(utils.denormalize_image(img.transpose()))
-        plt.pause(0.01)
+        plt.pause(0.5)
         self.agent_point[0].remove()
         self.agent_arrow.remove()
         if mode == 'rgb_array':
