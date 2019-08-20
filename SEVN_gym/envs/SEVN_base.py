@@ -8,6 +8,8 @@ import networkx as nx
 import gym
 import gzip
 from gym import spaces
+from matplotlib.collections import LineCollection
+import matplotlib.pyplot as plt
 from SEVN_gym.data import _ROOT
 from SEVN_gym.envs import utils, wrappers
 
@@ -171,7 +173,6 @@ class SEVNBase(gym.GoalEnv):
 
         return obs, reward, done, info
 
-
     def _get_image(self):
         img = self.images_df[self.meta_df.loc[self.agent_loc, 'frame'][0]]
         img = utils.normalize_image(img)
@@ -308,8 +309,52 @@ class SEVNBase(gym.GoalEnv):
         except Exception:
             return False
 
-    def render(self, mode='human'):
-        img, x, w = self._get_image()
+    # def render(self, mode='human'):
+    #     img, x, w = self._get_image()
+    #     if mode == 'rgb_array':
+    #         return img
+    #     elif mode == 'human':
+    #         from gym.envs.classic_control import rendering
+    #         if self.viewer is None:
+    #             self.viewer = rendering.SimpleImageViewer()
+    #         self.viewer.imshow(img)
+    #         return self.viewer.isopen
+    def render(self, mode='human', clear=False, first_time=False):
+        _, x, w = self._get_image()
+        img = self.images_df[self.meta_df.loc[self.agent_loc, 'frame'][0]]
+        img = img[:, x:x + w]
+        if first_time:
+            plt.ion()
+            self.fig, self.ax = plt.subplots(nrows=1, ncols=2)
+            self.ax[0] = self.ax[0].imshow(
+                np.zeros((84, 84, 3)),
+                interpolation='none',
+                animated=True,
+                label="ladida")
+            self.plot = plt.gca()
+        if clear:
+            self.plot.cla()
+            self.pos = {k: v.get('coords')[0:2] for k, v in self.G.nodes(data=True)}
+            # nx.draw(self.G, pos, node_color='r', node_size=1)
+            nodelist = list(self.G)
+            self.xy = np.asarray([self.pos[v] for v in nodelist])
+            self.corners = np.asarray([self.pos[node] for node in list(self.G) if node in
+                                       self.meta_df[self.meta_df.type == 'intersection'].frame])
+            self.streets = np.asarray([self.pos[node] for node in list(self.G) if node in
+                                       self.meta_df[self.meta_df.type == 'street_segment'].frame])
+            edgelist = list(self.G.edges())
+            edge_pos = np.asarray([(self.pos[e[0]], self.pos[e[1]]) for e in edgelist])
+            self.edge_collection = LineCollection(edge_pos)
+            self.edge_collection.set_zorder(1)  # edges go behind nodes
+            self.ax[1].scatter(self.corners[:, 0], self.corners[:, 1], c='#fde724')
+            self.ax[1].scatter(self.streets[:, 0], self.streets[:, 1], c='#29788e')
+            self.ax[1].add_collection(self.edge_collection)
+        agent_loc = self.pos[self.agent_loc]
+        goal_loc = self.pos[self.goal_idx]
+        self.ax[1].plot(agent_loc[0], agent_loc[1], 'bo')
+        self.ax[1].plot(goal_loc[0], goal_loc[1], 'ro')
+        self.ax[0].set_data(img/255.0)
+        plt.pause(0.001)
         if mode == 'rgb_array':
             return img
         elif mode == 'human':
