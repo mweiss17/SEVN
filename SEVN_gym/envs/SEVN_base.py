@@ -356,16 +356,18 @@ class SEVNBase(gym.GoalEnv):
         goal_dir = self.goal_dir - angle_adj
         print("Agent Dir:", agent_dir)
         print("Goal Dir:", self.goal_dir)
-        self.ax[1].plot(agent_loc[0], agent_loc[1], 'bo')
+        self.agent_point = self.ax[1].plot(agent_loc[0], agent_loc[1], 'bo')
         self.ax[1].plot(goal_loc[0], goal_loc[1], 'ro')
         self.ax[1].arrow(goal_loc[0], goal_loc[1], 5*math.sin(math.degrees(goal_dir)),
-                         5*math.cos(math.degrees(goal_dir)), length_includes_head=True,
+                         5 * math.cos(math.degrees(goal_dir)), length_includes_head=True,
                          head_width=2.0, head_length=2.0, color='r')
-        self.ax[1].arrow(agent_loc[0], agent_loc[1], 5 * math.sin(math.degrees(agent_dir)),
-                         5 * math.cos(math.degrees(agent_dir)), length_includes_head=True,
-                         head_width=2.0, head_length=2.0, color='b')
+        self.agent_arrow = self.ax[1].arrow(agent_loc[0], agent_loc[1], 5 * math.sin(math.degrees(agent_dir)),
+                                            5 * math.cos(math.degrees(agent_dir)), length_includes_head=True,
+                                            head_width=2.0, head_length=2.0, color='b')
         self.ax[0].set_data(utils.denormalize_image(img.transpose()))
         plt.pause(0.01)
+        self.agent_point[0].remove()
+        self.agent_arrow.remove()
         if mode == 'rgb_array':
             return img
         elif mode == 'human':
