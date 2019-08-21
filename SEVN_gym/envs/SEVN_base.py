@@ -346,7 +346,7 @@ class SEVNBase(gym.GoalEnv):
             self.edge_collection = LineCollection(edge_pos)
             self.edge_collection.set_zorder(1)  # edges go behind nodes
             self.ax[1].scatter(self.corners[:, 0], self.corners[:, 1], c='#fde724')
-            self.ax[1].scatter(self.streets[:, 0], self.streets[:, 1], c='#29788e')
+            self.ax[1].scatter(self.streets[:, 0], self.streets[:, 1], c='#79d151')
             self.ax[1].add_collection(self.edge_collection)
         angle_adj = 0
         agent_loc = self.pos[self.agent_loc]
@@ -356,8 +356,8 @@ class SEVNBase(gym.GoalEnv):
         goal_dir = self.goal_dir - angle_adj
         print("Agent Dir:", agent_dir)
         print("Goal Dir:", self.goal_dir)
-        self.agent_point = self.ax[1].plot(agent_loc[0], agent_loc[1], 'bo')
-        self.ax[1].plot(goal_loc[0], goal_loc[1], 'ro')
+        self.agent_point = self.ax[1].plot(agent_loc[0], agent_loc[1], color='b', marker='o')
+        self.ax[1].plot(goal_loc[0], goal_loc[1], color='r', marker='o')
         self.ax[1].arrow(goal_loc[0], goal_loc[1], 5*math.cos(math.radians(goal_dir)),
                          5 * math.sin(math.radians(goal_dir)), length_includes_head=True,
                          head_width=2.0, head_length=2.0, color='r')
@@ -365,7 +365,7 @@ class SEVNBase(gym.GoalEnv):
                                             5 * math.sin(math.radians(agent_dir)), length_includes_head=True,
                                             head_width=2.0, head_length=2.0, color='b')
         self.ax[0].set_data(utils.denormalize_image(img.transpose()))
-        plt.pause(0.5)
+        plt.pause(0.01)
         self.agent_point[0].remove()
         self.agent_arrow.remove()
         if mode == 'rgb_array':
