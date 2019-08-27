@@ -33,7 +33,6 @@ From: ubuntu:18.04
         apt clean && \
         rm -rf /var/lib/apt/lists/*
 
-
         # export env vars
         . /environment
 
