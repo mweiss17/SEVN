@@ -54,7 +54,6 @@ From: ubuntu:18.04
         cd ..
 
         # install SEVN and dependencies
-        # cd /usr/local/
         git clone https://github.com/openai/baselines.git
         cd baselines
         pip3 install -e .
