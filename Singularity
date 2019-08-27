@@ -59,11 +59,11 @@ From: ubuntu:18.04
         cd baselines
         pip3 install -e .
         cd ..
-        git clone https://github.com/mweiss17/SEVN.git
+        git clone git@github.com/mweiss17/SEVN.git
         cd SEVN
         pip3 install -e .
         cd ..
-        git clone https://github.com/simonchamorro/NAVI-STR
+        git clone git@github.com/simonchamorro/NAVI-STR
         cd NAVI-STR
         pip3 install -r requirements.txt
         cd ..
