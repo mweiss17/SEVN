@@ -54,15 +54,16 @@ From: ubuntu:18.04
         cd ..
 
         # install SEVN and dependencies
+        # cd /usr/local/
         git clone https://github.com/openai/baselines.git
         cd baselines
         pip3 install -e .
         cd ..
-        git clone git@github.com:mweiss17/SEVN.git
+        git clone https://github.com/mweiss17/SEVN.git
         cd SEVN
         pip3 install -e .
         cd ..
-        git clone git@github.com:simonchamorro/NAVI-STR
+        git clone https://github.com/simonchamorro/NAVI-STR
         cd NAVI-STR
         pip3 install -r requirements.txt
         cd ..
@@ -75,7 +76,6 @@ From: ubuntu:18.04
         mkdir trained_models/ppo/
 	      pip3 install -e .
         # pip install -r requirements.txt
-
 
 %runscript
         exec /bin/bash "$@"
