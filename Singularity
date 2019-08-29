@@ -65,7 +65,7 @@ From: ubuntu:18.04
         cd ..
         git clone https://github.com/simonchamorro/NAVI-STR
         cd NAVI-STR
-        pip3 install -r requirements.txt
+        pip3 install -e .
         cd ..
         mv NAVI-STR NAVI_STR
 
