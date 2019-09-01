@@ -45,7 +45,7 @@ From: ubuntu:18.04
         mkdir /tmp_log
         mkdir /final_log
 
-        pip3 install ipdb matplotlib enum34 tensorflow gym comet_ml pandas
+        pip3 install ipdb matplotlib enum34 tensorflow gym comet_ml pandas torch==1.2
         cd scratch/
 
         # Download Gym
