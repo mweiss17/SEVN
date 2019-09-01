@@ -1,5 +1,6 @@
 from setuptools import setup
 
+
 setup(
     name='SEVN_gym',
     version='1.0',
