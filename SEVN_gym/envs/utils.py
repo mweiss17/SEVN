@@ -43,15 +43,19 @@ def denormalize_image(normed_image):
 
 def convert_house_numbers(num):
     res = np.zeros((4, 10))
-    for col, row in enumerate(str(num)):
+    for col, row in enumerate(str(num).zfill(4)):
         res[col, int(row)] = 1
     return res.reshape(-1)
 
 def convert_house_vec_to_ints(vec):
     numbers = []
-    for offset in range(0, 120, 10):
-        numbers.append(str(vec[offset:offset + 10].argmax()))
-    return (int("".join(numbers[:4])), int("".join(numbers[4:8])), int("".join(numbers[8:12])))
+    house_num_len = 40
+    for i in range(int(vec.size(0)/house_num_len)):
+        this_num = []
+        for offset in range(i * house_num_len, i * house_num_len + house_num_len, 10):
+            this_num.append(str(vec[offset:offset + 10].argmax()))
+        numbers.append(int("".join(this_num)))
+    return numbers
 
 def convert_street_name(street_name, all_street_names):
     assert street_name in all_street_names
