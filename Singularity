@@ -75,8 +75,7 @@ From: ubuntu:18.04
         cd pytorch-a2c-ppo-acktr-gail
         mkdir trained_models/
         mkdir trained_models/ppo/
-	      pip3 install -e .
-        # pip install -r requirements.txt
+	pip3 install -e .
 
 %runscript
         exec /bin/bash "$@"
