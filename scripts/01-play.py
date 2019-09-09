@@ -3,41 +3,51 @@ import argparse
 import time
 import matplotlib
 import gym
-import SEVN_gym
+import SEVN_gym # noqa
 from gym import logger
 import pygame
+
 try:
     matplotlib.use('TkAgg')
     import matplotlib.pyplot as plt
 except ImportError as e:
-    logger.warn('failed to set matplotlib backend, plotting will not work: %s' % str(e))
+    logger.warn('failed to set matplotlib backend,' +
+                ' plotting will not work: %s' % str(e))
     plt = None
 from pygame.locals import VIDEORESIZE
+
 
 def display_arr(screen, arr, video_size, transpose):
     arr_min, arr_max = arr.min(), arr.max()
     arr = 255.0 * (arr - arr_min) / (arr_max - arr_min)
-    pyg_img = pygame.surfarray.make_surface(arr.swapaxes(0, 1) if transpose else arr)
+    pyg_img = pygame.surfarray.make_surface(arr.swapaxes(0, 1) if
+                                            transpose else arr)
     pyg_img = pygame.transform.scale(pyg_img, video_size)
-    screen.blit(pyg_img, (0,0))
+    screen.blit(pyg_img, (0, 0))
+
 
 def display_text(screen, text, video_size):
-    textSurface = pygame.font.Font('freesansbold.ttf',30).render(text, True, (0,0,0))
+    textSurface = pygame.font.Font(
+        'freesansbold.ttf', 30).render(text, True, (0, 0, 0))
     textRect = textSurface.get_rect()
     textRect.center = (video_size[0]/10, video_size[1]/10)
     screen.blit(textSurface, textRect)
     pygame.display.update()
 
+
 def display_bb(screen, rel_coords, text, video_size):
-    textSurface = pygame.font.Font('freesansbold.ttf',30).render(text, True, (0,0,0))
+    textSurface = pygame.font.Font(
+        'freesansbold.ttf', 30).render(text, True, (0, 0, 0))
     textRect = textSurface.get_rect()
-    BLUE=(0,0,255)
+    BLUE = (0, 0, 255)
     pygame.draw.rect(screen, BLUE, rel_coords)
     textRect.center = (video_size[0]/10, video_size[1]/10)
     screen.blit(textSurface, textRect)
     pygame.display.update()
 
-def play(env, transpose=True, fps=30, zoom=None, callback=None, keys_to_action=None):
+
+def play(env, transpose=True, fps=30, zoom=None,
+         callback=None, keys_to_action=None):
     rendered = env.render(mode='rgb_array')
     if keys_to_action is None:
         if hasattr(env, 'get_keys_to_action'):
@@ -45,8 +55,8 @@ def play(env, transpose=True, fps=30, zoom=None, callback=None, keys_to_action=N
         elif hasattr(env.unwrapped, 'get_keys_to_action'):
             keys_to_action = env.unwrapped.get_keys_to_action()
         else:
-            assert False, env.spec.id + " does not have explicit key to action mapping, " + \
-                          "please specify one manually"
+            assert False, env.spec.id + ' does not have explicit key to' + \
+                          ' action mapping, please specify one manually'
     relevant_keys = set(sum(map(list, keys_to_action.keys()), []))
     video_size = [rendered.shape[1], rendered.shape[0]]
     if zoom is not None:
@@ -83,9 +93,10 @@ def play(env, transpose=True, fps=30, zoom=None, callback=None, keys_to_action=N
 
         if obs is not None:
             rendered = env.render(mode='rgb_array')
-            display_arr(screen, rendered, transpose=transpose, video_size=video_size)
+            display_arr(screen, rendered,
+                        transpose=transpose, video_size=video_size)
         if info is not None:
-            achieved_goal = info.get('achieved_goal')
+            info.get('achieved_goal')
 
         # process pygame events
         for event in pygame.event.get():
@@ -103,11 +114,12 @@ def play(env, transpose=True, fps=30, zoom=None, callback=None, keys_to_action=N
             elif event.type == VIDEORESIZE:
                 video_size = event.size
                 screen = pygame.display.set_mode(video_size)
-                #print(video_size)
+                # print(video_size)
 
         pygame.display.flip()
         clock.tick(fps)
     pygame.quit()
+
 
 class PlayPlot(object):
     def __init__(self, callback, horizon_timesteps, plot_names):
@@ -115,7 +127,8 @@ class PlayPlot(object):
         self.horizon_timesteps = horizon_timesteps
         self.plot_names = plot_names
 
-        assert plt is not None, "matplotlib backend failed, plotting will not work"
+        assert plt is not None, 'matplotlib backend failed, plotting will' + \
+                                ' not work'
 
         num_plots = len(self.plot_names)
         self.fig, self.ax = plt.subplots(num_plots)
@@ -138,14 +151,20 @@ class PlayPlot(object):
         for i, plot in enumerate(self.cur_plot):
             if plot is not None:
                 plot.remove()
-            self.cur_plot[i] = self.ax[i].scatter(range(xmin, xmax), list(self.data[i]), c='blue')
+            self.cur_plot[i] = self.ax[i].scatter(
+                range(xmin, xmax), list(self.data[i]), c='blue')
             self.ax[i].set_xlim(xmin, xmax)
         plt.pause(0.000001)
 
+
 def main():
     parser = argparse.ArgumentParser()
-    parser.add_argument('--env', type=str, default='SEVN-Play-v1', help='Define Environment')
-    parser.add_argument('--zoom', type=float, default=4, help='Zoom')
+    parser.add_argument('--env',
+                        type=str, default='SEVN-Play-v1',
+                        help='Define Environment')
+    parser.add_argument('--zoom',
+                        type=float, default=4,
+                        help='Zoom')
     args = parser.parse_args()
     env = gym.make(args.env)
     play(env, zoom=args.zoom, fps=6)

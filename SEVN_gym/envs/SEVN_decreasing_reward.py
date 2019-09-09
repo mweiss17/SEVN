@@ -12,11 +12,17 @@ ACTION_MEANING = {
     7: 'READ'
 }
 
+
 class SEVNDecreasingReward(SEVNBase):
     metadata = {'render.modes': ['human', 'rgb_array']}
-    def __init__(self, obs_shape=(4, 84, 84), use_image_obs=True, use_gps_obs=False, use_visible_text_obs=True, use_full=False, reward_type=None):
+
+    def __init__(self, obs_shape=(4, 84, 84), use_image_obs=True,
+                 use_gps_obs=False, use_visible_text_obs=True,
+                 use_full=False, reward_type=None):
         self.prev_spl = 100000
-        super(SEVNDecreasingReward, self).__init__(obs_shape, use_image_obs, False, use_visible_text_obs, use_full, reward_type)
+        super(SEVNDecreasingReward, self).__init__(obs_shape, use_image_obs,
+                                                   False, use_visible_text_obs,
+                                                   use_full, reward_type)
 
     def compute_reward(self, x, info, done):
         cur_spl = len(self.shortest_path_length())
