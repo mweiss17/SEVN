@@ -30,3 +30,6 @@ pip install -e .
 ```
 python scripts/01-play.py
 ```
+
+## For more information
+[Creating a Navigation Assistant for the Visually Impaired](https://github.com/mweiss17/SEVN/blob/master/docs/01-article-env-introduction.md)
