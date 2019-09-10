@@ -102,7 +102,7 @@ class SEVNBase(gym.GoalEnv):
         return angle
 
     def select_goal(self, same_segment=True):
-        goals = self.meta_df[self.meta_df.is_goal]
+        goals = self.meta_df[self.meta_df.is_goal.fillna(False)]
         G = self.G.copy()
         if same_segment:
             frames = self.meta_df[(self.meta_df.type == 'street_segment') &
