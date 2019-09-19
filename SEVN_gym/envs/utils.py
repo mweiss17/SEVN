@@ -70,15 +70,13 @@ def convert_house_numbers(num):
 
 def convert_house_vec_to_ints(vec):
     numbers = []
-    house_num_len = 40
-    for i in range(int(vec.size(0)/house_num_len)):
-        this_num = []
-        for offset in range(i*house_num_len,
-                            i*house_num_len+house_num_len, 10):
-            this_num.append(str(vec[offset:offset + 10].argmax()))
-        numbers.append(int(''.join(this_num)))
+    hn_len = 40
+    for i in range(int(vec.size/hn_len)):
+        number = []
+        for offset in range(i*hn_len, i*hn_len + hn_len, 10):
+            number.append(str(vec[offset:offset + 10].argmax()))
+        numbers.append(int("".join(number)))
     return numbers
-
 
 def convert_street_name(street_name, all_street_names):
     assert street_name in all_street_names

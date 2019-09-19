@@ -149,7 +149,7 @@ class SEVNBase(gym.GoalEnv):
                 self.get_angle_between_nodes(self.agent_loc, n) -
                 self.agent_dir))
 
-        if neighbors[min(neighbors, key=neighbors.get)] > 22.5:
+        if neighbors[min(neighbors, key=neighbors.get)] > 45:
             return
 
         self.agent_loc = min(neighbors, key=neighbors.get)
