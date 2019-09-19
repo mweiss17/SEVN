@@ -21,7 +21,7 @@ class SEVNPlay(SEVNBase):
 
     def __init__(self, obs_shape=(84, 84, 3), use_image_obs=True,
                  use_gps_obs=False, use_visible_text_obs=True,
-                 use_full=False, reward_type=None, high_res=False):
+                 use_full=False, reward_type=None, high_res=True):
         super(SEVNPlay, self).__init__(obs_shape, use_image_obs, use_gps_obs,
                                        use_visible_text_obs, use_full,
                                        reward_type)
@@ -36,7 +36,7 @@ class SEVNPlay(SEVNBase):
         reward = 0.0
         action = self._action_set(a)
         image, x, w = self._get_image()
-        visible_text = self.get_visible_text(x, w)
+        visible_text = self._get_visible_text(x, w)
 
         if not action == self.Actions.NOOP:
             for text in visible_text['house_numbers']:
@@ -88,7 +88,7 @@ class SEVNPlay(SEVNBase):
 
     def _get_image(self, high_res=False, plot=False):
         if self.high_res:
-            path = './SEVN_gym/data/SEVN-mini/panos/pano_' + str(int(
+            path = './SEVN_gym/data/panos/pano_' + str(int(
                 30*self.G.nodes[self.agent_loc]['timestamp'])).zfill(6) + \
                 '.png'
             img = cv2.imread(path)[:, :, ::-1]
@@ -140,7 +140,7 @@ class SEVNPlay(SEVNBase):
         return {'image': image,
                 'mission': self.goal_address,
                 'rel_gps': rel_gps,
-                'visible_text': self.get_visible_text(x, w)}
+                'visible_text': self._get_visible_text(x, w)}
 
     def compute_reward(self, x, info, done):
         cur_spl = len(self.shortest_path_length())
@@ -229,7 +229,7 @@ class SEVNPlay(SEVNBase):
 
         return keys_to_action
 
-    def get_visible_text(self, x, w):
+    def _get_visible_text(self, x, w):
         visible_text = {}
         subset = self.meta_df.loc[self.agent_loc,
                                   ['house_number', 'street_name',

@@ -20,7 +20,7 @@ class SEVNExplorer(SEVNBase):
         self.num_steps_taken += 1
         action = self._action_set(a)
         image, x, w = self._get_image()
-        visible_text = self.get_visible_text(x, w)
+        visible_text = self._get_visible_text(x, w)
 
         if self.num_steps_taken >= self.max_num_steps and done is False:
             done = True
@@ -45,7 +45,7 @@ class SEVNExplorer(SEVNBase):
         self.num_steps_taken = 0
         self.seen_house_nums = []
         image, x, w = self._get_image()
-        obs = {'image': image, 'visible_text': self.get_visible_text(x, w)}
+        obs = {'image': image, 'visible_text': self._get_visible_text(x, w)}
         obs = wrappers.wrap_obs(obs, self.use_gps_obs,
                                 self.use_visible_text_obs,
                                 self.use_image_obs, False, self.num_streets)
