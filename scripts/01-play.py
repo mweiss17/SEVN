@@ -171,7 +171,7 @@ def main():
                         help='Set upper limit of FPS')
     args = parser.parse_args()
     env = gym.make(args.env)
-    play(env, zoom=args.zoom, fps=args.fps)
+    play(env, zoom=args.zoom, fps=6)
 
 
 if __name__ == '__main__':
