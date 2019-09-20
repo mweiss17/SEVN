@@ -11,7 +11,7 @@ class SEVNPlay(SEVNBase):
 
     def __init__(self, obs_shape=(84, 84, 3), use_image_obs=True,
                  use_gps_obs=False, use_visible_text_obs=True,
-                 use_full=False, reward_type=None, high_res=True):
+                 use_full=False, reward_type=None, high_res=False):
         super(SEVNPlay, self).__init__(obs_shape, use_image_obs, use_gps_obs,
                                        use_visible_text_obs, use_full,
                                        reward_type)

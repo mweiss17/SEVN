@@ -1,9 +1,13 @@
 from __future__ import print_function, division
 import enum
+import time
 import math
+import h5py
 import pickle
 import numpy as np
 import pandas as pd
+import dask.dataframe as dd
+import dask.array as da
 import networkx as nx
 import gym
 import gzip
@@ -46,7 +50,7 @@ class SEVNBase(gym.GoalEnv):
         print(f'Booting environment from {DATA_PATH} with shaped reward,' +
               f' image_obs: {use_image_obs}, gps: {use_gps_obs},' +
               f' visible_text: {use_visible_text_obs}')
-        
+
         # Initialize environment
         self.viewer = None
         self.high_res = False
@@ -63,16 +67,21 @@ class SEVNBase(gym.GoalEnv):
         self.num_steps_taken = 0
         self.prev_spl = 100000
         self.goal_id = -1
-        self.SMALL_TURN_DEGREES = 22.5
-        self.BIG_TURN_DEGREES = 67.5
+        self.SMALL_TURN_DEG = 22.5
+        self.BIG_TURN_DEG = 67.5
 
         # Load data
-        f = gzip.GzipFile(DATA_PATH + 'images.pkl.gz', 'r')
-        self.images_df = pickle.load(f)
-        f.close()
+        import pdb; pdb.set_trace()
+        f = h5py.File(DATA_PATH + 'images.hdf5')
+        self.images = f['images']#da.from_array(f["images"]) 
+        self.frame_key = {int(k): i for i, k in enumerate(f['frames'][:])}#da.from_array(f["images"]) 
+        #self.images_df = dd.read_hdf(DATA_PATH + 'images.hdf5', key='image', mode='r')        
+        # f = gzip.GzipFile(DATA_PATH + 'images.pkl.gz', 'r')
+        # self.images_df = pickle.load(f)
+        # f.close()
         self.meta_df = pd.read_hdf(DATA_PATH + 'meta.hdf5', key='df', mode='r')
         self.G = nx.read_gpickle(DATA_PATH + 'graph.pkl')
-        
+
         # Set data-dependent variables
         self.max_num_steps = \
             self.meta_df[self.meta_df.type == 'street_segment'].groupby(
@@ -82,31 +91,19 @@ class SEVNBase(gym.GoalEnv):
         self.x_scale = self.meta_df.x.max() - self.meta_df.x.min()
         self.y_scale = self.meta_df.y.max() - self.meta_df.y.min()
         self.agent_loc = np.random.choice(self.meta_df.frame)
-        
 
     def turn(self, action):
         # Modify agent heading
         action = self._action_set(action)
         if action == self.Actions.LEFT_BIG:
-            self.agent_dir += self.BIG_TURN_DEGREES
+            self.agent_dir += self.BIG_TURN_DEG
         if action == self.Actions.LEFT_SMALL:
-            self.agent_dir += self.SMALL_TURN_DEGREES
+            self.agent_dir += self.SMALL_TURN_DEG
         if action == self.Actions.RIGHT_SMALL:
-            self.agent_dir -= self.SMALL_TURN_DEGREES
+            self.agent_dir -= self.SMALL_TURN_DEG
         if action == self.Actions.RIGHT_BIG:
-            self.agent_dir -= self.BIG_TURN_DEGREES
+            self.agent_dir -= self.BIG_TURN_DEG
         self.agent_dir = utils.norm_angle(self.agent_dir)
-
-    def sample_nearby(self):
-        house_numbers = self.meta_df['house_number'].dropna().unique().tolist()
-        street_names = self.meta_df['street_name'].dropna().unique().tolist()
-        return house_numbers, street_names
-
-    def get_angle_between_nodes(self, n1, n2):
-        x = self.G.nodes[n2]['coords'][0] - self.G.nodes[n1]['coords'][0]
-        y = self.G.nodes[n2]['coords'][1] - self.G.nodes[n1]['coords'][1]
-        angle = (math.atan2(y, x) * 180 / np.pi)
-        return angle
 
     def select_goal(self, same_segment=True):
         goals = self.meta_df[self.meta_df.is_goal.fillna(False)]
@@ -137,7 +134,7 @@ class SEVNBase(gym.GoalEnv):
         label_dir = (224-(label.x_min.values[0]+label.x_max.values[0])/2) * \
             360/224-180
         goal_dir = utils.norm_angle(label_dir + pano_rotation)
-        self.agent_dir = self.SMALL_TURN_DEGREES * np.random.choice(range(-8, 8))
+        self.agent_dir = self.SMALL_TURN_DEG * np.random.choice(range(-8, 8))
         self.agent_loc = np.random.choice(segment_panos.frame.unique())
         goal_address = {'house_numbers': utils.convert_house_numbers(
                             int(goal.house_number.iloc[0])),
@@ -153,7 +150,7 @@ class SEVNBase(gym.GoalEnv):
         neighbors = {}
         for n in [edge[1] for edge in list(self.G.edges(self.agent_loc))]:
             neighbors[n] = np.abs(utils.norm_angle(
-                self.get_angle_between_nodes(self.agent_loc, n) -
+                utils.get_angle_between_nodes(self.G, self.agent_loc, n) -
                 self.agent_dir))
 
         if neighbors[min(neighbors, key=neighbors.get)] > 45:
@@ -162,6 +159,7 @@ class SEVNBase(gym.GoalEnv):
         self.agent_loc = min(neighbors, key=neighbors.get)
 
     def step(self, a):
+        start = time.time()
         done = False
         was_successful_trajectory = False
         oracle = False
@@ -203,12 +201,14 @@ class SEVNBase(gym.GoalEnv):
         if done:
             info['was_successful_trajectory'] = was_successful_trajectory
             self.needs_reset = True
+        print(f'step: {time.time() - start}')
 
         return obs, reward, done, info
 
     def _get_image(self):
-        img = self.images_df[self.meta_df.loc[self.agent_loc, 'frame'][0]]
-        img = utils.normalize_image(img)
+        import pdb; pdb.set_trace()    
+
+        img = self.images[self.frame_key[self.agent_loc]]
         obs_shape = self.observation_space.shape
 
         pano_rotation = self.meta_df.loc[self.agent_loc, 'angle'][0]
@@ -246,6 +246,7 @@ class SEVNBase(gym.GoalEnv):
         return visible_text
 
     def reset(self):
+        start = time.time()
         self.needs_reset = False
         self.num_steps_taken = 0
         self.goal_idx, self.goal_address, self.goal_dir = \
@@ -267,27 +268,28 @@ class SEVNBase(gym.GoalEnv):
         obs = wrappers.wrap_obs(obs, self.use_gps_obs,
                                 self.use_visible_text_obs,
                                 self.use_image_obs, True, self.num_streets)
+        print(f'reset: {time.time() - start}')
         return obs
 
     def angles_to_turn(self, cur, target):
         angle = utils.smallest_angle(cur, target)
         turns = []
         if (np.sign(angle)) == 1:
-            big_turns = int(angle / self.BIG_TURN_DEGREES)
+            big_turns = int(angle / self.BIG_TURN_DEG)
             turns.extend([self.Actions.LEFT_BIG for i in range(big_turns)])
-            cur = utils.norm_angle(cur + big_turns * self.BIG_TURN_DEGREES)
-            small_turns = int((angle - big_turns * self.BIG_TURN_DEGREES) / self.SMALL_TURN_DEGREES)
+            cur = utils.norm_angle(cur + big_turns * self.BIG_TURN_DEG)
+            small_turns = int((angle - big_turns * self.BIG_TURN_DEG) / self.SMALL_TURN_DEG)
             turns.extend([self.Actions.LEFT_SMALL for i in range(small_turns)])
-            cur = utils.norm_angle(cur + small_turns * self.SMALL_TURN_DEGREES)
+            cur = utils.norm_angle(cur + small_turns * self.SMALL_TURN_DEG)
         else:
             angle = np.abs(angle)
-            big_turns = int(angle / self.BIG_TURN_DEGREES)
+            big_turns = int(angle / self.BIG_TURN_DEG)
             turns.extend([self.Actions.RIGHT_BIG for i in range(big_turns)])
-            cur = utils.norm_angle(cur - big_turns * self.BIG_TURN_DEGREES)
-            small_turns = int((angle - big_turns * self.BIG_TURN_DEGREES) / self.SMALL_TURN_DEGREES)
+            cur = utils.norm_angle(cur - big_turns * self.BIG_TURN_DEG)
+            small_turns = int((angle - big_turns * self.BIG_TURN_DEG) / self.SMALL_TURN_DEG)
             turns.extend([
                 self.Actions.RIGHT_SMALL for i in range(small_turns)])
-            cur = utils.norm_angle(cur - small_turns * self.SMALL_TURN_DEGREES)
+            cur = utils.norm_angle(cur - small_turns * self.SMALL_TURN_DEG)
         return turns, cur
 
     def shortest_path_length(self):
@@ -314,17 +316,17 @@ class SEVNBase(gym.GoalEnv):
         return actions
 
     def angle_to_node(self, n1, n2):
-        node_dir = self.get_angle_between_nodes(n1, n2)
+        node_dir = utils.get_angle_between_nodes(self.G, n1, n2)
         neighbors = [edge[1] for edge in list(self.G.edges(n1))]
         neighbor_angles = []
         for neighbor in neighbors:
-            neighbor_angles.append(self.get_angle_between_nodes(n1, neighbor))
+            neighbor_angles.append(utils.get_angle_between_nodes(self.G, n1, neighbor))
 
         dest_nodes = {}
-        for direction in [x*self.SMALL_TURN_DEGREES for x in range(-8, 8)]:
+        for direction in [x*self.SMALL_TURN_DEG for x in range(-8, 8)]:
             angles = utils.smallest_angles(direction, neighbor_angles)
             min_angle_node = neighbors[angles.index(min(angles))]
-            if min(angles) < self.SMALL_TURN_DEGREES:
+            if min(angles) < self.SMALL_TURN_DEG:
                 dest_nodes[direction] = min_angle_node
             else:
                 dest_nodes[direction] = None
@@ -339,6 +341,7 @@ class SEVNBase(gym.GoalEnv):
         return valid_angles[dist.index(min(dist))]
 
     def compute_reward(self, x, info, done):
+        start = time.time()
         cur_spl = len(self.shortest_path_length())
         if done and self.is_successful_trajectory(x):
             reward = 2.0
@@ -352,6 +355,7 @@ class SEVNBase(gym.GoalEnv):
         if self.reward_type == 'Sparse' and reward != 2.0 and reward != -2.0:
             reward = 0
         self.prev_spl = cur_spl
+        print(f'compute_reward: {time.time() - start}')
         return reward
 
     def is_successful_trajectory(self, x):

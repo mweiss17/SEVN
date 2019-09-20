@@ -1,3 +1,4 @@
+import math
 import numpy as np
 
 
@@ -19,6 +20,16 @@ def norm_angle_360(x):
     if x < 0:
         x = 360 + x
     return x
+
+
+def get_angle_between_nodes(G, n1, n2):
+    '''
+    Calculates the angle between two nodes
+    '''
+    x = G.nodes[n2]['coords'][0] - G.nodes[n1]['coords'][0]
+    y = G.nodes[n2]['coords'][1] - G.nodes[n1]['coords'][1]
+    angle = (math.atan2(y, x) * 180 / np.pi)
+    return angle
 
 
 def smallest_angle(a1, a2):
@@ -77,6 +88,7 @@ def convert_house_vec_to_ints(vec):
             number.append(str(vec[offset:offset + 10].argmax()))
         numbers.append(int("".join(number)))
     return numbers
+
 
 def convert_street_name(street_name, all_street_names):
     assert street_name in all_street_names

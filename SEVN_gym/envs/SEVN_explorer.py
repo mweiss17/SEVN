@@ -1,7 +1,7 @@
 from __future__ import print_function, division
 from SEVN_gym.envs.SEVN_base import SEVNBase
 from SEVN_gym.envs import utils, wrappers
-
+import time
 
 class SEVNExplorer(SEVNBase):
     def __init__(self, obs_shape=(4, 84, 84), use_image_obs=True,
@@ -14,6 +14,7 @@ class SEVNExplorer(SEVNBase):
         self.seen_house_nums = []
 
     def step(self, a):
+        start = time.time()
         done = False
 
         reward = 0.0
@@ -37,6 +38,7 @@ class SEVNExplorer(SEVNBase):
         info = {}
         if done:
             self.needs_reset = True
+        print(f'step: {time.time() - start}')
 
         return obs, reward, done, info
 
