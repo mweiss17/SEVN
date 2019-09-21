@@ -1,19 +1,19 @@
 from __future__ import print_function, division
 import enum
+import os
 import time
 import math
 import h5py
-import pickle
+import zipfile
 import numpy as np
 import pandas as pd
-import dask.dataframe as dd
 import dask.array as da
 import networkx as nx
+import academictorrents as at
+import matplotlib.pyplot as plt
 import gym
-import gzip
 from gym import spaces
 from matplotlib.collections import LineCollection
-import matplotlib.pyplot as plt
 from SEVN_gym.data import DATA_PATH
 from SEVN_gym.envs import utils, wrappers
 
@@ -71,18 +71,14 @@ class SEVNBase(gym.GoalEnv):
         self.BIG_TURN_DEG = 67.5
 
         # Load data
+        if not os.isfile(DATA_PATH + 'images.hdf5') or not os.isfile(DATA_PATH + 'graph.pkl'):
+            zipfile.ZipFile(at.get("b9e719976cdedb94a25d2f162b899d5f0e711fe0", datastore=DATA_PATH)).extractall()
         f = h5py.File(DATA_PATH + 'images.hdf5')
-        self.images = f['images']#da.from_array(f["images"])
-        self.frame_key = {int(k): i for i, k in enumerate(f['frames'][:])}#da.from_array(f["images"])
-        #self.images_df = dd.read_hdf(DATA_PATH + 'images.hdf5', key='image', mode='r')
-        # f = gzip.GzipFile(DATA_PATH + 'images.pkl.gz', 'r')
-        # self.images_df = pickle.load(f)
-        # f.close()
-        # self.meta_df = pd.read_hdf(DATA_PATH + 'meta.hdf5', key='df', mode='r')
+        self.images = da.from_array(f["images"])
+        self.frame_key = {int(k): i for i, k in enumerate(f['frames'][:])}
         self.label_df = pd.read_hdf(DATA_PATH + 'label.hdf5', key='df', mode='r')
         self.coord_df = pd.read_hdf(DATA_PATH + 'coord.hdf5', key='df', mode='r')
         self.G = nx.read_gpickle(DATA_PATH + 'graph.pkl')
-        # self.spl = pickle.load(open(DATA_PATH + 'spl.pkl', 'rb'))
 
         # Set data-dependent variables
         self.max_num_steps = \
@@ -201,7 +197,6 @@ class SEVNBase(gym.GoalEnv):
         return obs, reward, done, info
 
     def _get_image(self):
-
         img = self.images[self.frame_key[self.agent_loc]]
         obs_shape = self.observation_space.shape
 
@@ -311,31 +306,6 @@ class SEVNBase(gym.GoalEnv):
                                                             self.goal_dir)
                 actions.extend(new_action)
         return actions
-
-    def angle_to_node(self, n1, n2):
-        node_dir = utils.get_angle_between_nodes(self.G, n1, n2)
-        neighbors = [edge[1] for edge in list(self.G.edges(n1))]
-        neighbor_angles = []
-        for neighbor in neighbors:
-            neighbor_angles.append(utils.get_angle_between_nodes(self.G, n1, neighbor))
-
-        dest_nodes = {}
-        for direction in [x*self.SMALL_TURN_DEG for x in range(-8, 8)]:
-            angles = utils.smallest_angles(direction, neighbor_angles)
-            min_angle_node = neighbors[angles.index(min(angles))]
-            if min(angles) < self.SMALL_TURN_DEG:
-                dest_nodes[direction] = min_angle_node
-            else:
-                dest_nodes[direction] = None
-
-        valid_angles = []
-        dist = []
-        for k, v in dest_nodes.items():
-            if v == n2:
-                valid_angles.append(k)
-                dist.append(np.abs(utils.smallest_angle(k, node_dir)))
-
-        return valid_angles[dist.index(min(dist))]
 
     def compute_reward(self, x, info, done):
         start = time.time()
