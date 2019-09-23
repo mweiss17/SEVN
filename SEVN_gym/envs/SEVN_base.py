@@ -71,7 +71,7 @@ class SEVNBase(gym.GoalEnv):
         self.BIG_TURN_DEG = 67.5
 
         # Load data
-        if not os.isfile(DATA_PATH + 'images.hdf5') or not os.isfile(DATA_PATH + 'graph.pkl'):
+        if not os.path.isfile(DATA_PATH + 'images.hdf5') or not os.path.isfile(DATA_PATH + 'graph.pkl'):
             zipfile.ZipFile(at.get("b9e719976cdedb94a25d2f162b899d5f0e711fe0", datastore=DATA_PATH)).extractall()
         f = h5py.File(DATA_PATH + 'images.hdf5')
         self.images = da.from_array(f["images"])
@@ -106,7 +106,7 @@ class SEVNBase(gym.GoalEnv):
         goals = self.label_df.loc[self.label_df['is_goal'] == True]
         if same_segment:
             frames = self.coord_df[(self.coord_df.type == 'street_segment') &
-                                  self.coord_df.frame.isin(goals.frame)].frame
+                                   self.coord_df.frame.isin(goals.frame)].frame
             goals_on_street_segment = goals[goals.frame.isin(frames)]
             goal = goals_on_street_segment.loc[np.random.choice(
                 goals_on_street_segment.frame.values.tolist())]
@@ -127,8 +127,7 @@ class SEVNBase(gym.GoalEnv):
         goal_dir = utils.norm_angle(label_dir + pano_rotation)
         self.agent_dir = self.SMALL_TURN_DEG * np.random.choice(range(-8, 8))
         self.agent_loc = np.random.choice(segment_panos.frame.unique())
-        goal_address = {'house_numbers': utils.convert_house_numbers(
-                            int(self.goal_hn)),
+        goal_address = {'house_numbers': utils.convert_house_numbers(self.goal_hn),
                         'street_names': utils.convert_street_name(
                             goal.street_name, self.all_street_names)}
         return goal.frame, goal_address, goal_dir
