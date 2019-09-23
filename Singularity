@@ -1,7 +1,6 @@
 #This is a dockerfile that sets up a full SEVN install
 Bootstrap: docker
 
-
 # Here we ll build our container upon the ubuntu container
 From: ubuntu:18.04
 
