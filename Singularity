@@ -1,7 +1,6 @@
 #This is a dockerfile that sets up a full SEVN install
 Bootstrap: docker
 
-
 # Here we ll build our container upon the ubuntu container
 From: ubuntu:18.04
 
@@ -45,7 +44,7 @@ From: ubuntu:18.04
         mkdir /tmp_log
         mkdir /final_log
 
-        pip3 install ipdb matplotlib enum34 tensorflow gym comet_ml pandas torch==1.2 academictorrents
+        pip3 install ipdb matplotlib enum34 tensorflow gym comet_ml pandas torch==1.2 dask[complete] academictorrents
         cd scratch/
 
         # Download Gym
