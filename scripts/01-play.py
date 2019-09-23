@@ -46,7 +46,7 @@ def display_bb(screen, rel_coords, text, video_size):
     pygame.display.update()
 
 
-def play(env, transpose=True, fps=30, zoom=None,
+def play(env, transpose=True, fps=30, zoom=0.5, high_res=False,
          callback=None, keys_to_action=None):
     rendered = env.render(mode='rgb_array')
     if keys_to_action is None:
@@ -162,12 +162,17 @@ def main():
     parser.add_argument('--env',
                         type=str, default='SEVN-Play-v1',
                         help='Define Environment')
-    parser.add_argument('--zoom',
-                        type=float, default=4,
-                        help='Zoom')
+    parser.add_argument('--high-res', action="store_true",
+                        help='Use high-resolution images')
+    parser.add_argument('--fps', type=int, default=6,
+                        help='Set upper limit of FPS')
     args = parser.parse_args()
+    if args.high_res:
+        zoom = 0.5
+    else:
+        zoom = 4
     env = gym.make(args.env)
-    play(env, zoom=args.zoom, fps=6)
+    play(env, zoom=zoom, fps=6)
 
 
 if __name__ == '__main__':

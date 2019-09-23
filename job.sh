@@ -17,10 +17,10 @@ seed="$(find $SCRATCH/trained_models/ppo/ -maxdepth 0 -type d | wc -l)"
 echo "$(nvidia-smi)"
 
 # 3. Executing your code with singularity
+# try singularity run
 singularity exec --nv \
         -H $HOME:/home \
         -B $SLURM_TMPDIR:/dataset/ \
-        -B $SLURM_TMPDIR:/tmp_log/ \
         -B $SCRATCH:/final_log/ \
         $SLURM_TMPDIR/SEVN_latest.sif \
         python3 pytorch-a2c-ppo-acktr-gail/main.py \

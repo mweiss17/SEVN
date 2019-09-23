@@ -35,7 +35,7 @@ class SEVNCostlyText(SEVNBase):
         if oracle:
             action = next(iter(self.shortest_path_length()), None)
         image, x, w = self._get_image()
-        visible_text = self.get_visible_text(x, w)
+        visible_text = self._get_visible_text(x, w)
         self.use_visible_text_obs = False
         if action == self.actions.READ:
             self.use_visible_text_obs = True

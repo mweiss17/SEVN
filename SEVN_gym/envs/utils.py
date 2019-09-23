@@ -1,5 +1,6 @@
+import math
 import numpy as np
-
+import pandas as pd
 
 def norm_angle(x):
     '''
@@ -19,6 +20,16 @@ def norm_angle_360(x):
     if x < 0:
         x = 360 + x
     return x
+
+
+def get_angle_between_nodes(G, n1, n2):
+    '''
+    Calculates the angle between two nodes
+    '''
+    x = G.nodes[n2]['coords'][0] - G.nodes[n1]['coords'][0]
+    y = G.nodes[n2]['coords'][1] - G.nodes[n1]['coords'][1]
+    angle = (math.atan2(y, x) * 180 / np.pi)
+    return angle
 
 
 def smallest_angle(a1, a2):
@@ -63,20 +74,21 @@ def denormalize_image(normed_image):
 
 def convert_house_numbers(num):
     res = np.zeros((4, 10))
-    for col, row in enumerate(str(num).zfill(4)):
-        res[col, int(row)] = 1
+    for col, n in enumerate(str(num).zfill(4)):
+        n = int(n)
+        if n > 0:
+            res[col, n] = 1
     return res.reshape(-1)
 
 
 def convert_house_vec_to_ints(vec):
     numbers = []
-    house_num_len = 40
-    for i in range(int(vec.size(0)/house_num_len)):
-        this_num = []
-        for offset in range(i*house_num_len,
-                            i*house_num_len+house_num_len, 10):
-            this_num.append(str(vec[offset:offset + 10].argmax()))
-        numbers.append(int(''.join(this_num)))
+    hn_len = 40
+    for i in range(int(vec.size/hn_len)):
+        number = []
+        for offset in range(i*hn_len, i*hn_len + hn_len, 10):
+            number.append(str(vec[offset:offset + 10].argmax()))
+        numbers.append(int("".join(number)))
     return numbers
 
 
@@ -87,10 +99,8 @@ def convert_street_name(street_name, all_street_names):
 
 def sample_gps(groundtruth, x_scale, y_scale, noise_scale=0):
     coords = groundtruth[['x', 'y']]
-    x = (coords.at[0, 'x'] + np.random.normal(loc=0.0, scale=noise_scale)) \
-        / x_scale
-    y = (coords.at[0, 'y'] + np.random.normal(loc=0.0, scale=noise_scale)) \
-        / y_scale
+    x = (coords.x + np.random.normal(loc=0.0, scale=noise_scale)) / x_scale
+    y = (coords.y + np.random.normal(loc=0.0, scale=noise_scale)) / y_scale
     return (x, y)
 
 
@@ -98,8 +108,21 @@ def extract_text(x, w, subset, high_res):
     house_numbers = []
     street_signs = []
 
-    for _, row in subset.iterrows():
+    if isinstance(subset, pd.Series):
+        if high_res:
+            x_min = subset.x_min * 3840 / 224
+            x_max = subset.x_max * 3840 / 224
+        else:
+            x_min = subset.x_min
+            x_max = subset.x_max
+        if x < x_min and x + w > x_max:
+            if subset.obj_type == 'house_number':
+                house_numbers.append(subset.house_number)
+            elif subset.obj_type == 'street_sign':
+                street_signs.append(subset.street_name)
+        return house_numbers, street_signs
 
+    for _, row in subset.iterrows():
         if high_res:
             x_min = row.x_min * 3840 / 224
             x_max = row.x_max * 3840 / 224
@@ -130,3 +153,28 @@ def stack_text(house_numbers, street_signs, num_streets):
         temp[:nums.size] = nums
     visible_text['street_names'] = temp
     return visible_text
+
+def angle_to_node(G, n1, n2, SMALL_TURN_DEG):
+    node_dir = utils.get_angle_between_nodes(G, n1, n2)
+    neighbors = [edge[1] for edge in list(G.edges(n1))]
+    neighbor_angles = []
+    for neighbor in neighbors:
+        neighbor_angles.append(utils.get_angle_between_nodes(G, n1, neighbor))
+
+    dest_nodes = {}
+    for direction in [x*SMALL_TURN_DEG for x in range(-8, 8)]:
+        angles = utils.smallest_angles(direction, neighbor_angles)
+        min_angle_node = neighbors[angles.index(min(angles))]
+        if min(angles) < SMALL_TURN_DEG:
+            dest_nodes[direction] = min_angle_node
+        else:
+            dest_nodes[direction] = None
+
+    valid_angles = []
+    dist = []
+    for k, v in dest_nodes.items():
+        if v == n2:
+            valid_angles.append(k)
+            dist.append(np.abs(utils.smallest_angle(k, node_dir)))
+
+    return valid_angles[dist.index(min(dist))]
