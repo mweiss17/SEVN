@@ -71,8 +71,12 @@ class SEVNBase(gym.GoalEnv):
         self.BIG_TURN_DEG = 67.5
 
         # Load data
-        if not os.path.isfile(DATA_PATH + 'images.hdf5') or not os.path.isfile(DATA_PATH + 'graph.pkl'):
-            zipfile.ZipFile(at.get("b9e719976cdedb94a25d2f162b899d5f0e711fe0", datastore=DATA_PATH)).extractall()
+        if not os.path.isfile(DATA_PATH + 'images.hdf5') \
+            or not os.path.isfile(DATA_PATH + 'graph.pkl') \
+            or not os.path.isfile(DATA_PATH + 'labels.hdf5') \
+            or not os.path.isfile(DATA_PATH + 'coords.hdf5'):
+            zipfile.ZipFile(at.get("b9e719976cdedb94a25d2f162b899d5f0e711fe0", datastore=DATA_PATH)) \
+                .extractall(DATA_PATH)
         f = h5py.File(DATA_PATH + 'images.hdf5')
         self.images = da.from_array(f["images"])
         self.frame_key = {int(k): i for i, k in enumerate(f['frames'][:])}
@@ -119,11 +123,11 @@ class SEVNBase(gym.GoalEnv):
         else:
             goal = goals.loc[np.random.choice(goals.frame.values.tolist())]
         self.goal_hn = goal.house_number
-        label = self.label_df.loc[goal.frame]
-        label = label[label.is_goal]
         pano_rotation = utils.norm_angle(self.coord_df.loc[goal.frame].angle)
-        label_dir = (224-(label.x_min.values[0]+label.x_max.values[0])/2) * \
-            360/224-180
+        label = self.label_df.loc[goal.frame]
+        if isinstance(label, pd.DataFrame):
+            label = label[label.is_goal]
+        label_dir = (224-(label.x_min+label.x_max)/2) * 360/224-180
         goal_dir = utils.norm_angle(label_dir + pano_rotation)
         self.agent_dir = self.SMALL_TURN_DEG * np.random.choice(range(-8, 8))
         self.agent_loc = np.random.choice(segment_panos.frame.unique())
@@ -149,7 +153,6 @@ class SEVNBase(gym.GoalEnv):
         self.agent_loc = min(neighbors, key=neighbors.get)
 
     def step(self, a):
-        start = time.time()
         done = False
         was_successful_trajectory = False
         oracle = False
@@ -191,7 +194,6 @@ class SEVNBase(gym.GoalEnv):
         if done:
             info['was_successful_trajectory'] = was_successful_trajectory
             self.needs_reset = True
-        print(f'step: {time.time() - start}')
 
         return obs, reward, done, info
 
@@ -237,7 +239,6 @@ class SEVNBase(gym.GoalEnv):
         return visible_text
 
     def reset(self):
-        start = time.time()
         self.needs_reset = False
         self.num_steps_taken = 0
         self.goal_idx, self.goal_address, self.goal_dir = \
@@ -259,7 +260,6 @@ class SEVNBase(gym.GoalEnv):
         obs = wrappers.wrap_obs(obs, self.use_gps_obs,
                                 self.use_visible_text_obs,
                                 self.use_image_obs, True, self.num_streets)
-        print(f'reset: {time.time() - start}')
         return obs
 
     def angles_to_turn(self, cur, target):
@@ -294,7 +294,7 @@ class SEVNBase(gym.GoalEnv):
         actions = []
         for idx, node in enumerate(path):
             if idx + 1 != len(path):
-                target_dir = self.angle_to_node(node, path[idx + 1])
+                target_dir = utils.angle_to_node(self.G, node, path[idx + 1], self.SMALL_TURN_DEG)
                 new_action, final_dir = self.angles_to_turn(cur_dir,
                                                             target_dir)
                 actions.extend(new_action)
@@ -307,9 +307,7 @@ class SEVNBase(gym.GoalEnv):
         return actions
 
     def compute_reward(self, x, info, done):
-        start = time.time()
         cur_spl = len(self.shortest_path_length())
-        print(f'spl: {time.time() - start}')
         if done and self.is_successful_trajectory(x):
             reward = 2.0
         elif done and not self.is_successful_trajectory(x):
@@ -322,7 +320,6 @@ class SEVNBase(gym.GoalEnv):
         if self.reward_type == 'Sparse' and reward != 2.0 and reward != -2.0:
             reward = 0
         self.prev_spl = cur_spl
-        print(f'compute_reward: {time.time() - start}')
         return reward
 
     def is_successful_trajectory(self, x):
