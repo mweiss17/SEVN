@@ -155,15 +155,15 @@ def stack_text(house_numbers, street_signs, num_streets):
     return visible_text
 
 def angle_to_node(G, n1, n2, SMALL_TURN_DEG):
-    node_dir = utils.get_angle_between_nodes(G, n1, n2)
+    node_dir = get_angle_between_nodes(G, n1, n2)
     neighbors = [edge[1] for edge in list(G.edges(n1))]
     neighbor_angles = []
     for neighbor in neighbors:
-        neighbor_angles.append(utils.get_angle_between_nodes(G, n1, neighbor))
+        neighbor_angles.append(get_angle_between_nodes(G, n1, neighbor))
 
     dest_nodes = {}
     for direction in [x*SMALL_TURN_DEG for x in range(-8, 8)]:
-        angles = utils.smallest_angles(direction, neighbor_angles)
+        angles = smallest_angles(direction, neighbor_angles)
         min_angle_node = neighbors[angles.index(min(angles))]
         if min(angles) < SMALL_TURN_DEG:
             dest_nodes[direction] = min_angle_node
@@ -175,6 +175,6 @@ def angle_to_node(G, n1, n2, SMALL_TURN_DEG):
     for k, v in dest_nodes.items():
         if v == n2:
             valid_angles.append(k)
-            dist.append(np.abs(utils.smallest_angle(k, node_dir)))
+            dist.append(np.abs(smallest_angle(k, node_dir)))
 
     return valid_angles[dist.index(min(dist))]
