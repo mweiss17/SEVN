@@ -44,7 +44,7 @@ From: ubuntu:18.04
         mkdir /tmp_log
         mkdir /final_log
 
-        pip3 install ipdb academictorrents tensorflow torch==1.2
+        pip3 install ipdb tensorflow torch==1.2
         cd scratch/
 
         # Download Gym
