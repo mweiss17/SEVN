@@ -16,30 +16,30 @@ register(
 )
 
 register(
-    id='SEVN-Mini-DecreasingReward-v1',
+    id='SEVN-Test-DecreasingReward-v1',
     entry_point='SEVN_gym.envs:SEVNDecreasingReward',
     kwargs={},
     max_episode_steps=10000,
 )
 
 register(
-    id='SEVN-Full-DecreasingReward-v1',
+    id='SEVN-Train-DecreasingReward-v1',
     entry_point='SEVN_gym.envs:SEVNDecreasingReward',
-    kwargs={'use_full': True},
+    kwargs={'split': 'Train'},
     max_episode_steps=10000,
 )
 
 register(
-    id='SEVN-Mini-NoisyGPS-1-v1',
+    id='SEVN-Test-NoisyGPS-1-v1',
     entry_point='SEVN_gym.envs:SEVNNoisyGPS',
-    kwargs={'use_full': False, "noise_scale": 1},
+    kwargs={'split': 'Test', "noise_scale": 1},
     max_episode_steps=10000,
 )
 
 register(
-    id='SEVN-Mini-NoisyGPS-5-v1',
+    id='SEVN-Test-NoisyGPS-5-v1',
     entry_point='SEVN_gym.envs:SEVNNoisyGPS',
-    kwargs={'use_full': False, "noise_scale": 5},
+    kwargs={'split': 'Test', "noise_scale": 5},
     max_episode_steps=10000,
 )
 
@@ -58,17 +58,14 @@ register(
 )
 
 
-for dataset in ['Full', 'Mini']:
-    for modality in ['All', 'NoImg', 'NoGPS', 'ImgOnly']:
+for split in ['Train', 'Test', 'AllData']:
+    for modality in ['AllObs', 'NoImg', 'NoGPS', 'ImgOnly']:
         for reward in ['Shaped', 'Sparse']:
-            id = f'SEVN-{dataset}-{modality}-{reward}-v1'
-            use_full = False
-            if dataset == 'Full':
-                use_full = True
+            id = f'SEVN-{split}-{modality}-{reward}-v1'
             use_image_obs = False
             use_visible_text_obs = False
             use_gps_obs = False
-            if modality == 'All':
+            if modality == 'AllObs':
                 use_image_obs = True
                 use_visible_text_obs = True
                 use_gps_obs = True
@@ -86,6 +83,6 @@ for dataset in ['Full', 'Mini']:
                 kwargs={'use_image_obs': use_image_obs,
                         'use_gps_obs': use_gps_obs,
                         'use_visible_text_obs': use_visible_text_obs,
-                        'use_full': use_full,
+                        'split': split,
                         'reward_type': reward},
             )

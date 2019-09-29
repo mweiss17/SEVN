@@ -45,7 +45,7 @@ class SEVNBase(gym.GoalEnv):
 
     def __init__(self, obs_shape=(4, 84, 84), use_image_obs=False,
                  use_gps_obs=False, use_visible_text_obs=False,
-                 use_full=False, reward_type=None):
+                 split="train", reward_type=None):
 
         print(f'Booting environment from {DATA_PATH} with shaped reward,' +
               f' image_obs: {use_image_obs}, gps: {use_gps_obs},' +
@@ -83,6 +83,19 @@ class SEVNBase(gym.GoalEnv):
         self.label_df = pd.read_hdf(DATA_PATH + 'label.hdf5', key='df', mode='r')
         self.coord_df = pd.read_hdf(DATA_PATH + 'coord.hdf5', key='df', mode='r')
         self.G = nx.read_gpickle(DATA_PATH + 'graph.pkl')
+
+        if split == 'Test':
+            indices = self.coord_df.index
+            self.coord_df = utils.filter_for_test(self.coord_df)
+            to_remove = set(indices).difference(set(self.coord_df.index))
+            self.label_df = self.label_df[self.label_df.index.isin(self.coord_df.index)]
+            self.G.remove_nodes_from(to_remove)
+
+        if split == 'Train':
+            test_indices = utils.filter_for_test(self.coord_df).index
+            self.coord_df = self.coord_df[~self.coord_df.index.isin(test_indices)]
+            self.label_df = self.label_df[~self.label_df.index.isin(test_indices)]
+            self.G.remove_nodes_from(test_indices)
 
         # Set data-dependent variables
         self.max_num_steps = \

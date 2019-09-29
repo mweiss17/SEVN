@@ -178,3 +178,21 @@ def angle_to_node(G, n1, n2, SMALL_TURN_DEG):
             dist.append(np.abs(smallest_angle(k, node_dir)))
 
     return valid_angles[dist.index(min(dist))]
+
+def filter_for_test(coord_df):
+    node_blacklist = []
+    node_blacklist.extend([x for x in range(877, 879)])
+    node_blacklist.extend([x for x in range(52, 56)])
+    node_blacklist.extend([x for x in range(31, 39)])
+    node_blacklist.extend([x for x in range(2040, 2045)])
+    node_blacklist.extend([x for x in range(2057, 2063)])
+    node_blacklist.extend([x for x in range(3661, 3669)])
+    node_blacklist.extend([x for x in range(780, 784)])
+    box = (24, 76, -125, 10)
+    coord_df = coord_df[((coord_df.x > box[0]) &
+                           (coord_df.x < box[1]) &
+                           (coord_df.y > box[2]) &
+                           (coord_df.y < box[3]))]
+
+    coord_df = coord_df[~coord_df.index.isin(node_blacklist)]
+    return coord_df
