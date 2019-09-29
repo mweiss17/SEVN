@@ -126,9 +126,13 @@ class SEVNBase(gym.GoalEnv):
         pano_rotation = utils.norm_angle(self.coord_df.loc[goal.frame].angle)
         label = self.label_df.loc[goal.frame]
         if isinstance(label, pd.DataFrame):
-            label = label[label.is_goal]
+            label = label[label.is_goal].iloc[np.random.choice(label[label.is_goal].shape[0])]
         label_dir = (224-(label.x_min+label.x_max)/2) * 360/224-180
-        goal_dir = utils.norm_angle(label_dir + pano_rotation)
+        try:
+            goal_dir = utils.norm_angle(label_dir + pano_rotation)
+        except Exception as e:
+            import pdb; pdb.set_trace()
+            print(label)
         self.agent_dir = self.SMALL_TURN_DEG * np.random.choice(range(-8, 8))
         self.agent_loc = np.random.choice(segment_panos.frame.unique())
         goal_address = {'house_numbers': utils.convert_house_numbers(self.goal_hn),
