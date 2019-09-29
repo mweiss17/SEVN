@@ -330,10 +330,13 @@ class SEVNBase(gym.GoalEnv):
             if isinstance(label, pd.DataFrame):
                 label = label[(label.house_number == self.goal_hn) &
                                (label.obj_type == 'door')]
+            label = label.iloc[np.random.randint(len(label))]
             if label.empty:
                 return False
-            return x < label.x_min and x + 84 > label.x_max
-        except (KeyError, IndexError, AttributeError) as e:
+            if x < label.x_min and x + 84 > label.x_max:
+                print("TRUEEEEE")
+                return x < label.x_min and x + 84 > label.x_max
+        except (KeyError, IndexError, AttributeError, ValueError) as e:
             return False
 
     def render(self, mode='human', clear=False, first_time=False):
