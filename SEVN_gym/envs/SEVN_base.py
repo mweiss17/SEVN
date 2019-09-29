@@ -334,7 +334,6 @@ class SEVNBase(gym.GoalEnv):
             if label.empty:
                 return False
             if x < label.x_min and x + 84 > label.x_max:
-                print("TRUEEEEE")
                 return x < label.x_min and x + 84 > label.x_max
         except (KeyError, IndexError, AttributeError, ValueError) as e:
             return False
