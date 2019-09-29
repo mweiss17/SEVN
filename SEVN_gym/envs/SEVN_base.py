@@ -73,8 +73,8 @@ class SEVNBase(gym.GoalEnv):
         # Load data
         if not os.path.isfile(DATA_PATH + 'images.hdf5') \
             or not os.path.isfile(DATA_PATH + 'graph.pkl') \
-            or not os.path.isfile(DATA_PATH + 'labels.hdf5') \
-            or not os.path.isfile(DATA_PATH + 'coords.hdf5'):
+            or not os.path.isfile(DATA_PATH + 'label.hdf5') \
+            or not os.path.isfile(DATA_PATH + 'coord.hdf5'):
             zipfile.ZipFile(at.get("b9e719976cdedb94a25d2f162b899d5f0e711fe0", datastore=DATA_PATH)) \
                 .extractall(DATA_PATH)
         f = h5py.File(DATA_PATH + 'images.hdf5')
