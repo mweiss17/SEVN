@@ -128,11 +128,7 @@ class SEVNBase(gym.GoalEnv):
         if isinstance(label, pd.DataFrame):
             label = label[label.is_goal].iloc[np.random.choice(label[label.is_goal].shape[0])]
         label_dir = (224-(label.x_min+label.x_max)/2) * 360/224-180
-        try:
-            goal_dir = utils.norm_angle(label_dir + pano_rotation)
-        except Exception as e:
-            import pdb; pdb.set_trace()
-            print(label)
+        goal_dir = utils.norm_angle(label_dir + pano_rotation)
         self.agent_dir = self.SMALL_TURN_DEG * np.random.choice(range(-8, 8))
         self.agent_loc = np.random.choice(segment_panos.frame.unique())
         goal_address = {'house_numbers': utils.convert_house_numbers(self.goal_hn),
@@ -328,13 +324,14 @@ class SEVNBase(gym.GoalEnv):
 
     def is_successful_trajectory(self, x):
         try:
-            subset = self.label_df.loc[self.agent_loc,
+            label = self.label_df.loc[self.agent_loc,
                                       ['frame', 'obj_type', 'house_number',
                                        'x_min', 'x_max']]
-            label = subset[(subset.house_number == self.goal_hn.iloc[0]) &
-                           (subset.obj_type == 'door')]
-            return x < label.x_min.iloc[0] and x + 84 > label.x_max.iloc[0]
-        except Exception:
+            if isinstance(label, pd.DataFrame):
+                label = label[(label.house_number == self.goal_hn) &
+                               (label.obj_type == 'door')]
+            return not label.empty and x < label.x_min and x + 84 > label.x_max
+        except (KeyError, IndexError, AttributeError) as e:
             return False
 
     def render(self, mode='human', clear=False, first_time=False):
