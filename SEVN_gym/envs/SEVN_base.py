@@ -77,7 +77,7 @@ class SEVNBase(gym.GoalEnv):
             or not os.path.isfile(DATA_PATH + 'coord.hdf5'):
             zipfile.ZipFile(at.get("b9e719976cdedb94a25d2f162b899d5f0e711fe0", datastore=DATA_PATH)) \
                 .extractall(DATA_PATH)
-        f = h5py.File(DATA_PATH + 'images.hdf5')
+        f = h5py.File(DATA_PATH + 'images.hdf5', 'r')
         self.images = da.from_array(f["images"])
         self.frame_key = {int(k): i for i, k in enumerate(f['frames'][:])}
         self.label_df = pd.read_hdf(DATA_PATH + 'label.hdf5', key='df', mode='r')
