@@ -44,6 +44,20 @@ register(
 )
 
 register(
+    id='SEVN-Test-NoisyGPS-25-v1',
+    entry_point='SEVN_gym.envs:SEVNNoisyGPS',
+    kwargs={'split': 'Test', "noise_scale": 25},
+    max_episode_steps=10000,
+)
+
+register(
+    id='SEVN-Test-NoisyGPS-100-v1',
+    entry_point='SEVN_gym.envs:SEVNNoisyGPS',
+    kwargs={'split': 'Test', "noise_scale": 100},
+    max_episode_steps=10000,
+)
+
+register(
     id='SEVN-Play-v1',
     entry_point='SEVN_gym.envs:SEVNPlay',
     kwargs={},
