@@ -84,6 +84,8 @@ class SEVNBase(gym.GoalEnv):
         self.coord_df = pd.read_hdf(DATA_PATH + 'coord.hdf5', key='df', mode='r')
         self.G = nx.read_gpickle(DATA_PATH + 'graph.pkl')
 
+        # self.graph_plotting("before.jpg")
+
         if split == 'Test':
             indices = self.coord_df.index
             self.coord_df = utils.filter_for_test(self.coord_df)
@@ -97,6 +99,16 @@ class SEVNBase(gym.GoalEnv):
             self.label_df = self.label_df[~self.label_df.index.isin(test_indices)]
             self.G.remove_nodes_from(test_indices)
 
+            # self.graph_plotting("middle.jpg")
+
+            # train-V2
+            indices = self.coord_df.index
+            self.coord_df = utils.filter_for_trainv2(self.coord_df)
+            to_remove = set(indices).difference(set(self.coord_df.index))
+            self.label_df = self.label_df[self.label_df.index.isin(self.coord_df.index)]
+            self.G.remove_nodes_from(to_remove)
+            # self.graph_plotting("after.jpg")
+
         # Set data-dependent variables
         self.max_num_steps = \
             self.coord_df[self.coord_df.type == 'street_segment'].groupby('group').count().max().frame
@@ -105,6 +117,32 @@ class SEVNBase(gym.GoalEnv):
         self.x_scale = self.coord_df.x.max() - self.coord_df.x.min()
         self.y_scale = self.coord_df.y.max() - self.coord_df.y.min()
         self.agent_loc = np.random.choice(self.coord_df.frame)
+
+    def graph_plotting(self, figname):
+        plt.ion()
+        self.fig, self.ax = plt.subplots(nrows=1, ncols=1)
+        self.pos = {k: v.get('coords')[0:2] for
+                    k, v in self.G.nodes(data=True)}
+        # nx.draw(self.G, pos, node_color='r', node_size=1)
+        nodelist = list(self.G)
+        self.xy = np.asarray([self.pos[v] for v in nodelist])
+        self.corners = np.asarray([
+                                      self.pos[node] for node in list(self.G) if node in
+                                      self.coord_df[self.coord_df.type == 'intersection'].frame])
+        self.streets = np.asarray([
+                                      self.pos[node] for node in list(self.G) if node in
+                                      self.coord_df[self.coord_df.type == 'street_segment'].frame])
+        edgelist = list(self.G.edges())
+        edge_pos = np.asarray([(self.pos[e[0]], self.pos[e[1]]) for
+                               e in edgelist])
+        self.edge_collection = LineCollection(edge_pos)
+        self.edge_collection.set_zorder(1)  # edges go behind nodes
+        self.ax.scatter(self.corners[:, 0], self.corners[:, 1],
+                           c='#fde724')
+        self.ax.scatter(self.streets[:, 0], self.streets[:, 1],
+                           c='#79d151')
+        self.ax.add_collection(self.edge_collection)
+        plt.savefig(figname)
 
     def turn(self, action):
         # Modify agent heading

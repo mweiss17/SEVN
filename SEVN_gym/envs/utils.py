@@ -196,3 +196,11 @@ def filter_for_test(coord_df):
 
     coord_df = coord_df[~coord_df.index.isin(node_blacklist)]
     return coord_df
+
+def filter_for_trainv2(coord_df):
+    box = (-20, 40, -125, 112)
+    coord_df = coord_df[((coord_df.x > box[0]) &
+                           (coord_df.x < box[1]) &
+                           (coord_df.y > box[2]) &
+                           (coord_df.y < box[3]))]
+    return coord_df
