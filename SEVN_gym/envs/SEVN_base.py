@@ -102,6 +102,11 @@ class SEVNBase(gym.GoalEnv):
             # self.graph_plotting("middle.jpg")
 
             # train-V2
+        if split == 'trainv2':
+            test_indices = utils.filter_for_test(self.coord_df).index
+            self.coord_df = self.coord_df[~self.coord_df.index.isin(test_indices)]
+            self.label_df = self.label_df[~self.label_df.index.isin(test_indices)]
+            self.G.remove_nodes_from(test_indices)
             indices = self.coord_df.index
             self.coord_df = utils.filter_for_trainv2(self.coord_df)
             to_remove = set(indices).difference(set(self.coord_df.index))
