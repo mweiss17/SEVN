@@ -16,6 +16,8 @@ from gym import spaces
 from matplotlib.collections import LineCollection
 from SEVN_gym.data import DATA_PATH
 from SEVN_gym.envs import utils, wrappers
+import warnings
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 
 ACTION_MEANING = {
@@ -116,12 +118,12 @@ class SEVNBase(gym.GoalEnv):
 
         # Set data-dependent variables
         self.max_num_steps = \
-            self.coord_df[self.coord_df.type == 'street_segment'].groupby('group').count().max().frame
+            self.coord_df[self.coord_df.type == 'street_segment'].groupby('group').count().max().iloc[0]
         self.all_street_names = self.label_df.street_name.dropna().unique()
         self.num_streets = self.all_street_names.size
         self.x_scale = self.coord_df.x.max() - self.coord_df.x.min()
         self.y_scale = self.coord_df.y.max() - self.coord_df.y.min()
-        self.agent_loc = np.random.choice(self.coord_df.frame)
+        self.agent_loc = np.random.choice(self.coord_df.index)
 
     def graph_plotting(self, figname):
         plt.ion()
@@ -133,10 +135,10 @@ class SEVNBase(gym.GoalEnv):
         self.xy = np.asarray([self.pos[v] for v in nodelist])
         self.corners = np.asarray([
                                       self.pos[node] for node in list(self.G) if node in
-                                      self.coord_df[self.coord_df.type == 'intersection'].frame])
+                                      self.coord_df[self.coord_df.type == 'intersection'].index])
         self.streets = np.asarray([
                                       self.pos[node] for node in list(self.G) if node in
-                                      self.coord_df[self.coord_df.type == 'street_segment'].frame])
+                                      self.coord_df[self.coord_df.type == 'street_segment'].index])
         edgelist = list(self.G.edges())
         edge_pos = np.asarray([(self.pos[e[0]], self.pos[e[1]]) for
                                e in edgelist])
@@ -166,31 +168,31 @@ class SEVNBase(gym.GoalEnv):
         goals = self.label_df.loc[self.label_df['is_goal'] == True]
         if same_segment:
             frames = self.coord_df[(self.coord_df.type == 'street_segment') &
-                                   self.coord_df.frame.isin(goals.frame)].frame
-            goals_on_street_segment = goals[goals.frame.isin(frames)]
+                                   self.coord_df.index.isin(goals.index)].index
+            goals_on_street_segment = goals[goals.index.isin(frames)]
             goal = goals_on_street_segment.loc[np.random.choice(
-                goals_on_street_segment.frame.values.tolist())]
+                goals_on_street_segment.index.values.tolist())]
             if len(goal.shape) > 1:
                 goal = goal.iloc[np.random.randint(len(goal))]
-            segment_group = self.coord_df[self.coord_df.frame == goal.frame].group.iloc[0]
+            segment_group = self.coord_df[self.coord_df.index == goal.name].group.iloc[0]
             segment_panos = \
                 self.coord_df[(self.coord_df.group == segment_group) &
                              (self.coord_df.type == 'street_segment')]
         else:
-            goal = goals.loc[np.random.choice(goals.frame.values.tolist())]
+            goal = goals.loc[np.random.choice(goals.index.values.tolist())]
         self.goal_hn = goal.house_number
-        pano_rotation = utils.norm_angle(self.coord_df.loc[goal.frame].angle)
-        label = self.label_df.loc[goal.frame]
+        pano_rotation = utils.norm_angle(self.coord_df.loc[goal.name].angle)
+        label = self.label_df.loc[goal.name]
         if isinstance(label, pd.DataFrame):
             label = label[label.is_goal].iloc[np.random.choice(label[label.is_goal].shape[0])]
         label_dir = (224-(label.x_min+label.x_max)/2) * 360/224-180
         goal_dir = utils.norm_angle(label_dir + pano_rotation)
         self.agent_dir = self.SMALL_TURN_DEG * np.random.choice(range(-8, 8))
-        self.agent_loc = np.random.choice(segment_panos.frame.unique())
+        self.agent_loc = np.random.choice(segment_panos.index.unique())
         goal_address = {'house_numbers': utils.convert_house_numbers(self.goal_hn),
                         'street_names': utils.convert_street_name(
                             goal.street_name, self.all_street_names)}
-        return goal.frame, goal_address, goal_dir
+        return goal.name, goal_address, goal_dir
 
     def transition(self):
         '''
@@ -414,10 +416,10 @@ class SEVNBase(gym.GoalEnv):
             self.xy = np.asarray([self.pos[v] for v in nodelist])
             self.corners = np.asarray([
                 self.pos[node] for node in list(self.G) if node in
-                self.coord_df[self.coord_df.type == 'intersection'].frame])
+                self.coord_df[self.coord_df.type == 'intersection'].index])
             self.streets = np.asarray([
                 self.pos[node] for node in list(self.G) if node in
-                self.coord_df[self.coord_df.type == 'street_segment'].frame])
+                self.coord_df[self.coord_df.type == 'street_segment'].index])
             edgelist = list(self.G.edges())
             edge_pos = np.asarray([(self.pos[e[0]], self.pos[e[1]]) for
                                    e in edgelist])
