@@ -58,5 +58,6 @@ while True:
 
         obs, rew, done, misc = env.step(action)
         debug_output(obs)
+        print(f"shortest path length: {env.prev_spl}")
         print(f"Rew {rew}, done {done}, misc {misc}")
         print("=========")
