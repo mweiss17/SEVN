@@ -15,3 +15,4 @@ SEVN_gym/data/SEVN-mini/processed/test_task.npy
 SEVN_gym/data/SEVN/processed/coords.hdf5
 SEVN_gym/data/SEVN/processed/pos_ang.npy
 .idea/
+

@@ -10,11 +10,11 @@ def show_img(frame):
     img = np.swapaxes(frame[:3, :, :], 0, 2)
     img = cv2.resize(denormalize_image(img)[:, :, ::-1], (500, 500))
     cv2.imshow('SEVN viewer', img)
-    cv2.waitKey(1)
+    return cv2.waitKey(-1)
 
 
 def debug_output(obs):
-    show_img(obs)
+
     data = unwrap_obs(obs, True, True, None, True, env.unwrapped.num_streets)
     print("goal hn", unconvert_house_numbers(data["goal_house_numbers"]))
     for i in range(3):
@@ -32,31 +32,39 @@ def debug_output(obs):
                                   env.unwrapped.all_street_names))
 
 
+
 env = gym.make("SEVN-Train-AllObs-Shaped-v1")
 print(env.unwrapped.all_street_names)
 
 while True:
     print ("= = = RESETTING = = =")
     obs, done = env.reset(), False
-    debug_output(obs)
+    print("Highlight the Viewer window, press one of [aqwed]. Press 'x' to quit.")
+    key = show_img(obs)
 
     while not done:
-        action = None
-        while action not in ["a", "q", "w", "e", "d"]:
-            action = input("your action (out of [aqwed]):")
 
-        if action == "a":
+        while key not in [ord(x) for x in ["a", "q", "w", "e", "d", "x"]]:
+            key = show_img(obs)
+
+        if key == ord("a"):
             action = SEVNBase.Actions.LEFT_BIG
-        elif action == "q":
+        elif key == ord("q"):
             action = SEVNBase.Actions.LEFT_SMALL
-        elif action == "w":
+        elif key == ord("w"):
             action = SEVNBase.Actions.FORWARD
-        elif action == "e":
+        elif key == ord("e"):
             action = SEVNBase.Actions.RIGHT_SMALL
-        elif action == "d":
+        elif key == ord("d"):
             action = SEVNBase.Actions.RIGHT_BIG
+        elif key == ord("x"):
+            print ("quitting")
+            quit()
+        key = None
 
         obs, rew, done, misc = env.step(action)
+
         debug_output(obs)
+
         print(f"Rew {rew}, done {done}, misc {misc}")
         print("=========")
