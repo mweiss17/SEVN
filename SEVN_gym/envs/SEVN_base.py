@@ -242,9 +242,14 @@ class SEVNBase(gym.GoalEnv):
         if action == self.Actions.FORWARD:
             # If action was forward
             prev_spl = self.prev_spl
-            sp = nx.shortest_path(self.G, self.agent_loc, target=self.goal_idx)
-            self.prev_sp = sp
-            self.prev_spl = len(sp)
+            if self.prev_sp[1] != self.agent_loc:
+                sp = nx.shortest_path(self.G, self.agent_loc, target=self.goal_idx)
+                self.prev_sp = sp
+                self.prev_spl = len(sp)
+            else:
+                self.prev_sp = self.prev_sp[1:]
+                self.prev_spl = len(self.prev_sp)
+
             if self.prev_spl < prev_spl:
                 return 1
             return -1
@@ -287,7 +292,6 @@ class SEVNBase(gym.GoalEnv):
         else:
             self.turn(action)
         image, x, w = self._get_image()
-
         reward = self.compute_reward(x, info, done)
 
         if self.is_successful_trajectory(x):
@@ -295,11 +299,9 @@ class SEVNBase(gym.GoalEnv):
             was_successful_trajectory = True
         elif self.num_steps_taken >= self.max_num_steps and done is False:
             done = True
-
         visible_text = self._get_visible_text(x, w)
         self.agent_gps = utils.sample_gps(self.coord_df.loc[self.agent_loc],
                                           self.x_scale, self.y_scale)
-
         rel_gps = [
             self.target_gps[0] - self.agent_gps[0],
             self.target_gps[1] - self.agent_gps[1], self.target_gps[0],
@@ -319,7 +321,6 @@ class SEVNBase(gym.GoalEnv):
         if done:
             info['was_successful_trajectory'] = was_successful_trajectory
             self.needs_reset = True
-
         return obs, reward, done, info
 
     def _get_image(self):
@@ -429,8 +430,6 @@ class SEVNBase(gym.GoalEnv):
         '''
         Finds a minimal trajectory to navigate to the target pose.
         '''
-        start = time.time()
-
         cur_node = self.agent_loc
         cur_dir = self.agent_dir
         target_node = self.goal_idx
@@ -465,6 +464,8 @@ class SEVNBase(gym.GoalEnv):
         return actions
 
     def is_successful_trajectory(self, x):
+        if not self.agent_loc == self.goal_idx:
+            return False
         try:
             label = self.label_df.loc[self.agent_loc, [
                 'frame', 'obj_type', 'house_number', 'x_min', 'x_max'
