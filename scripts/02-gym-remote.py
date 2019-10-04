@@ -32,21 +32,23 @@ def debug_output(obs):
                                   env.unwrapped.all_street_names))
 
 
-
 env = gym.make("SEVN-Train-AllObs-Shaped-v1")
 print(env.unwrapped.all_street_names)
 
 while True:
-    print ("= = = RESETTING = = =")
+    print("= = = RESETTING = = =")
     obs, done = env.reset(), False
-    print("Highlight the Viewer window, press one of [aqwed]. Press 'x' to quit.")
+    print(
+        "Highlight the Viewer window, press one of [aqwed]. Press 'x' to quit. Press 'r' to reset."
+    )
     key = show_img(obs)
 
     while not done:
 
-        while key not in [ord(x) for x in ["a", "q", "w", "e", "d", "x"]]:
+        while key not in [ord(x) for x in ["a", "q", "w", "e", "d", "x", "r"]]:
             key = show_img(obs)
 
+        reset = False
         if key == ord("a"):
             action = SEVNBase.Actions.LEFT_BIG
         elif key == ord("q"):
@@ -58,14 +60,21 @@ while True:
         elif key == ord("d"):
             action = SEVNBase.Actions.RIGHT_BIG
         elif key == ord("x"):
-            print ("quitting")
+            print("quitting")
             quit()
+        elif key == ord("r"):
+            print("= requested resetting")
+            reset = True
         key = None
 
-        obs, rew, done, misc = env.step(action)
+        if not reset:
+            obs, rew, _, misc = env.step(action)
+        else:
+            obs = env.reset()
 
         debug_output(obs)
 
         print(f"shortest path length: {env.prev_spl}")
-        print(f"Rew {rew}, done {done}, misc {misc}")
+        if not reset:
+            print(f"Rew {rew}, done {done}, misc {misc}")
         print("=========")
