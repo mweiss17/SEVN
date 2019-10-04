@@ -26,9 +26,9 @@ ACTION_MEANING = {
     2: 'FORWARD',
     3: 'RIGHT_SMALL',
     4: 'RIGHT_BIG',
-    5: 'DONE',
-    6: 'NOOP',
-    7: 'READ'
+    # 5: 'DONE',
+    # 6: 'NOOP',
+    # 7: 'READ'
 }
 
 
@@ -41,9 +41,9 @@ class SEVNBase(gym.GoalEnv):
         FORWARD = 2
         RIGHT_SMALL = 3
         RIGHT_BIG = 4
-        DONE = 5
-        NOOP = 6
-        READ = 7
+        # DONE = 5
+        # NOOP = 6
+        # READ = 7
 
     def __init__(self,
                  obs_shape=(4, 84, 84),
@@ -265,6 +265,8 @@ class SEVNBase(gym.GoalEnv):
             if np.abs(new_angle) < np.abs(angle) and np.abs(angle) >= 45:
                 return 1
             return -1
+        # This should not happen
+        import pdb; pdb.set_trace()
         return -100000000
 
     def step(self, a):
