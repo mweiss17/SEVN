@@ -2,6 +2,7 @@ import math
 import numpy as np
 import pandas as pd
 
+
 def norm_angle(x):
     '''
     Utility function to keep some angles in the space of -180 to 180 degrees.
@@ -69,24 +70,31 @@ def denormalize_image(normed_image):
     normed_image[:, :, 0] = (normed_image[:, :, 0] * 0.2495) + 0.437
     normed_image[:, :, 1] = (normed_image[:, :, 1] * 0.2556) + 0.452
     normed_image[:, :, 2] = (normed_image[:, :, 2] * 0.2783) + 0.479
-    return normed_image
+
+    return np.clip(normed_image, 0, 1)
 
 
 def convert_house_numbers(num):
     res = np.zeros((4, 10))
     for col, n in enumerate(str(num).zfill(4)):
         n = int(n)
-        if n > 0:
-            res[col, n] = 1
+        res[col, n] = 1
     return res.reshape(-1)
+
+
+def unconvert_house_numbers(hn):
+    assert hn.shape == (4, 10)  #otherwise use .reshape((4,10)) beforehand
+    digits = [str(np.argmax(hn[pos])) for pos in range(4)]
+    num = int("".join(digits))
+    return num
 
 
 def convert_house_vec_to_ints(vec):
     numbers = []
     hn_len = 40
-    for i in range(int(vec.size/hn_len)):
+    for i in range(int(vec.size / hn_len)):
         number = []
-        for offset in range(i*hn_len, i*hn_len + hn_len, 10):
+        for offset in range(i * hn_len, i * hn_len + hn_len, 10):
             number.append(str(vec[offset:offset + 10].argmax()))
         numbers.append(int("".join(number)))
     return numbers
@@ -95,6 +103,12 @@ def convert_house_vec_to_ints(vec):
 def convert_street_name(street_name, all_street_names):
     assert street_name in all_street_names
     return (all_street_names == street_name).astype(int)
+
+
+def unconvert_street_name(street_enc, all_street_names):
+    if np.count_nonzero(street_enc) == 0:
+        return None
+    return all_street_names[np.argmax(street_enc)]
 
 
 def sample_gps(groundtruth, x_scale, y_scale, noise_scale=0):
@@ -154,6 +168,7 @@ def stack_text(house_numbers, street_signs, num_streets):
     visible_text['street_names'] = temp
     return visible_text
 
+
 def angle_to_node(G, n1, n2, SMALL_TURN_DEG):
     node_dir = get_angle_between_nodes(G, n1, n2)
     neighbors = [edge[1] for edge in list(G.edges(n1))]
@@ -162,7 +177,7 @@ def angle_to_node(G, n1, n2, SMALL_TURN_DEG):
         neighbor_angles.append(get_angle_between_nodes(G, n1, neighbor))
 
     dest_nodes = {}
-    for direction in [x*SMALL_TURN_DEG for x in range(-8, 8)]:
+    for direction in [x * SMALL_TURN_DEG for x in range(-8, 8)]:
         angles = smallest_angles(direction, neighbor_angles)
         min_angle_node = neighbors[angles.index(min(angles))]
         if min(angles) < SMALL_TURN_DEG:
@@ -179,6 +194,7 @@ def angle_to_node(G, n1, n2, SMALL_TURN_DEG):
 
     return valid_angles[dist.index(min(dist))]
 
+
 def filter_for_test(coord_df):
     node_blacklist = []
     node_blacklist.extend([x for x in range(877, 879)])
@@ -189,18 +205,15 @@ def filter_for_test(coord_df):
     node_blacklist.extend([x for x in range(3661, 3669)])
     node_blacklist.extend([x for x in range(780, 784)])
     box = (24, 76, -125, 10)
-    coord_df = coord_df[((coord_df.x > box[0]) &
-                           (coord_df.x < box[1]) &
-                           (coord_df.y > box[2]) &
-                           (coord_df.y < box[3]))]
+    coord_df = coord_df[((coord_df.x > box[0]) & (coord_df.x < box[1]) &
+                         (coord_df.y > box[2]) & (coord_df.y < box[3]))]
 
     coord_df = coord_df[~coord_df.index.isin(node_blacklist)]
     return coord_df
 
+
 def filter_for_trainv2(coord_df):
     box = (-20, 40, -125, 112)
-    coord_df = coord_df[((coord_df.x > box[0]) &
-                           (coord_df.x < box[1]) &
-                           (coord_df.y > box[2]) &
-                           (coord_df.y < box[3]))]
+    coord_df = coord_df[((coord_df.x > box[0]) & (coord_df.x < box[1]) &
+                         (coord_df.y > box[2]) & (coord_df.y < box[3]))]
     return coord_df

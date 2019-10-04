@@ -17,8 +17,8 @@ from matplotlib.collections import LineCollection
 from SEVN_gym.data import DATA_PATH
 from SEVN_gym.envs import utils, wrappers
 import warnings
-warnings.simplefilter(action='ignore', category=FutureWarning)
 
+warnings.simplefilter(action='ignore', category=FutureWarning)
 
 ACTION_MEANING = {
     0: 'LEFT_BIG',
@@ -45,9 +45,13 @@ class SEVNBase(gym.GoalEnv):
         NOOP = 6
         READ = 7
 
-    def __init__(self, obs_shape=(4, 84, 84), use_image_obs=False,
-                 use_gps_obs=False, use_visible_text_obs=False,
-                 split="train", reward_type=None):
+    def __init__(self,
+                 obs_shape=(4, 84, 84),
+                 use_image_obs=False,
+                 use_gps_obs=False,
+                 use_visible_text_obs=False,
+                 split="train",
+                 reward_type=None):
 
         print(f'Booting environment from {DATA_PATH} with shaped reward,' +
               f' image_obs: {use_image_obs}, gps: {use_gps_obs},' +
@@ -61,6 +65,7 @@ class SEVNBase(gym.GoalEnv):
         self.use_visible_text_obs = use_visible_text_obs
         self.reward_type = reward_type
         self.needs_reset = True
+        self.plot_ready = False
         self._action_set = SEVNBase.Actions
         self.action_space = spaces.Discrete(len(self._action_set))
         self.observation_space = spaces.Box(
@@ -71,19 +76,24 @@ class SEVNBase(gym.GoalEnv):
         self.goal_hn = -1
         self.SMALL_TURN_DEG = 22.5
         self.BIG_TURN_DEG = 67.5
+        self.last_x = None
 
         # Load data
         if not os.path.isfile(DATA_PATH + 'images.hdf5') \
-            or not os.path.isfile(DATA_PATH + 'graph.pkl') \
-            or not os.path.isfile(DATA_PATH + 'label.hdf5') \
-            or not os.path.isfile(DATA_PATH + 'coord.hdf5'):
-            zipfile.ZipFile(at.get("b9e719976cdedb94a25d2f162b899d5f0e711fe0", datastore=DATA_PATH)) \
-                .extractall(DATA_PATH)
+                or not os.path.isfile(DATA_PATH + 'graph.pkl') \
+                or not os.path.isfile(DATA_PATH + 'label.hdf5') \
+                or not os.path.isfile(DATA_PATH + 'coord.hdf5'):
+            # zipfile.ZipFile(at.get("b9e719976cdedb94a25d2f162b899d5f0e711fe0", datastore=DATA_PATH)) \
+            #     .extractall(DATA_PATH)
+            zipfile.ZipFile(os.path.join(DATA_PATH,
+                                         'dataset.zip')).extractall(DATA_PATH)
         f = h5py.File(DATA_PATH + 'images.hdf5', 'r')
-        self.images = da.from_array(f["images"])
+        self.images = f["images"]
         self.frame_key = {int(k): i for i, k in enumerate(f['frames'][:])}
-        self.label_df = pd.read_hdf(DATA_PATH + 'label.hdf5', key='df', mode='r')
-        self.coord_df = pd.read_hdf(DATA_PATH + 'coord.hdf5', key='df', mode='r')
+        self.label_df = pd.read_hdf(
+            DATA_PATH + 'label.hdf5', key='df', mode='r')
+        self.coord_df = pd.read_hdf(
+            DATA_PATH + 'coord.hdf5', key='df', mode='r')
         self.G = nx.read_gpickle(DATA_PATH + 'graph.pkl')
 
         # self.graph_plotting("before.jpg")
@@ -92,13 +102,16 @@ class SEVNBase(gym.GoalEnv):
             indices = self.coord_df.index
             self.coord_df = utils.filter_for_test(self.coord_df)
             to_remove = set(indices).difference(set(self.coord_df.index))
-            self.label_df = self.label_df[self.label_df.index.isin(self.coord_df.index)]
+            self.label_df = self.label_df[self.label_df.index.isin(
+                self.coord_df.index)]
             self.G.remove_nodes_from(to_remove)
 
         if split == 'Train':
             test_indices = utils.filter_for_test(self.coord_df).index
-            self.coord_df = self.coord_df[~self.coord_df.index.isin(test_indices)]
-            self.label_df = self.label_df[~self.label_df.index.isin(test_indices)]
+            self.coord_df = self.coord_df[~self.coord_df.index.isin(test_indices
+                                                                   )]
+            self.label_df = self.label_df[~self.label_df.index.isin(test_indices
+                                                                   )]
             self.G.remove_nodes_from(test_indices)
 
             # self.graph_plotting("middle.jpg")
@@ -106,13 +119,16 @@ class SEVNBase(gym.GoalEnv):
             # train-V2
         if split == 'trainv2':
             test_indices = utils.filter_for_test(self.coord_df).index
-            self.coord_df = self.coord_df[~self.coord_df.index.isin(test_indices)]
-            self.label_df = self.label_df[~self.label_df.index.isin(test_indices)]
+            self.coord_df = self.coord_df[~self.coord_df.index.isin(test_indices
+                                                                   )]
+            self.label_df = self.label_df[~self.label_df.index.isin(test_indices
+                                                                   )]
             self.G.remove_nodes_from(test_indices)
             indices = self.coord_df.index
             self.coord_df = utils.filter_for_trainv2(self.coord_df)
             to_remove = set(indices).difference(set(self.coord_df.index))
-            self.label_df = self.label_df[self.label_df.index.isin(self.coord_df.index)]
+            self.label_df = self.label_df[self.label_df.index.isin(
+                self.coord_df.index)]
             self.G.remove_nodes_from(to_remove)
             # self.graph_plotting("after.jpg")
 
@@ -128,26 +144,27 @@ class SEVNBase(gym.GoalEnv):
     def graph_plotting(self, figname):
         plt.ion()
         self.fig, self.ax = plt.subplots(nrows=1, ncols=1)
-        self.pos = {k: v.get('coords')[0:2] for
-                    k, v in self.G.nodes(data=True)}
+        self.pos = {k: v.get('coords')[0:2] for k, v in self.G.nodes(data=True)}
         # nx.draw(self.G, pos, node_color='r', node_size=1)
         nodelist = list(self.G)
         self.xy = np.asarray([self.pos[v] for v in nodelist])
         self.corners = np.asarray([
-                                      self.pos[node] for node in list(self.G) if node in
-                                      self.coord_df[self.coord_df.type == 'intersection'].index])
+            self.pos[node]
+            for node in list(self.G)
+            if node in self.coord_df[self.coord_df.type == 'intersection'].index
+        ])
         self.streets = np.asarray([
-                                      self.pos[node] for node in list(self.G) if node in
-                                      self.coord_df[self.coord_df.type == 'street_segment'].index])
+            self.pos[node] for node in list(self.G) if node in self.coord_df[
+                self.coord_df.type == 'street_segment'].index
+        ])
         edgelist = list(self.G.edges())
-        edge_pos = np.asarray([(self.pos[e[0]], self.pos[e[1]]) for
-                               e in edgelist])
+        edge_pos = np.asarray([
+            (self.pos[e[0]], self.pos[e[1]]) for e in edgelist
+        ])
         self.edge_collection = LineCollection(edge_pos)
         self.edge_collection.set_zorder(1)  # edges go behind nodes
-        self.ax.scatter(self.corners[:, 0], self.corners[:, 1],
-                           c='#fde724')
-        self.ax.scatter(self.streets[:, 0], self.streets[:, 1],
-                           c='#79d151')
+        self.ax.scatter(self.corners[:, 0], self.corners[:, 1], c='#fde724')
+        self.ax.scatter(self.streets[:, 0], self.streets[:, 1], c='#79d151')
         self.ax.add_collection(self.edge_collection)
         plt.savefig(figname)
 
@@ -167,31 +184,38 @@ class SEVNBase(gym.GoalEnv):
     def select_goal(self, same_segment=True):
         goals = self.label_df.loc[self.label_df['is_goal'] == True]
         if same_segment:
-            frames = self.coord_df[(self.coord_df.type == 'street_segment') &
-                                   self.coord_df.index.isin(goals.index)].index
+            frames = self.coord_df[
+                (self.coord_df.type == 'street_segment')
+                & self.coord_df.index.isin(goals.index)].index
             goals_on_street_segment = goals[goals.index.isin(frames)]
             goal = goals_on_street_segment.loc[np.random.choice(
                 goals_on_street_segment.index.values.tolist())]
             if len(goal.shape) > 1:
                 goal = goal.iloc[np.random.randint(len(goal))]
-            segment_group = self.coord_df[self.coord_df.index == goal.name].group.iloc[0]
+            segment_group = self.coord_df[self.coord_df.index ==
+                                          goal.name].group.iloc[0]
             segment_panos = \
                 self.coord_df[(self.coord_df.group == segment_group) &
-                             (self.coord_df.type == 'street_segment')]
+                              (self.coord_df.type == 'street_segment')]
         else:
             goal = goals.loc[np.random.choice(goals.index.values.tolist())]
         self.goal_hn = goal.house_number
         pano_rotation = utils.norm_angle(self.coord_df.loc[goal.name].angle)
         label = self.label_df.loc[goal.name]
         if isinstance(label, pd.DataFrame):
-            label = label[label.is_goal].iloc[np.random.choice(label[label.is_goal].shape[0])]
-        label_dir = (224-(label.x_min+label.x_max)/2) * 360/224-180
+            label = label[label.is_goal].iloc[np.random.choice(
+                label[label.is_goal].shape[0])]
+        label_dir = (224 - (label.x_min + label.x_max) / 2) * 360 / 224 - 180
         goal_dir = utils.norm_angle(label_dir + pano_rotation)
         self.agent_dir = self.SMALL_TURN_DEG * np.random.choice(range(-8, 8))
         self.agent_loc = np.random.choice(segment_panos.index.unique())
-        goal_address = {'house_numbers': utils.convert_house_numbers(self.goal_hn),
-                        'street_names': utils.convert_street_name(
-                            goal.street_name, self.all_street_names)}
+        goal_address = {
+            'house_numbers':
+                utils.convert_house_numbers(self.goal_hn),
+            'street_names':
+                utils.convert_street_name(goal.street_name,
+                                          self.all_street_names)
+        }
         return goal.name, goal_address, goal_dir
 
     def transition(self):
@@ -201,9 +225,10 @@ class SEVNBase(gym.GoalEnv):
         '''
         neighbors = {}
         for n in [edge[1] for edge in list(self.G.edges(self.agent_loc))]:
-            neighbors[n] = np.abs(utils.norm_angle(
-                utils.get_angle_between_nodes(self.G, self.agent_loc, n) -
-                self.agent_dir))
+            neighbors[n] = np.abs(
+                utils.norm_angle(
+                    utils.get_angle_between_nodes(self.G, self.agent_loc, n) -
+                    self.agent_dir))
 
         if neighbors[min(neighbors, key=neighbors.get)] > 45:
             return
@@ -215,38 +240,47 @@ class SEVNBase(gym.GoalEnv):
         was_successful_trajectory = False
         oracle = False
 
-        reward = 0.0
         self.num_steps_taken += 1
         action = self._action_set(a)
         if oracle:
             action = next(iter(self.shortest_path_length()), None)
-        image, x, w = self._get_image()
-        visible_text = self._get_visible_text(x, w)
-        try:
-            if self.is_successful_trajectory(x):
-                done = True
-                was_successful_trajectory = True
-            elif self.num_steps_taken >= self.max_num_steps and done is False:
-                done = True
-            elif action == self.Actions.FORWARD:
-                self.transition()
-            else:
-                self.turn(action)
-        except Exception:
-            self.is_successful_trajectory(x)
 
+        if self.last_x is None:
+            raise Exception("Must run `env.reset()` once before first step")
+
+        if action == self.Actions.FORWARD:
+            self.transition()
+        else:
+            self.turn(action)
+
+        image, x, w = self._get_image()
+
+        if self.is_successful_trajectory(x):
+            done = True
+            was_successful_trajectory = True
+        elif self.num_steps_taken >= self.max_num_steps and done is False:
+            done = True
+
+        visible_text = self._get_visible_text(x, w)
         reward = self.compute_reward(x, {}, done)
 
         self.agent_gps = utils.sample_gps(self.coord_df.loc[self.agent_loc],
                                           self.x_scale, self.y_scale)
-        rel_gps = [self.target_gps[0] - self.agent_gps[0],
-                   self.target_gps[1] - self.agent_gps[1],
-                   self.target_gps[0], self.target_gps[1]]
-        obs = {'image': image, 'mission': self.goal_address,
-               'rel_gps': rel_gps, 'visible_text': visible_text}
+
+        rel_gps = [
+            self.target_gps[0] - self.agent_gps[0],
+            self.target_gps[1] - self.agent_gps[1], self.target_gps[0],
+            self.target_gps[1]
+        ]
+        obs = {
+            'image': image,
+            'mission': self.goal_address,
+            'rel_gps': rel_gps,
+            'visible_text': visible_text
+        }
         obs = wrappers.wrap_obs(obs, self.use_gps_obs,
-                                self.use_visible_text_obs,
-                                self.use_image_obs, True, self.num_streets)
+                                self.use_visible_text_obs, self.use_image_obs,
+                                True, self.num_streets)
 
         info = {}
         if done:
@@ -261,30 +295,34 @@ class SEVNBase(gym.GoalEnv):
 
         pano_rotation = self.coord_df.loc[self.agent_loc, 'angle']
         agent_dir = utils.norm_angle_360(self.agent_dir)
-        normed_ang = ((agent_dir - pano_rotation) % 360)/360
+        normed_ang = ((agent_dir - pano_rotation) % 360) / 360
         w = obs_shape[1]
         y = img.shape[0] - obs_shape[1]
         h = obs_shape[2]
         x = int(img.shape[1] - (
-            (normed_ang*img.shape[1]) +
-            img.shape[1]/2+obs_shape[1]/2) % img.shape[1])
+            (normed_ang * img.shape[1]) + img.shape[1] / 2 + obs_shape[1] / 2) %
+                img.shape[1])
         img = img.transpose()
         if (x + w) % img.shape[1] != (x + w):
             res_img = np.zeros((3, 84, 84))
             offset = img.shape[1] - (x % img.shape[1])
-            res_img[:, :offset] = img[y:y+h, x:x + offset]
-            res_img[:, offset:] = img[y:y+h, :(x + w) % img.shape[1]]
+            res_img[:, :offset] = img[y:y + h, x:x + offset]
+            res_img[:, offset:] = img[y:y + h, :(x + w) % img.shape[1]]
         else:
             res_img = img[:, x:x + w]
 
+        self.last_x = x
         return res_img, x, w
 
     def _get_visible_text(self, x, w):
         if self.agent_loc not in self.label_df.index:
-            return {'street_names': np.zeros(2 * len(self.all_street_names)),
-                    'house_numbers': np.zeros(120)}
+            return {
+                'street_names': np.zeros(2 * len(self.all_street_names)),
+                'house_numbers': np.zeros(120)
+            }
         subset = self.label_df.loc[self.agent_loc, [
-            'house_number', 'street_name', 'obj_type', 'x_min', 'x_max']]
+            'house_number', 'street_name', 'obj_type', 'x_min', 'x_max'
+        ]]
         house_numbers, street_names = utils.extract_text(
             x, w, subset, self.high_res)
         house_numbers = \
@@ -297,6 +335,14 @@ class SEVNBase(gym.GoalEnv):
         return visible_text
 
     def reset(self):
+        # TODO: remove this when we no longer need profiling
+        self.diff_a = []
+        self.diff_b = []
+        self.diff_c = []
+        self.diff_d = []
+        self.diff_e = []
+        self.diff_f = []
+
         self.needs_reset = False
         self.num_steps_taken = 0
         self.goal_idx, self.goal_address, self.goal_dir = \
@@ -308,16 +354,20 @@ class SEVNBase(gym.GoalEnv):
         self.target_gps = utils.sample_gps(self.coord_df.loc[self.goal_idx],
                                            self.x_scale, self.y_scale)
         image, x, w = self._get_image()
-        rel_gps = [self.target_gps[0] - self.agent_gps[0],
-                   self.target_gps[1] - self.agent_gps[1],
-                   self.target_gps[0], self.target_gps[1]]
-        obs = {'image': image,
-               'mission': self.goal_address,
-               'rel_gps': rel_gps,
-               'visible_text': self._get_visible_text(x, w)}
+        rel_gps = [
+            self.target_gps[0] - self.agent_gps[0],
+            self.target_gps[1] - self.agent_gps[1], self.target_gps[0],
+            self.target_gps[1]
+        ]
+        obs = {
+            'image': image,
+            'mission': self.goal_address,
+            'rel_gps': rel_gps,
+            'visible_text': self._get_visible_text(x, w)
+        }
         obs = wrappers.wrap_obs(obs, self.use_gps_obs,
-                                self.use_visible_text_obs,
-                                self.use_image_obs, True, self.num_streets)
+                                self.use_visible_text_obs, self.use_image_obs,
+                                True, self.num_streets)
         return obs
 
     def angles_to_turn(self, cur, target):
@@ -327,7 +377,8 @@ class SEVNBase(gym.GoalEnv):
             big_turns = int(angle / self.BIG_TURN_DEG)
             turns.extend([self.Actions.LEFT_BIG for i in range(big_turns)])
             cur = utils.norm_angle(cur + big_turns * self.BIG_TURN_DEG)
-            small_turns = int((angle - big_turns * self.BIG_TURN_DEG) / self.SMALL_TURN_DEG)
+            small_turns = int(
+                (angle - big_turns * self.BIG_TURN_DEG) / self.SMALL_TURN_DEG)
             turns.extend([self.Actions.LEFT_SMALL for i in range(small_turns)])
             cur = utils.norm_angle(cur + small_turns * self.SMALL_TURN_DEG)
         else:
@@ -335,9 +386,9 @@ class SEVNBase(gym.GoalEnv):
             big_turns = int(angle / self.BIG_TURN_DEG)
             turns.extend([self.Actions.RIGHT_BIG for i in range(big_turns)])
             cur = utils.norm_angle(cur - big_turns * self.BIG_TURN_DEG)
-            small_turns = int((angle - big_turns * self.BIG_TURN_DEG) / self.SMALL_TURN_DEG)
-            turns.extend([
-                self.Actions.RIGHT_SMALL for i in range(small_turns)])
+            small_turns = int(
+                (angle - big_turns * self.BIG_TURN_DEG) / self.SMALL_TURN_DEG)
+            turns.extend([self.Actions.RIGHT_SMALL for i in range(small_turns)])
             cur = utils.norm_angle(cur - small_turns * self.SMALL_TURN_DEG)
         return turns, cur
 
@@ -345,27 +396,41 @@ class SEVNBase(gym.GoalEnv):
         '''
         Finds a minimal trajectory to navigate to the target pose.
         '''
+        start = time.time()
+
         cur_node = self.agent_loc
         cur_dir = self.agent_dir
         target_node = self.goal_idx
+
         path = nx.shortest_path(self.G, cur_node, target=target_node)
+
         actions = []
+
+        # TODO precompute this for the entire graph
+        # TODO store nodes in list
+        # TODO pop nodes upon traversal,
+        # TODO only recompute if node changes and then only for the new node
+
         for idx, node in enumerate(path):
             if idx + 1 != len(path):
-                target_dir = utils.angle_to_node(self.G, node, path[idx + 1], self.SMALL_TURN_DEG)
-                new_action, final_dir = self.angles_to_turn(cur_dir,
-                                                            target_dir)
+                target_dir = utils.angle_to_node(self.G, node, path[idx + 1],
+                                                 self.SMALL_TURN_DEG)
+                new_action, final_dir = self.angles_to_turn(cur_dir, target_dir)
+
                 actions.extend(new_action)
                 cur_dir = final_dir
                 actions.append(self.Actions.FORWARD)
+
             else:
-                new_action, final_dir = self.angles_to_turn(cur_dir,
-                                                            self.goal_dir)
+                new_action, final_dir = self.angles_to_turn(
+                    cur_dir, self.goal_dir)
                 actions.extend(new_action)
+
         return actions
 
     def compute_reward(self, x, info, done):
         cur_spl = len(self.shortest_path_length())
+
         if done and self.is_successful_trajectory(x):
             reward = 2.0
         elif done and not self.is_successful_trajectory(x):
@@ -378,16 +443,17 @@ class SEVNBase(gym.GoalEnv):
         if self.reward_type == 'Sparse' and reward != 2.0 and reward != -2.0:
             reward = 0
         self.prev_spl = cur_spl
+
         return reward
 
     def is_successful_trajectory(self, x):
         try:
-            label = self.label_df.loc[self.agent_loc,
-                                      ['frame', 'obj_type', 'house_number',
-                                       'x_min', 'x_max']]
+            label = self.label_df.loc[self.agent_loc, [
+                'frame', 'obj_type', 'house_number', 'x_min', 'x_max'
+            ]]
             if isinstance(label, pd.DataFrame):
-                label = label[(label.house_number == self.goal_hn) &
-                               (label.obj_type == 'door')]
+                label = label[(label.house_number == self.goal_hn)
+                              & (label.obj_type == 'door')]
             label = label.iloc[np.random.randint(len(label))]
             if label.empty:
                 return False
@@ -398,7 +464,8 @@ class SEVNBase(gym.GoalEnv):
 
     def render(self, mode='human', clear=False, first_time=False):
         img, x, w = self._get_image()
-        if first_time:
+
+        if first_time or not self.plot_ready:
             plt.ion()
             self.fig, self.ax = plt.subplots(nrows=1, ncols=2)
             self.ax[0] = self.ax[0].imshow(
@@ -407,28 +474,33 @@ class SEVNBase(gym.GoalEnv):
                 animated=True,
                 label='ladida')
             self.plot = plt.gca()
-        if clear:
+        if clear or not self.plot_ready:
+            self.plot_ready = True
             self.plot.cla()
-            self.pos = {k: v.get('coords')[0:2] for
-                        k, v in self.G.nodes(data=True)}
+            self.pos = {
+                k: v.get('coords')[0:2] for k, v in self.G.nodes(data=True)
+            }
             # nx.draw(self.G, pos, node_color='r', node_size=1)
             nodelist = list(self.G)
             self.xy = np.asarray([self.pos[v] for v in nodelist])
             self.corners = np.asarray([
                 self.pos[node] for node in list(self.G) if node in
-                self.coord_df[self.coord_df.type == 'intersection'].index])
+                self.coord_df[self.coord_df.type == 'intersection'].index
+            ])
             self.streets = np.asarray([
                 self.pos[node] for node in list(self.G) if node in
-                self.coord_df[self.coord_df.type == 'street_segment'].index])
+                self.coord_df[self.coord_df.type == 'street_segment'].index
+            ])
             edgelist = list(self.G.edges())
-            edge_pos = np.asarray([(self.pos[e[0]], self.pos[e[1]]) for
-                                   e in edgelist])
+            edge_pos = np.asarray([
+                (self.pos[e[0]], self.pos[e[1]]) for e in edgelist
+            ])
             self.edge_collection = LineCollection(edge_pos)
             self.edge_collection.set_zorder(1)  # edges go behind nodes
-            self.ax[1].scatter(self.corners[:, 0], self.corners[:, 1],
-                               c='#fde724')
-            self.ax[1].scatter(self.streets[:, 0], self.streets[:, 1],
-                               c='#79d151')
+            self.ax[1].scatter(
+                self.corners[:, 0], self.corners[:, 1], c='#fde724')
+            self.ax[1].scatter(
+                self.streets[:, 0], self.streets[:, 1], c='#79d151')
             self.ax[1].add_collection(self.edge_collection)
         angle_adj = 0
         agent_loc = self.pos[self.agent_loc]
@@ -437,17 +509,27 @@ class SEVNBase(gym.GoalEnv):
         goal_dir = self.goal_dir - angle_adj
         print("Agent Dir:", agent_dir)
         print("Goal Dir:", self.goal_dir)
-        self.agent_point = self.ax[1].plot(agent_loc[0], agent_loc[1],
-                                           color='b', marker='o')
+        self.agent_point = self.ax[1].plot(
+            agent_loc[0], agent_loc[1], color='b', marker='o')
         self.ax[1].plot(goal_loc[0], goal_loc[1], color='r', marker='o')
         self.ax[1].arrow(
-            goal_loc[0], goal_loc[1], 5*math.cos(math.radians(goal_dir)),
-            5 * math.sin(math.radians(goal_dir)), length_includes_head=True,
-            head_width=2.0, head_length=2.0, color='r')
+            goal_loc[0],
+            goal_loc[1],
+            5 * math.cos(math.radians(goal_dir)),
+            5 * math.sin(math.radians(goal_dir)),
+            length_includes_head=True,
+            head_width=2.0,
+            head_length=2.0,
+            color='r')
         self.agent_arrow = self.ax[1].arrow(
-            agent_loc[0], agent_loc[1], 5 * math.cos(math.radians(agent_dir)),
-            5 * math.sin(math.radians(agent_dir)), length_includes_head=True,
-            head_width=2.0, head_length=2.0, color='b')
+            agent_loc[0],
+            agent_loc[1],
+            5 * math.cos(math.radians(agent_dir)),
+            5 * math.sin(math.radians(agent_dir)),
+            length_includes_head=True,
+            head_width=2.0,
+            head_length=2.0,
+            color='b')
         self.ax[0].set_data(utils.denormalize_image(img.transpose()))
         plt.pause(0.01)
         self.agent_point[0].remove()

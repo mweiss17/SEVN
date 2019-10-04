@@ -85,7 +85,7 @@ class SEVNPlay(SEVNBase):
             img = img[crop_margin:height - crop_margin]
             obs_shape = (1280, 1280, 3)
         else:
-            img = self.images_df[self.meta_df.loc[self.agent_loc, 'frame'][0]]
+            img = self.images[self.meta_df.loc[self.agent_loc, 'frame'][0]]
             obs_shape = self.observation_space.shape
 
         pano_rotation = self.meta_df.loc[self.agent_loc, 'angle'][0]

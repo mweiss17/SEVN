@@ -35,3 +35,9 @@ python scripts/01-play.py
 
 ## For more information
 [Creating a Navigation Assistant for the Visually Impaired](https://github.com/mweiss17/SEVN/blob/master/docs/01-article-env-introduction.md)
+
+
+## Things that are currently broken:
+
+- scripts/01-play.py uses outdated `meta.hdf5`
+- env.render("human") currently doesn't work, because the render function requires some "first_time" and "clear" parameters

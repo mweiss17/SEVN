@@ -99,4 +99,5 @@ for split in ['Train', 'Test', 'AllData']:
                         'use_visible_text_obs': use_visible_text_obs,
                         'split': split,
                         'reward_type': reward},
+                max_episode_steps=255,
             )
