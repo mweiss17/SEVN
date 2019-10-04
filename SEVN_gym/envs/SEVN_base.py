@@ -235,10 +235,31 @@ class SEVNBase(gym.GoalEnv):
 
         self.agent_loc = min(neighbors, key=neighbors.get)
 
+    -
+
+    # def compute_reward(self, x, info, done):
+    #         cur_spl = len(self.shortest_path_length())
+    #
+    #
+    #
+    # if done and self.is_successful_trajectory(x):
+    #            reward = 2.0
+    #  elif done and not self.is_successful_trajectory(x):
+    #             reward = -2.0
+    #  elif self.prev_spl - cur_spl > 0:
+    #             reward = 1
+    #  elif self.prev_spl - cur_spl <= 0:
+    #             reward = -1
+    # if self.reward_type == 'Sparse' and reward != 2.0 and reward != -2.0:
+    #               reward = 0
+    #         self.prev_spl = cur_spl
+    # return reward
+
     def step(self, a):
         done = False
         was_successful_trajectory = False
         oracle = False
+        reward = -1
 
         self.num_steps_taken += 1
         action = self._action_set(a)
@@ -247,14 +268,25 @@ class SEVNBase(gym.GoalEnv):
 
         if self.last_x is None:
             raise Exception("Must run `env.reset()` once before first step")
-
         if action == self.Actions.FORWARD:
             self.transition()
+            sp = nx.shortest_path(self.G, self.agent_loc, target=self.goal_idx)
+            if len(sp) < self.prev_spl:
+                reward = 1
+            self.prev_sp = sp
+            self.prev_spl = len(sp)
         else:
-            self.turn(action)
+            try:
+                target_dir = utils.angle_to_node(self.G, self.agent_loc, self.prev_sp[1], self.SMALL_TURN_DEG)
+                angle = utils.smallest_angle(self.agent_dir, target_dir)
+                self.turn(action)
+                new_angle = utils.smallest_angle(self.agent_dir, target_dir)
+                if np.abs(new_angle) < np.abs(angle) and np.abs(angle) >= 45:
+                    reward = 1
+            except Exception:
+                self.turn(action)
 
         image, x, w = self._get_image()
-
         if self.is_successful_trajectory(x):
             done = True
             was_successful_trajectory = True
@@ -262,8 +294,6 @@ class SEVNBase(gym.GoalEnv):
             done = True
 
         visible_text = self._get_visible_text(x, w)
-        reward = self.compute_reward(x, {}, done)
-
         self.agent_gps = utils.sample_gps(self.coord_df.loc[self.agent_loc],
                                           self.x_scale, self.y_scale)
 
@@ -347,8 +377,8 @@ class SEVNBase(gym.GoalEnv):
         self.num_steps_taken = 0
         self.goal_idx, self.goal_address, self.goal_dir = \
             self.select_goal(same_segment=True)
-        self.prev_spl = len(self.shortest_path_length())
-        self.start_spl = self.prev_spl
+        self.prev_sp = nx.shortest_path(self.G, self.agent_loc, target=self.goal_idx)
+        self.prev_spl = len(self.prev_sp)
         self.agent_gps = utils.sample_gps(self.coord_df.loc[self.agent_loc],
                                           self.x_scale, self.y_scale)
         self.target_gps = utils.sample_gps(self.coord_df.loc[self.goal_idx],
@@ -411,6 +441,9 @@ class SEVNBase(gym.GoalEnv):
         # TODO pop nodes upon traversal,
         # TODO only recompute if node changes and then only for the new node
 
+        # if you're in a goal node: turn until you see the goal
+        # if you're not in a goal node: turn towards the correct transition
+
         for idx, node in enumerate(path):
             if idx + 1 != len(path):
                 target_dir = utils.angle_to_node(self.G, node, path[idx + 1],
@@ -427,24 +460,6 @@ class SEVNBase(gym.GoalEnv):
                 actions.extend(new_action)
 
         return actions
-
-    def compute_reward(self, x, info, done):
-        cur_spl = len(self.shortest_path_length())
-
-        if done and self.is_successful_trajectory(x):
-            reward = 2.0
-        elif done and not self.is_successful_trajectory(x):
-            reward = -2.0
-        elif self.prev_spl - cur_spl > 0:
-            reward = 1
-        elif self.prev_spl - cur_spl <= 0:
-            reward = -1
-
-        if self.reward_type == 'Sparse' and reward != 2.0 and reward != -2.0:
-            reward = 0
-        self.prev_spl = cur_spl
-
-        return reward
 
     def is_successful_trajectory(self, x):
         try:
