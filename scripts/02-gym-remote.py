@@ -66,5 +66,6 @@ while True:
 
         debug_output(obs)
 
+        print(f"shortest path length: {env.prev_spl}")
         print(f"Rew {rew}, done {done}, misc {misc}")
         print("=========")
