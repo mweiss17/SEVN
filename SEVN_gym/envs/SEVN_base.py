@@ -235,25 +235,37 @@ class SEVNBase(gym.GoalEnv):
 
         self.agent_loc = min(neighbors, key=neighbors.get)
 
-    -
+    def compute_reward(self, x, info, done):
+        action = info['action']
+        old_agent_dir = info['old_agent_dir']
 
-    # def compute_reward(self, x, info, done):
-    #         cur_spl = len(self.shortest_path_length())
-    #
-    #
-    #
-    # if done and self.is_successful_trajectory(x):
-    #            reward = 2.0
-    #  elif done and not self.is_successful_trajectory(x):
-    #             reward = -2.0
-    #  elif self.prev_spl - cur_spl > 0:
-    #             reward = 1
-    #  elif self.prev_spl - cur_spl <= 0:
-    #             reward = -1
-    # if self.reward_type == 'Sparse' and reward != 2.0 and reward != -2.0:
-    #               reward = 0
-    #         self.prev_spl = cur_spl
-    # return reward
+        if action == self.Actions.FORWARD:
+            # If action was forward
+            prev_spl = self.prev_spl
+            sp = nx.shortest_path(self.G, self.agent_loc, target=self.goal_idx)
+            self.prev_sp = sp
+            self.prev_spl = len(sp)
+            if self.prev_spl < prev_spl:
+                return 1
+            return -1
+
+        if self.prev_spl == 1:
+            # When in Goal node:
+            angle = utils.smallest_angle(old_agent_dir, self.goal_dir)
+            new_angle = utils.smallest_angle(self.agent_dir, self.goal_dir)
+            if np.abs(new_angle) < np.abs(angle):
+                return 1
+            return -1
+
+        if action in [self.Actions.LEFT_SMALL, self.Actions.LEFT_BIG, self.Actions.RIGHT_SMALL, self.Actions.RIGHT_BIG]:
+            # If action was turn
+            target_dir = utils.angle_to_node(self.G, self.agent_loc, self.prev_sp[1], self.SMALL_TURN_DEG)
+            angle = utils.smallest_angle(old_agent_dir, target_dir)
+            new_angle = utils.smallest_angle(self.agent_dir, target_dir)
+            if np.abs(new_angle) < np.abs(angle) and np.abs(angle) >= 45:
+                return 1
+            return -1
+        return -100000000
 
     def step(self, a):
         done = False
@@ -263,30 +275,19 @@ class SEVNBase(gym.GoalEnv):
 
         self.num_steps_taken += 1
         action = self._action_set(a)
+        info = {'action': action, 'old_agent_dir': self.agent_dir}
         if oracle:
             action = next(iter(self.shortest_path_length()), None)
-
         if self.last_x is None:
             raise Exception("Must run `env.reset()` once before first step")
         if action == self.Actions.FORWARD:
             self.transition()
-            sp = nx.shortest_path(self.G, self.agent_loc, target=self.goal_idx)
-            if len(sp) < self.prev_spl:
-                reward = 1
-            self.prev_sp = sp
-            self.prev_spl = len(sp)
         else:
-            try:
-                target_dir = utils.angle_to_node(self.G, self.agent_loc, self.prev_sp[1], self.SMALL_TURN_DEG)
-                angle = utils.smallest_angle(self.agent_dir, target_dir)
-                self.turn(action)
-                new_angle = utils.smallest_angle(self.agent_dir, target_dir)
-                if np.abs(new_angle) < np.abs(angle) and np.abs(angle) >= 45:
-                    reward = 1
-            except Exception:
-                self.turn(action)
-
+            self.turn(action)
         image, x, w = self._get_image()
+
+        reward = self.compute_reward(x, info, done)
+
         if self.is_successful_trajectory(x):
             done = True
             was_successful_trajectory = True
