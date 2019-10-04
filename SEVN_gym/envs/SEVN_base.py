@@ -239,6 +239,14 @@ class SEVNBase(gym.GoalEnv):
         action = info['action']
         old_agent_dir = info['old_agent_dir']
 
+        if self.prev_spl == 1:
+            # When in Goal node:
+            angle = utils.smallest_angle(old_agent_dir, self.goal_dir)
+            new_angle = utils.smallest_angle(self.agent_dir, self.goal_dir)
+            if np.abs(new_angle) < np.abs(angle):
+                return 1
+            return -1
+
         if action == self.Actions.FORWARD:
             # If action was forward
             prev_spl = self.prev_spl
@@ -251,14 +259,6 @@ class SEVNBase(gym.GoalEnv):
                 self.prev_spl = len(self.prev_sp)
 
             if self.prev_spl < prev_spl:
-                return 1
-            return -1
-
-        if self.prev_spl == 1:
-            # When in Goal node:
-            angle = utils.smallest_angle(old_agent_dir, self.goal_dir)
-            new_angle = utils.smallest_angle(self.agent_dir, self.goal_dir)
-            if np.abs(new_angle) < np.abs(angle):
                 return 1
             return -1
 
