@@ -12,8 +12,8 @@ def wrap_obs(obs, use_gps_obs, use_visible_text_obs, use_image_obs, use_goal, nu
 
     if use_visible_text_obs:
         # Visible street signs (2 X num_streets input)
-        vsn_fm = np.array([obs['visible_text']['street_names'][:num_streets][:num_streets],
-                           obs['visible_text']['street_names'][:num_streets][num_streets:2*num_streets]],
+        vsn_fm = np.array([obs['visible_text']['street_names'][:num_streets],
+                           obs['visible_text']['street_names'][num_streets:2*num_streets]],
                           dtype=np.float32)
         vsn_fm = np.tile(vsn_fm, (1, 84 // num_streets))
         vsn_fm = np.pad(vsn_fm, ((0, 0), (0, 84 % num_streets)), 'constant', constant_values=0)
