@@ -109,7 +109,7 @@ class SEVNBase(gym.GoalEnv):
         # Set data-dependent variables
         self.max_num_steps = \
             self.coord_df[self.coord_df.type == 'street_segment'].groupby('group').count().max().iloc[0]
-        self.all_street_names = self.label_df[~self.label_df.index.isin(self.bad_indices)].street_name.dropna().unique()
+        self.all_street_names = self.label_df.street_name.dropna().unique()
         self.num_streets = self.all_street_names.size
         self.x_scale = self.coord_df.x.max() - self.coord_df.x.min()
         self.y_scale = self.coord_df.y.max() - self.coord_df.y.min()
