@@ -176,6 +176,8 @@ def angle_to_node(G, n1, n2, SMALL_TURN_DEG):
     for neighbor in neighbors:
         neighbor_angles.append(get_angle_between_nodes(G, n1, neighbor))
 
+    print (neighbor_angles)
+
     dest_nodes = {}
     for direction in [x * SMALL_TURN_DEG for x in range(-8, 8)]:
         angles = smallest_angles(direction, neighbor_angles)
@@ -184,6 +186,8 @@ def angle_to_node(G, n1, n2, SMALL_TURN_DEG):
             dest_nodes[direction] = min_angle_node
         else:
             dest_nodes[direction] = None
+
+    print (dest_nodes)
 
     valid_angles = []
     dist = []

@@ -234,28 +234,22 @@ class SEVNBase(gym.GoalEnv):
             return
 
         self.agent_loc = min(neighbors, key=neighbors.get)
+        self.moved_forward = True
 
-    def compute_reward(self, x, info, done):
-        action = info['action']
-        old_agent_dir = info['old_agent_dir']
-
-        if self.prev_spl == 1:
-            # When in Goal node:
-            angle = utils.smallest_angle(old_agent_dir, self.goal_dir)
-            new_angle = utils.smallest_angle(self.agent_dir, self.goal_dir)
-            if np.abs(new_angle) < np.abs(angle):
-                return 1
-            return -1
+    def compute_reward(self, x, action, done):
+        assert action in self.Actions
 
         if action == self.Actions.FORWARD:
             # If action was forward
             prev_spl = self.prev_spl
-            if self.prev_sp[1] != self.agent_loc:
+            if prev_spl == 1 or self.prev_sp[1] != self.agent_loc:
+                ## if the agent did NOT go to the next correct node
                 sp = nx.shortest_path(
                     self.G, self.agent_loc, target=self.goal_idx)
                 self.prev_sp = sp
                 self.prev_spl = len(sp)
             else:
+                ## if the agent moved forward
                 self.prev_sp = self.prev_sp[1:]
                 self.prev_spl = len(self.prev_sp)
 
@@ -267,19 +261,37 @@ class SEVNBase(gym.GoalEnv):
                 self.Actions.LEFT_SMALL, self.Actions.LEFT_BIG,
                 self.Actions.RIGHT_SMALL, self.Actions.RIGHT_BIG
         ]:
-            # If action was turn
-            target_dir = utils.angle_to_node(self.G, self.agent_loc,
-                                             self.prev_sp[1],
-                                             self.SMALL_TURN_DEG)
-            angle = utils.smallest_angle(old_agent_dir, target_dir)
+            ## If action was turn
+
+            if self.prev_spl == 1:
+                ## Goal node:
+                target_dir = self.goal_dir
+            else:
+                target_dir = utils.angle_to_node(self.G, self.agent_loc,
+                                                 self.prev_sp[1],
+                                                 self.SMALL_TURN_DEG)
+
+            angle = utils.smallest_angle(self.old_agent_dir, target_dir)
             new_angle = utils.smallest_angle(self.agent_dir, target_dir)
-            if np.abs(new_angle) < np.abs(angle) and np.abs(angle) >= 45:
+
+            ## if we just moved forward than our base orientation is our new baseline
+            if self.moved_forward:
+                self.moved_forward = False
+                self.min_angle = angle
+
+            assert angle != new_angle  # just making sure
+
+            if np.abs(new_angle) < np.abs(self.min_angle):
+                ## nice, we found an angle that is closer to the goal
+                self.min_angle = new_angle
+                ## this min_angle reset upon walking forward
                 return 1
-            return -1
-        # This should not happen
-        import pdb
-        pdb.set_trace()
-        return -100000000
+            elif np.abs(new_angle) > np.abs(angle):
+                ## colder
+                return -1
+            elif np.abs(new_angle) < np.abs(angle):
+                ## warmer, but we've done better before, so no +1
+                return 0
 
     def step(self, a):
         done = False
@@ -289,17 +301,19 @@ class SEVNBase(gym.GoalEnv):
 
         self.num_steps_taken += 1
         action = self._action_set(a)
-        info = {'action': action, 'old_agent_dir': self.agent_dir}
         if oracle:
             action = next(iter(self.shortest_path_length()), None)
         if self.last_x is None:
             raise Exception("Must run `env.reset()` once before first step")
+
+        self.old_agent_dir = self.agent_dir
+
         if action == self.Actions.FORWARD:
             self.transition()
         else:
             self.turn(action)
         image, x, w = self._get_image()
-        reward = self.compute_reward(x, info, done)
+        reward = self.compute_reward(x, action, done)
 
         if self.is_successful_trajectory(x):
             done = True
@@ -385,6 +399,8 @@ class SEVNBase(gym.GoalEnv):
         self.diff_f = []
 
         self.needs_reset = False
+        self.min_angle = np.inf
+        self.moved_forward = False
         self.num_steps_taken = 0
         self.goal_idx, self.goal_address, self.goal_dir = \
             self.select_goal(same_segment=True)

@@ -31,6 +31,8 @@ def debug_output(obs):
             unconvert_street_name(data["visible_street_names"][i],
                                   env.unwrapped.all_street_names))
 
+    print(f"shortest path length: {env.unwrapped.prev_spl}")
+
 
 env = gym.make("SEVN-Train-AllObs-Shaped-v1")
 print(env.unwrapped.all_street_names)
@@ -74,7 +76,6 @@ while True:
 
         debug_output(obs)
 
-        print(f"shortest path length: {env.prev_spl}")
         if not reset:
             print(f"Rew {rew}, done {done}, misc {misc}")
         print("=========")
