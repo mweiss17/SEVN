@@ -46,7 +46,7 @@ class SEVNBase(gym.GoalEnv):
         # READ = 7
 
     def __init__(self,
-                 obs_shape=(4, 84, 84),
+                 obs_shape=(8, 84, 84),
                  use_image_obs=False,
                  use_gps_obs=False,
                  use_visible_text_obs=False,
