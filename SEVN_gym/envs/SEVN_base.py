@@ -251,7 +251,8 @@ class SEVNBase(gym.GoalEnv):
             # If action was forward
             prev_spl = self.prev_spl
             if self.prev_sp[1] != self.agent_loc:
-                sp = nx.shortest_path(self.G, self.agent_loc, target=self.goal_idx)
+                sp = nx.shortest_path(
+                    self.G, self.agent_loc, target=self.goal_idx)
                 self.prev_sp = sp
                 self.prev_spl = len(sp)
             else:
@@ -262,16 +263,22 @@ class SEVNBase(gym.GoalEnv):
                 return 1
             return -1
 
-        if action in [self.Actions.LEFT_SMALL, self.Actions.LEFT_BIG, self.Actions.RIGHT_SMALL, self.Actions.RIGHT_BIG]:
+        if action in [
+                self.Actions.LEFT_SMALL, self.Actions.LEFT_BIG,
+                self.Actions.RIGHT_SMALL, self.Actions.RIGHT_BIG
+        ]:
             # If action was turn
-            target_dir = utils.angle_to_node(self.G, self.agent_loc, self.prev_sp[1], self.SMALL_TURN_DEG)
+            target_dir = utils.angle_to_node(self.G, self.agent_loc,
+                                             self.prev_sp[1],
+                                             self.SMALL_TURN_DEG)
             angle = utils.smallest_angle(old_agent_dir, target_dir)
             new_angle = utils.smallest_angle(self.agent_dir, target_dir)
             if np.abs(new_angle) < np.abs(angle) and np.abs(angle) >= 45:
                 return 1
             return -1
         # This should not happen
-        import pdb; pdb.set_trace()
+        import pdb
+        pdb.set_trace()
         return -100000000
 
     def step(self, a):
@@ -381,7 +388,8 @@ class SEVNBase(gym.GoalEnv):
         self.num_steps_taken = 0
         self.goal_idx, self.goal_address, self.goal_dir = \
             self.select_goal(same_segment=True)
-        self.prev_sp = nx.shortest_path(self.G, self.agent_loc, target=self.goal_idx)
+        self.prev_sp = nx.shortest_path(
+            self.G, self.agent_loc, target=self.goal_idx)
         self.prev_spl = len(self.prev_sp)
         self.agent_gps = utils.sample_gps(self.coord_df.loc[self.agent_loc],
                                           self.x_scale, self.y_scale)
