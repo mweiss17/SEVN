@@ -252,10 +252,10 @@ class SEVNBase(gym.GoalEnv):
                 ## nice, we found an angle that is closer to the goal
                 self.min_angle = new_angle
                 ## this min_angle reset upon walking forward
-                return 1
+                return .1
             elif np.abs(new_angle) > np.abs(angle):
                 ## colder
-                return -1
+                return -.1
             elif np.abs(new_angle) < np.abs(angle):
                 ## warmer, but we've done better before, so no +1
                 return 0
