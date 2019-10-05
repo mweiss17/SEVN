@@ -96,8 +96,6 @@ class SEVNBase(gym.GoalEnv):
             DATA_PATH + 'coord.hdf5', key='df', mode='r')
         self.G = nx.read_gpickle(DATA_PATH + 'graph.pkl')
 
-        # self.graph_plotting("before.jpg")
-
         if split == 'Test':
             self.bad_indices = set(self.coord_df.index).difference(set(utils.filter_for_test(self.coord_df).index))
 
@@ -107,40 +105,7 @@ class SEVNBase(gym.GoalEnv):
         if split == 'trainv2':
             self.bad_indices = utils.filter_for_test(self.coord_df).index
             self.bad_indices = set(self.bad_indices).union(set(utils.filter_for_trainv2(self.coord_df).index))
-
-        # if split == 'Test':
-        #     indices = self.coord_df.index
-        #     self.coord_df = utils.filter_for_test(self.coord_df)
-        #     to_remove = set(indices).difference(set(self.coord_df.index))
-        #     self.label_df = self.label_df[self.label_df.index.isin(
-        #         self.coord_df.index)]
-        #     self.G.remove_nodes_from(to_remove)
-        #
-        # if split == 'Train':
-        #     test_indices = utils.filter_for_test(self.coord_df).index
-        #     self.coord_df = self.coord_df[~self.coord_df.index.isin(test_indices)]
-        #     self.label_df = self.label_df[~self.label_df.index.isin(test_indices)]
-        #     self.G.remove_nodes_from(test_indices)
-        #
-        #     # self.graph_plotting("middle.jpg")
-        #
-        #
-        # if split == 'trainv2':
-        #     test_indices = utils.filter_for_test(self.coord_df).index
-        #     self.coord_df = self.coord_df[~self.coord_df.index.isin(test_indices
-        #                                                            )]
-        #     self.label_df = self.label_df[~self.label_df.index.isin(test_indices
-        #                                                            )]
-        #     self.G.remove_nodes_from(test_indices)
-        #     indices = self.coord_df.index
-        #     self.coord_df = utils.filter_for_trainv2(self.coord_df)
-        #     to_remove = set(indices).difference(set(self.coord_df.index))
-        #     self.label_df = self.label_df[self.label_df.index.isin(
-        #         self.coord_df.index)]
-        #     self.G.remove_nodes_from(to_remove)
-        #     # self.graph_plotting("after.jpg")
-
-        # self.graph_plotting("graph.jpg")
+        self.label_df = self.label_df[~self.label_df.index.isin(self.bad_indices)]
 
         # Set data-dependent variables
         self.max_num_steps = \
@@ -469,9 +434,6 @@ class SEVNBase(gym.GoalEnv):
         # TODO store nodes in list
         # TODO pop nodes upon traversal,
         # TODO only recompute if node changes and then only for the new node
-
-        # if you're in a goal node: turn until you see the goal
-        # if you're not in a goal node: turn towards the correct transition
 
         for idx, node in enumerate(path):
             if idx + 1 != len(path):
