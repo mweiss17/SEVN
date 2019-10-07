@@ -80,23 +80,23 @@ def _wrap_obs(obs, use_gps_obs, use_visible_text_obs, use_image_obs, use_goal,
     return out
 
 
-def unwrap_obs(obs, use_gps_obs, use_visible_text_obs, use_image_obs, use_goal,
-               num_streets):
+def unwrap_obs(obs, use_gps_obs, use_visible_text_obs, use_image_obs, use_goal, num_streets):
+
     out = {}
+    if not use_image_obs:
+        out['image'] = np.zeros((3, 84, 84))
+    else:
+        out['image'] = obs[0:3]
+
     if use_gps_obs:
         out['rel_gps'] = obs[3, 0, :4]
 
     if use_visible_text_obs:
-        out['visible_street_names'] = obs[4, 0, :2 * num_streets].reshape(
-            (2, num_streets))
-        out['visible_house_numbers'] = np.hstack(
-            (obs[2, :], obs[3, :36])).reshape((3, 4, 10))  # [84:120]
-
-    # if not use_image_obs:
-    #     obs['image'] = np.zeros((3, 84, 84))
+        out['visible_street_names'] = obs[4, 0:2, :num_streets].reshape((2, num_streets))
+        out['visible_house_numbers'] = obs[5, 0:3, :40].reshape((3, 4, 10))
 
     if use_goal:
-        out['goal_house_numbers'] = obs[4, :40].reshape((4, 10))
-        out['goal_street_names'] = obs[4, 40:40 + num_streets]
+        out['goal_house_numbers'] = obs[6, 0, :40].reshape((4, 10))
+        out['goal_street_names'] = obs[7, 0, :num_streets]
 
     return out
