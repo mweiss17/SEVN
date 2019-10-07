@@ -203,8 +203,8 @@ class SEVNBase(gym.GoalEnv):
     def compute_reward(self, x, action, done):
         assert action in Actions
 
-        if action == Actions.NOOP:
-            return -0.1  # we don't wanna just stand around
+        # if action == Actions.NOOP:
+        #     return -0.1  # we don't wanna just stand around
 
         if action == Actions.FORWARD:
             # If action was forward
@@ -288,8 +288,8 @@ class SEVNBase(gym.GoalEnv):
 
         if action == Actions.FORWARD:
             self.transition()
-        elif action == Actions.NOOP:
-            pass  # no change to position
+        # elif action == Actions.NOOP:
+        #     pass  # no change to position
         else:
             self.turn(action)
 
