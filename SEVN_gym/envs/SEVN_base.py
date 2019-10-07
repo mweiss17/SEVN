@@ -252,17 +252,17 @@ class SEVNBase(gym.GoalEnv):
             # this is to prevent exploitation by only incentivizing approaching the goal,
             # not going too far and coming back
             multiplier = 1
-            if self.prev_spl > self.min_spl: # prev_spl is current_spl
-                multiplier = 0
+            # if self.prev_spl > self.min_spl: # prev_spl is current_spl
+            #     multiplier = 0
 
             if np.abs(new_angle) < np.abs(self.min_angle):
                 ## nice, we found an angle that is closer to the goal
                 self.min_angle = new_angle
                 ## this min_angle reset upon walking forward
-                return 1 * multiplier
+                return .1 * multiplier
             elif np.abs(new_angle) > np.abs(angle):
                 ## colder
-                return -1
+                return -.2
             elif np.abs(new_angle) < np.abs(angle):
                 ## warmer, but we've done better before, so no +1
                 return 0
