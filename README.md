@@ -28,7 +28,18 @@ cd SEVN
 pip install -e .
 ```
 
-## To play
+## Dataset
+You can dowload the dataset here: 
+- [Low resolution](http://sevn.s3.amazonaws.com/dataset.zip)
+- [High resolution](https://sevn.s3.amazonaws.com/SEVN-high-res-images.zip)
+
+### Dataset pre-processing
+For more information about the data-preprocessing and the data format consult the `README` in the [SEVN-data](https://github.com/simonchamorro/SEVN-data) github repository.
+
+## Training
+For more information about how to train an agent on SEVN consult the `README` in the [a2c_ppo_acktr](https://github.com/simonchamorro/pytorch-a2c-ppo-acktr-gail/tree/master/a2c_ppo_acktr) github repository.
+
+### To play
 ```
 python scripts/01-play.py
 ```
