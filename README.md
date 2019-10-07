@@ -31,7 +31,7 @@ pip install -e .
 ## Dataset
 You can dowload the dataset here: 
 - [Low resolution](http://sevn.s3.amazonaws.com/dataset.zip)
-- [High resolution](https://sevn.s3.amazonaws.com/SEVN-high-res-images.zip)
+- [High resolution](https://sevn.s3.amazonaws.com/SEVN-high-res-images.zip) (Warning! 48 GB of images)
 
 ### Dataset pre-processing
 For more information about the data-preprocessing and the data format consult the `README` in the [SEVN-data](https://github.com/simonchamorro/SEVN-data) github repository.
