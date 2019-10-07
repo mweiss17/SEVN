@@ -1,7 +1,29 @@
 import math
+
+import enum
 import numpy as np
 import pandas as pd
 
+ACTION_MEANING = {
+    0: 'LEFT_BIG',
+    1: 'LEFT_SMALL',
+    2: 'FORWARD',
+    3: 'RIGHT_SMALL',
+    4: 'RIGHT_BIG',
+    # 5: 'DONE',
+    6: 'NOOP', #needed for continuous
+    # 7: 'READ'
+}
+
+class Actions(enum.IntEnum):
+    LEFT_BIG = 0
+    LEFT_SMALL = 1
+    FORWARD = 2
+    RIGHT_SMALL = 3
+    RIGHT_BIG = 4
+    # DONE = 5
+    NOOP = 6  # needed for continuous
+    # READ = 7
 
 def norm_angle(x):
     '''
@@ -217,3 +239,21 @@ def filter_for_trainv2(coord_df):
     coord_df = coord_df[((coord_df.x > box[0]) & (coord_df.x < box[1]) &
                          (coord_df.y > box[2]) & (coord_df.y < box[3]))]
     return coord_df
+
+def continuous2discrete(action):
+    ## action has 2 float values in [-1,1],
+    ## corresponding to forward/backward and left/right
+    if action[0] > 0:
+        return Actions.FORWARD
+    else:
+        if action[1] <= -0.1 and action[1] > -0.5:
+            return Actions.LEFT_SMALL
+        elif action[1] <=  -0.5:
+            return Actions.LEFT_BIG
+        elif action[1] >= 0.1 and action[1] < 0.5:
+            return Actions.RIGHT_SMALL
+        elif action[1] >= 0.5:
+            return Actions.RIGHT_BIG
+        else: # in case of [x,y] being x<=0 and -0.1<x<0.1
+            return Actions.NOOP
+

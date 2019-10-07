@@ -75,29 +75,35 @@ register(
 for split in ['Train', 'Test', 'AllData']:
     for modality in ['AllObs', 'NoImg', 'NoGPS', 'ImgOnly']:
         for reward in ['Shaped', 'Sparse']:
-            id = f'SEVN-{split}-{modality}-{reward}-v1'
-            use_image_obs = False
-            use_visible_text_obs = False
-            use_gps_obs = False
-            if modality == 'AllObs':
-                use_image_obs = True
-                use_visible_text_obs = True
-                use_gps_obs = True
-            elif modality == 'NoImg':
-                use_visible_text_obs = True
-                use_gps_obs = True
-            elif modality == 'NoGPS':
-                use_visible_text_obs = True
-                use_image_obs = True
-            elif modality == 'ImgOnly':
-                use_image_obs = True
-            register(
-                id=id,
-                entry_point=f'SEVN_gym.envs:SEVNBase',
-                kwargs={'use_image_obs': use_image_obs,
-                        'use_gps_obs': use_gps_obs,
-                        'use_visible_text_obs': use_visible_text_obs,
-                        'split': split,
-                        'reward_type': reward},
-                max_episode_steps=255,
-            )
+            for action in ['','-Continuous']:
+                id = f'SEVN-{split}-{modality}-{reward}{action}-v1'
+                use_image_obs = False
+                use_visible_text_obs = False
+                use_gps_obs = False
+                continuous = False
+                if modality == 'AllObs':
+                    use_image_obs = True
+                    use_visible_text_obs = True
+                    use_gps_obs = True
+                elif modality == 'NoImg':
+                    use_visible_text_obs = True
+                    use_gps_obs = True
+                elif modality == 'NoGPS':
+                    use_visible_text_obs = True
+                    use_image_obs = True
+                elif modality == 'ImgOnly':
+                    use_image_obs = True
+                if action != '':
+                    continuous = True
+                register(
+                    id=id,
+                    entry_point=f'SEVN_gym.envs:SEVNBase',
+                    kwargs={'use_image_obs': use_image_obs,
+                            'use_gps_obs': use_gps_obs,
+                            'use_visible_text_obs': use_visible_text_obs,
+                            'split': split,
+                            'reward_type': reward,
+                            'continuous': continuous
+                            },
+                    max_episode_steps=255,
+                )

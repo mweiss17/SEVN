@@ -1,7 +1,5 @@
 from __future__ import print_function, division
-import enum
 import os
-import time
 import math
 import h5py
 import zipfile
@@ -9,9 +7,9 @@ import numpy as np
 import pandas as pd
 import dask.array as da
 import networkx as nx
-import academictorrents as at
 import matplotlib.pyplot as plt
 import gym
+from SEVN_gym.envs.utils import continuous2discrete, Actions, ACTION_MEANING
 from gym import spaces
 from matplotlib.collections import LineCollection
 from SEVN_gym.data import DATA_PATH
@@ -20,30 +18,9 @@ import warnings
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-ACTION_MEANING = {
-    0: 'LEFT_BIG',
-    1: 'LEFT_SMALL',
-    2: 'FORWARD',
-    3: 'RIGHT_SMALL',
-    4: 'RIGHT_BIG',
-    # 5: 'DONE',
-    # 6: 'NOOP',
-    # 7: 'READ'
-}
-
 
 class SEVNBase(gym.GoalEnv):
     metadata = {'render.modes': ['human', 'rgb_array']}
-
-    class Actions(enum.IntEnum):
-        LEFT_BIG = 0
-        LEFT_SMALL = 1
-        FORWARD = 2
-        RIGHT_SMALL = 3
-        RIGHT_BIG = 4
-        # DONE = 5
-        # NOOP = 6
-        # READ = 7
 
     def __init__(self,
                  obs_shape=(8, 84, 84),
@@ -51,7 +28,8 @@ class SEVNBase(gym.GoalEnv):
                  use_gps_obs=False,
                  use_visible_text_obs=False,
                  split="train",
-                 reward_type=None):
+                 reward_type=None,
+                 continuous=False):
 
         print(f'Booting environment from {DATA_PATH} with shaped reward,' +
               f' image_obs: {use_image_obs}, gps: {use_gps_obs},' +
@@ -60,14 +38,23 @@ class SEVNBase(gym.GoalEnv):
         # Initialize environment
         self.viewer = None
         self.high_res = False
+        self.continuous = continuous
         self.use_image_obs = use_image_obs
         self.use_gps_obs = use_gps_obs
         self.use_visible_text_obs = use_visible_text_obs
         self.reward_type = reward_type
         self.needs_reset = True
         self.plot_ready = False
-        self._action_set = SEVNBase.Actions
-        self.action_space = spaces.Discrete(len(self._action_set))
+        self._action_set = Actions
+        if not self.continuous:
+            self.action_space = spaces.Discrete(len(self._action_set))
+        else:
+            ## pseudo-continuous action. This is jsut a shallow wrapper to use TD3/SAC
+
+            ## forward/backward and left/right, but backward isn't allowed, so forward/noop
+            ## and going forward takes priority over turning
+            self.action_space = spaces.Box(low=-1, high=1, shape=(2,))
+
         self.observation_space = spaces.Box(
             low=0, high=255, shape=obs_shape, dtype=np.float32)
         self.agent_dir = 0
@@ -147,13 +134,13 @@ class SEVNBase(gym.GoalEnv):
     def turn(self, action):
         # Modify agent heading
         action = self._action_set(action)
-        if action == self.Actions.LEFT_BIG:
+        if action == Actions.LEFT_BIG:
             self.agent_dir += self.BIG_TURN_DEG
-        if action == self.Actions.LEFT_SMALL:
+        if action == Actions.LEFT_SMALL:
             self.agent_dir += self.SMALL_TURN_DEG
-        if action == self.Actions.RIGHT_SMALL:
+        if action == Actions.RIGHT_SMALL:
             self.agent_dir -= self.SMALL_TURN_DEG
-        if action == self.Actions.RIGHT_BIG:
+        if action == Actions.RIGHT_BIG:
             self.agent_dir -= self.BIG_TURN_DEG
         self.agent_dir = utils.norm_angle(self.agent_dir)
 
@@ -214,9 +201,12 @@ class SEVNBase(gym.GoalEnv):
         self.moved_forward = True
 
     def compute_reward(self, x, action, done):
-        assert action in self.Actions
+        assert action in Actions
 
-        if action == self.Actions.FORWARD:
+        if action == Actions.NOOP:
+            return -0.1  # we don't wanna just stand around
+
+        if action == Actions.FORWARD:
             # If action was forward
             prev_spl = self.prev_spl
             if prev_spl == 1 or self.prev_sp[1] != self.agent_loc:
@@ -236,8 +226,8 @@ class SEVNBase(gym.GoalEnv):
             return -1
 
         if action in [
-                self.Actions.LEFT_SMALL, self.Actions.LEFT_BIG,
-                self.Actions.RIGHT_SMALL, self.Actions.RIGHT_BIG
+                Actions.LEFT_SMALL, Actions.LEFT_BIG, Actions.RIGHT_SMALL,
+                Actions.RIGHT_BIG
         ]:
             ## If action was turn
 
@@ -284,6 +274,10 @@ class SEVNBase(gym.GoalEnv):
         reward = -1
 
         self.num_steps_taken += 1
+
+        if self.continuous:
+            a = continuous2discrete(a)
+
         action = self._action_set(a)
         if oracle:
             action = next(iter(self.shortest_path_length()), None)
@@ -292,10 +286,13 @@ class SEVNBase(gym.GoalEnv):
 
         self.old_agent_dir = self.agent_dir
 
-        if action == self.Actions.FORWARD:
+        if action == Actions.FORWARD:
             self.transition()
+        elif action == Actions.NOOP:
+            pass  # no change to position
         else:
             self.turn(action)
+
         image, x, w = self._get_image()
         reward = self.compute_reward(x, action, done)
 
@@ -418,20 +415,20 @@ class SEVNBase(gym.GoalEnv):
         turns = []
         if (np.sign(angle)) == 1:
             big_turns = int(angle / self.BIG_TURN_DEG)
-            turns.extend([self.Actions.LEFT_BIG for i in range(big_turns)])
+            turns.extend([Actions.LEFT_BIG for i in range(big_turns)])
             cur = utils.norm_angle(cur + big_turns * self.BIG_TURN_DEG)
             small_turns = int(
                 (angle - big_turns * self.BIG_TURN_DEG) / self.SMALL_TURN_DEG)
-            turns.extend([self.Actions.LEFT_SMALL for i in range(small_turns)])
+            turns.extend([Actions.LEFT_SMALL for i in range(small_turns)])
             cur = utils.norm_angle(cur + small_turns * self.SMALL_TURN_DEG)
         else:
             angle = np.abs(angle)
             big_turns = int(angle / self.BIG_TURN_DEG)
-            turns.extend([self.Actions.RIGHT_BIG for i in range(big_turns)])
+            turns.extend([Actions.RIGHT_BIG for i in range(big_turns)])
             cur = utils.norm_angle(cur - big_turns * self.BIG_TURN_DEG)
             small_turns = int(
                 (angle - big_turns * self.BIG_TURN_DEG) / self.SMALL_TURN_DEG)
-            turns.extend([self.Actions.RIGHT_SMALL for i in range(small_turns)])
+            turns.extend([Actions.RIGHT_SMALL for i in range(small_turns)])
             cur = utils.norm_angle(cur - small_turns * self.SMALL_TURN_DEG)
         return turns, cur
 
@@ -447,11 +444,6 @@ class SEVNBase(gym.GoalEnv):
 
         actions = []
 
-        # TODO precompute this for the entire graph
-        # TODO store nodes in list
-        # TODO pop nodes upon traversal,
-        # TODO only recompute if node changes and then only for the new node
-
         for idx, node in enumerate(path):
             if idx + 1 != len(path):
                 target_dir = utils.angle_to_node(self.G, node, path[idx + 1],
@@ -460,7 +452,7 @@ class SEVNBase(gym.GoalEnv):
 
                 actions.extend(new_action)
                 cur_dir = final_dir
-                actions.append(self.Actions.FORWARD)
+                actions.append(Actions.FORWARD)
 
             else:
                 new_action, final_dir = self.angles_to_turn(

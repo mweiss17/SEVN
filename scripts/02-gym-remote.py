@@ -1,7 +1,7 @@
 import gym
 from SEVN_gym.envs.SEVN_base import SEVNBase
 import numpy as np
-from SEVN_gym.envs.utils import denormalize_image, unconvert_house_numbers, unconvert_street_name
+from SEVN_gym.envs.utils import denormalize_image, unconvert_house_numbers, unconvert_street_name, Actions
 from SEVN_gym.envs.wrappers import unwrap_obs
 import cv2
 
@@ -52,15 +52,15 @@ while True:
 
         reset = False
         if key == ord("a"):
-            action = SEVNBase.Actions.LEFT_BIG
+            action = Actions.LEFT_BIG
         elif key == ord("q"):
-            action = SEVNBase.Actions.LEFT_SMALL
+            action = Actions.LEFT_SMALL
         elif key == ord("w"):
-            action = SEVNBase.Actions.FORWARD
+            action = Actions.FORWARD
         elif key == ord("e"):
-            action = SEVNBase.Actions.RIGHT_SMALL
+            action = Actions.RIGHT_SMALL
         elif key == ord("d"):
-            action = SEVNBase.Actions.RIGHT_BIG
+            action = Actions.RIGHT_BIG
         elif key == ord("x"):
             print("quitting")
             quit()
