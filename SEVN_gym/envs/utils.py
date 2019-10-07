@@ -11,7 +11,7 @@ ACTION_MEANING = {
     3: 'RIGHT_SMALL',
     4: 'RIGHT_BIG',
     # 5: 'DONE',
-    6: 'NOOP', #needed for continuous
+    # 6: 'NOOP', #needed for continuous
     # 7: 'READ'
 }
 
@@ -22,7 +22,7 @@ class Actions(enum.IntEnum):
     RIGHT_SMALL = 3
     RIGHT_BIG = 4
     # DONE = 5
-    NOOP = 6  # needed for continuous
+    # NOOP = 6  # needed for continuous
     # READ = 7
 
 def norm_angle(x):

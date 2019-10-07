@@ -95,6 +95,7 @@ for split in ['Train', 'Test', 'AllData']:
                     use_image_obs = True
                 if action != '':
                     continuous = True
+                    raise NotImplementedError("currently disabled, please check back later")
                 register(
                     id=id,
                     entry_point=f'SEVN_gym.envs:SEVNBase',
