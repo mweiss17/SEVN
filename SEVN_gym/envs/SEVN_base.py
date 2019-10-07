@@ -97,14 +97,16 @@ class SEVNBase(gym.GoalEnv):
         self.G = nx.read_gpickle(DATA_PATH + 'graph.pkl')
 
         if split == 'Test':
-            self.bad_indices = set(self.coord_df.index).difference(set(utils.filter_for_test(self.coord_df).index))
+            self.bad_indices = set(self.coord_df.index).difference(
+                set(utils.filter_for_test(self.coord_df).index))
 
         if split == 'Train':
             self.bad_indices = utils.filter_for_test(self.coord_df).index
 
         if split == 'trainv2':
             self.bad_indices = utils.filter_for_test(self.coord_df).index
-            self.bad_indices = set(self.bad_indices).union(set(utils.filter_for_trainv2(self.coord_df).index))
+            self.bad_indices = set(self.bad_indices).union(
+                set(utils.filter_for_trainv2(self.coord_df).index))
 
         # Set data-dependent variables
         self.max_num_steps = \
@@ -158,30 +160,38 @@ class SEVNBase(gym.GoalEnv):
     def select_goal(self, same_segment=True):
         goals = self.label_df.loc[self.label_df['is_goal'] == True]
         if same_segment:
-            frames = self.coord_df[(self.coord_df.type == 'street_segment') &
-                                   self.coord_df.index.isin(goals.index) &
-                                   ~self.coord_df.index.isin(self.bad_indices)].index
+            frames = self.coord_df[
+                (self.coord_df.type == 'street_segment')
+                & self.coord_df.index.isin(goals.index)
+                & ~self.coord_df.index.isin(self.bad_indices)].index
             goals_on_street_segment = goals[goals.index.isin(frames)]
-            goal = goals_on_street_segment.loc[np.random.choice(goals_on_street_segment.index.values.tolist())]
+            goal = goals_on_street_segment.loc[np.random.choice(
+                goals_on_street_segment.index.values.tolist())]
             if len(goal.shape) > 1:
                 goal = goal.iloc[np.random.randint(len(goal))]
-            segment_group = self.coord_df[self.coord_df.index == goal.name].group.iloc[0]
-            segment_panos = self.coord_df[(self.coord_df.group == segment_group) &
-                                          (self.coord_df.type == 'street_segment')]
+            segment_group = self.coord_df[self.coord_df.index ==
+                                          goal.name].group.iloc[0]
+            segment_panos = self.coord_df[
+                (self.coord_df.group == segment_group)
+                & (self.coord_df.type == 'street_segment')]
         else:
             goal = goals.loc[np.random.choice(goals.index.values.tolist())]
         self.goal_hn = goal.house_number
         pano_rotation = utils.norm_angle(self.coord_df.loc[goal.name].angle)
         label = self.label_df.loc[goal.name]
         if isinstance(label, pd.DataFrame):
-            label = label[label.is_goal].iloc[np.random.choice(label[label.is_goal].shape[0])]
+            label = label[label.is_goal].iloc[np.random.choice(
+                label[label.is_goal].shape[0])]
         label_dir = (224 - (label.x_min + label.x_max) / 2) * 360 / 224 - 180
         goal_dir = utils.norm_angle(label_dir + pano_rotation)
         self.agent_dir = self.SMALL_TURN_DEG * np.random.choice(range(-8, 8))
         self.agent_loc = np.random.choice(segment_panos.index.unique())
         goal_address = {
-            'house_numbers': utils.convert_house_numbers(self.goal_hn),
-            'street_names': utils.convert_street_name(goal.street_name, self.all_street_names)
+            'house_numbers':
+                utils.convert_house_numbers(self.goal_hn),
+            'street_names':
+                utils.convert_street_name(goal.street_name,
+                                          self.all_street_names)
         }
         return goal.name, goal_address, goal_dir
 
