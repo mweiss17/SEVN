@@ -4,7 +4,7 @@
 
 SEVN contains 360<sup>0</sup> images and labels for house numbers, doors, and street name signs, which can be used for several different navigation tasks.
 Agents trained with SEVN have access to variable resolution images, visible text, and simulated GPS data to navigate the environment. 
-The SEVN Simulator is based on the OpenAI Gym environment. An instance of the simulator can be run at 400-800 \ac{FPS} on a machine with 2 CPU cores and 2 GB of RAM.
+The SEVN Simulator is based on the OpenAI Gym environment. An instance of the simulator using low-resolution imagery can be run at 400-800 frames per second on a machine with 2 CPU cores and 2 GB of RAM.
 
 Low Resolution Views (84x84px)             |  High Resolution Views (1280x1280px)
 :-------------------------:|:-------------------------:
