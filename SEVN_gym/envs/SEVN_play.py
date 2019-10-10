@@ -76,7 +76,7 @@ class SEVNPlay(SEVNBase):
 
     def _get_image(self, high_res=False, plot=False):
         if self.high_res:
-            path = './SEVN_gym/data/panos/pano_' + str(int(
+            path = './SEVN_gym/data0/panos/pano_' + str(int(
                 30*self.G.nodes[self.agent_loc]['timestamp'])).zfill(6) + \
                 '.png'
             img = cv2.imread(path)[:, :, ::-1]

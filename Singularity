@@ -70,8 +70,8 @@ From: ubuntu:18.04
         mv NAVI-STR NAVI_STR
 
         # Install pytorch-a2c-ppo-acktr
-        git clone https://github.com/simonchamorro/pytorch-a2c-ppo-acktr-gail.git
-        cd pytorch-a2c-ppo-acktr-gail
+        git clone https://github.com/simonchamorro/SEVN-model.git
+        cd SEVN-model
         mkdir trained_models/
         mkdir trained_models/ppo/
 	pip3 install -e .

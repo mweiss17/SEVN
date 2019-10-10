@@ -10,7 +10,7 @@ mkdir $SCRATCH/trained_models/ppo/
 # 1. Copy your container on the compute node
 rsync -avz $SCRATCH/SEVN_latest.sif $SLURM_TMPDIR
 # 2. Copy your code on the compute node
-rsync -avz $SCRATCH/pytorch-a2c-ppo-acktr-gail $SLURM_TMPDIR
+rsync -avz $SCRATCH/SEVN-model $SLURM_TMPDIR
 
 seed="$(find $SCRATCH/trained_models/ppo/ -maxdepth 0 -type d | wc -l)"
 
@@ -23,7 +23,7 @@ singularity exec --nv \
         -B $SLURM_TMPDIR:/dataset/ \
         -B $SCRATCH:/final_log/ \
         $SLURM_TMPDIR/SEVN_latest.sif \
-        python3 pytorch-a2c-ppo-acktr-gail/main.py \
+        python3 SEVN-model/main.py \
           --env-name "SEVN-Mini-All-Shaped-v1" \
           --custom-gym SEVN_gym \
           --algo ppo \

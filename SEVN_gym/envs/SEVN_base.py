@@ -17,13 +17,6 @@ import warnings
 
 warnings.simplefilter(action='ignore', category=FutureWarning)
 
-# in order to speed up training/NFS file access, you can make 5 copies of
-# SEVN_gym/data and call them SEVN_gym/data0 to ...data4. Then this script will
-# randomly pick one of those and reduce concurrent access
-
-DATA_PATH = get_data_path()
-
-
 class SEVNBase(gym.GoalEnv):
     metadata = {'render.modes': ['human', 'rgb_array']}
 
@@ -34,7 +27,17 @@ class SEVNBase(gym.GoalEnv):
                  use_visible_text_obs=False,
                  split="train",
                  reward_type=None,
-                 continuous=False):
+                 continuous=False,
+                 concurrent_access=False,
+                 high_res=False):
+
+        # in order to speed up training/NFS file access, you can make 5 copies of
+        # SEVN_gym/data0 and call them SEVN_gym/data0 to ...data4. Then this script will
+        # randomly pick one of those and reduce concurrent access
+        if concurrent_access:
+            DATA_PATH = get_data_path()
+        else:
+            from SEVN_gym.data import DATA_PATH
 
         print(f'Booting environment from {DATA_PATH} with shaped reward,' +
               f' image_obs: {use_image_obs}, gps: {use_gps_obs},' +
@@ -42,7 +45,9 @@ class SEVNBase(gym.GoalEnv):
 
         # Initialize environment
         self.viewer = None
-        self.high_res = False
+        self.high_res = high_res
+        if high_res:
+            obs_shape = (8, 1280, 1280)
         self.continuous = continuous
         self.use_image_obs = use_image_obs
         self.use_gps_obs = use_gps_obs
@@ -54,8 +59,7 @@ class SEVNBase(gym.GoalEnv):
         if not self.continuous:
             self.action_space = spaces.Discrete(len(self._action_set))
         else:
-            ## pseudo-continuous action. This is jsut a shallow wrapper to use TD3/SAC
-
+            ## pseudo-continuous action. This is just a shallow wrapper to use TD3/SAC
             ## forward/backward and left/right, but backward isn't allowed, so forward/noop
             ## and going forward takes priority over turning
             self.action_space = spaces.Box(low=-1, high=1, shape=(2,))
@@ -71,7 +75,7 @@ class SEVNBase(gym.GoalEnv):
         self.last_x = None
 
         # Load data
-        if not os.path.isfile(os.path.join(DATA_PATH,'images.hdf5')) \
+        if not os.path.isfile(os.path.join(DATA_PATH, 'images.hdf5')) \
                 or not os.path.isfile(os.path.join(DATA_PATH, 'graph.pkl')) \
                 or not os.path.isfile(os.path.join(DATA_PATH, 'label.hdf5')) \
                 or not os.path.isfile(os.path.join(DATA_PATH, 'coord.hdf5')):
@@ -79,7 +83,10 @@ class SEVNBase(gym.GoalEnv):
             #     .extractall(DATA_PATH)
             zipfile.ZipFile(os.path.join(DATA_PATH,
                                          'dataset.zip')).extractall(DATA_PATH)
-        f = h5py.File(os.path.join(DATA_PATH, 'images.hdf5'), 'r')
+        if high_res:
+            f = h5py.File(os.path.join(DATA_PATH, 'images-high-res.hdf5'), 'r')
+        else:
+            f = h5py.File(os.path.join(DATA_PATH, 'images.hdf5'), 'r')
         self.images = f["images"]
         self.frame_key = {int(k): i for i, k in enumerate(f['frames'][:])}
         self.label_df = pd.read_hdf(
@@ -100,7 +107,7 @@ class SEVNBase(gym.GoalEnv):
             self.bad_indices = set(self.bad_indices).union(
                 set(utils.filter_for_trainv2(self.coord_df).index))
 
-        # Set data-dependent variables
+        # Set data0-dependent variables
         self.max_num_steps = \
             self.coord_df[self.coord_df.type == 'street_segment'].groupby('group').count().max().iloc[0]
         self.all_street_names = self.label_df.street_name.dropna().unique()
@@ -333,7 +340,6 @@ class SEVNBase(gym.GoalEnv):
     def _get_image(self):
         img = self.images[self.frame_key[self.agent_loc]]
         obs_shape = self.observation_space.shape
-
         pano_rotation = self.coord_df.loc[self.agent_loc, 'angle']
         agent_dir = utils.norm_angle_360(self.agent_dir)
         normed_ang = ((agent_dir - pano_rotation) % 360) / 360
@@ -345,7 +351,7 @@ class SEVNBase(gym.GoalEnv):
                 img.shape[1])
         img = img.transpose()
         if (x + w) % img.shape[1] != (x + w):
-            res_img = np.zeros((3, 84, 84))
+            res_img = np.zeros((3, w, w))
             offset = img.shape[1] - (x % img.shape[1])
             res_img[:, :offset] = img[y:y + h, x:x + offset]
             res_img[:, offset:] = img[y:y + h, :(x + w) % img.shape[1]]
