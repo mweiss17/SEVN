@@ -1,5 +1,5 @@
 theme: jekyll-theme-cayman
 title: SEVN: Sidewalk Environment for Visual Navigation
 description: Creating a navigation assistant for the visually impaired
-show_downloads: "true"
+show_downloads: true
 google_analytics: [Your Google Analytics tracking ID]
