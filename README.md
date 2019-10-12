@@ -48,7 +48,7 @@ You can manually download the dataset here (in case you don't want to follow the
 For more information about the data-preprocessing and the data format consult the `README` in the [SEVN-data](https://github.com/simonchamorro/SEVN-data) github repository.
 
 ## Training
-For more information about how to train an agent on SEVN consult the `README` in the [a2c_ppo_acktr](https://github.com/simonchamorro/SEVN-model/tree/master/sevn_model) github repository.
+For more information about how to train an agent on SEVN consult the `README` in the [SEVN Model Github repo](https://github.com/simonchamorro/SEVN-model/tree/master/sevn_model).
 
 ## For more information
 [Creating a Navigation Assistant for the Visually Impaired](https://github.com/mweiss17/SEVN/blob/master/docs/01-article-env-introduction.md)
