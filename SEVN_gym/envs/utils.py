@@ -1,8 +1,12 @@
 import math
 
 import enum
+import os
+import random
+
 import numpy as np
 import pandas as pd
+from SEVN_gym.data import DATA_PATH
 
 ACTION_MEANING = {
     0: 'LEFT_BIG',
@@ -256,4 +260,10 @@ def continuous2discrete(action):
             return Actions.RIGHT_BIG
         else: # in case of [x,y] being x<=0 and -0.1<x<0.1
             return Actions.NOOP
+
+def get_data_path():
+    parent = os.path.join(DATA_PATH,"..")
+    if os.path.isdir(os.path.join(parent,"data0")): # the prolly the others (0..4) exist too
+        path = random.randint(0, 4)
+        return os.path.join(parent,f"data{path}")
 
