@@ -1,4 +1,4 @@
-# Navigation Agents for the Visually Impaired: A Sidewalk Simulator and Experiments 
+# Navigation Agents for the Visually Impaired
 
 # Video
 
