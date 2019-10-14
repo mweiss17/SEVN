@@ -92,6 +92,6 @@ Or via our bibtex:
 
 ## License
 
-This project is licensed under ...?
+This project is licensed under the MIT licence - please see the `LICENCE` file in the repository.
  
 
