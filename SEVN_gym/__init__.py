@@ -9,9 +9,23 @@ register(
 )
 
 register(
+    id='SEVN-Intersection-v1',
+    entry_point='SEVN_gym.envs:SEVNIntersection',
+    kwargs={},
+    max_episode_steps=10000,
+)
+
+register(
+    id='SEVN-CostlyText-HighRes-v1',
+    entry_point='SEVN_gym.envs:SEVNCostlyText',
+    kwargs={'reward_type': 'Shaped', 'high_res': True},
+    max_episode_steps=10000,
+)
+
+register(
     id='SEVN-CostlyText-v1',
     entry_point='SEVN_gym.envs:SEVNCostlyText',
-    kwargs={},
+    kwargs={'reward_type': 'Shaped', 'high_res': False},
     max_episode_steps=10000,
 )
 

@@ -25,7 +25,7 @@ class SEVNBase(gym.GoalEnv):
                  use_image_obs=False,
                  use_gps_obs=False,
                  use_visible_text_obs=False,
-                 split="train",
+                 split="Train",
                  reward_type=None,
                  continuous=False,
                  concurrent_access=False,
@@ -53,9 +53,14 @@ class SEVNBase(gym.GoalEnv):
         self.use_gps_obs = use_gps_obs
         self.use_visible_text_obs = use_visible_text_obs
         self.reward_type = reward_type
+        self.goal_type = "segment"
         self.needs_reset = True
         self.plot_ready = False
-        self._action_set = Actions
+        self.is_explorer = False
+        try:
+            assert self._action_set
+        except Exception as e:
+            self._action_set = Actions
         if not self.continuous:
             self.action_space = spaces.Discrete(len(self._action_set))
         else:
@@ -156,9 +161,9 @@ class SEVNBase(gym.GoalEnv):
             self.agent_dir -= self.BIG_TURN_DEG
         self.agent_dir = utils.norm_angle(self.agent_dir)
 
-    def select_goal(self, same_segment=True):
+    def select_goal(self):
         goals = self.label_df.loc[self.label_df['is_goal'] == True]
-        if same_segment:
+        if self.goal_type == "segment":
             frames = self.coord_df[
                 (self.coord_df.type == 'street_segment')
                 & self.coord_df.index.isin(goals.index)
@@ -173,25 +178,55 @@ class SEVNBase(gym.GoalEnv):
             segment_panos = self.coord_df[
                 (self.coord_df.group == segment_group)
                 & (self.coord_df.type == 'street_segment')]
-        else:
-            goal = goals.loc[np.random.choice(goals.index.values.tolist())]
-        self.goal_hn = goal.house_number
-        pano_rotation = utils.norm_angle(self.coord_df.loc[goal.name].angle)
-        label = self.label_df.loc[goal.name]
-        if isinstance(label, pd.DataFrame):
-            label = label[label.is_goal].iloc[np.random.choice(
-                label[label.is_goal].shape[0])]
-        label_dir = (224 - (label.x_min + label.x_max) / 2) * 360 / 224 - 180
-        goal_dir = utils.norm_angle(label_dir + pano_rotation)
-        self.agent_dir = self.SMALL_TURN_DEG * np.random.choice(range(-8, 8))
-        self.agent_loc = np.random.choice(segment_panos.index.unique())
-        goal_address = {
-            'house_numbers':
-                utils.convert_house_numbers(self.goal_hn),
-            'street_names':
-                utils.convert_street_name(goal.street_name,
-                                          self.all_street_names)
-        }
+            self.goal_hn = goal.house_number
+            pano_rotation = utils.norm_angle(self.coord_df.loc[goal.name].angle)
+            label = self.label_df.loc[goal.name]
+            if isinstance(label, pd.DataFrame):
+                label = label[label.is_goal].iloc[np.random.choice(
+                    label[label.is_goal].shape[0])]
+            label_dir = (224 - (label.x_min + label.x_max) / 2) * 360 / 224 - 180
+            goal_dir = utils.norm_angle(label_dir + pano_rotation)
+            self.agent_dir = self.SMALL_TURN_DEG * np.random.choice(range(-8, 8))
+            self.agent_loc = np.random.choice(segment_panos.index.unique())
+            goal_address = {
+                'house_numbers':
+                    utils.convert_house_numbers(self.goal_hn),
+                'street_names':
+                    utils.convert_street_name(goal.street_name,
+                                              self.all_street_names)
+            }
+        elif self.goal_type == "intersection":
+            frames = self.coord_df[
+                (self.coord_df.type == 'street_segment')
+                & self.coord_df.index.isin(goals.index)
+                & ~self.coord_df.index.isin(self.bad_indices)].index
+            goals_on_street_segment = goals[goals.index.isin(frames)]
+            goal = goals_on_street_segment.loc[np.random.choice(
+                goals_on_street_segment.index.values.tolist())]
+            if len(goal.shape) > 1:
+                goal = goal.iloc[np.random.randint(len(goal))]
+            segment_group = self.coord_df[self.coord_df.index ==
+                                          goal.name].group.iloc[0]
+            segment_panos = self.coord_df[
+                (self.coord_df.group == segment_group)
+                & (self.coord_df.type == 'street_segment')]
+            self.goal_hn = goal.house_number
+            pano_rotation = utils.norm_angle(self.coord_df.loc[goal.name].angle)
+            label = self.label_df.loc[goal.name]
+            if isinstance(label, pd.DataFrame):
+                label = label[label.is_goal].iloc[np.random.choice(
+                    label[label.is_goal].shape[0])]
+            label_dir = (224 - (label.x_min + label.x_max) / 2) * 360 / 224 - 180
+            goal_dir = utils.norm_angle(label_dir + pano_rotation)
+            self.agent_dir = self.SMALL_TURN_DEG * np.random.choice(range(-8, 8))
+            self.agent_loc = np.random.choice(segment_panos.index.unique())
+            goal_address = {
+                'house_numbers':
+                    utils.convert_house_numbers(self.goal_hn),
+                'street_names':
+                    utils.convert_street_name(goal.street_name,
+                                              self.all_street_names)
+            }
         return goal.name, goal_address, goal_dir
 
     def transition(self):
@@ -212,8 +247,8 @@ class SEVNBase(gym.GoalEnv):
         self.agent_loc = min(neighbors, key=neighbors.get)
         self.moved_forward = True
 
-    def compute_reward(self, x, action, done):
-        assert action in Actions
+    def compute_reward(self, x, action, done, obs=None):
+        assert action in self._action_set
 
         # if action == Actions.NOOP:
         #     return -0.1  # we don't wanna just stand around
@@ -283,13 +318,10 @@ class SEVNBase(gym.GoalEnv):
         done = False
         was_successful_trajectory = False
         oracle = False
-        reward = -1
-
         self.num_steps_taken += 1
 
         # if self.continuous:
         #     a = continuous2discrete(a)
-
         action = self._action_set(a)
         if oracle:
             action = next(iter(self.shortest_path_length()), None)
@@ -300,13 +332,12 @@ class SEVNBase(gym.GoalEnv):
 
         if action == Actions.FORWARD:
             self.transition()
-        # elif action == Actions.NOOP:
-        #     pass  # no change to position
-        else:
+        elif action in [Actions.LEFT_BIG, Actions.LEFT_SMALL, Actions.RIGHT_BIG, Actions.RIGHT_SMALL]:
             self.turn(action)
+        else:
+            pass
 
         image, x, w = self._get_image()
-        reward = self.compute_reward(x, action, done)
 
         if self.is_successful_trajectory(x):
             done = True
@@ -327,9 +358,15 @@ class SEVNBase(gym.GoalEnv):
             'rel_gps': rel_gps,
             'visible_text': visible_text
         }
+        reward = self.compute_reward(x, action, done, obs)
         obs = wrappers.wrap_obs(obs, self.use_gps_obs,
                                 self.use_visible_text_obs, self.use_image_obs,
                                 True, self.num_streets)
+
+        if self.reward_type == "Sparse":
+            reward = 0
+            if was_successful_trajectory:
+                reward = 1
 
         info = {}
         if done:
@@ -382,21 +419,12 @@ class SEVNBase(gym.GoalEnv):
         return visible_text
 
     def reset(self):
-        # TODO: remove this when we no longer need profiling
-        self.diff_a = []
-        self.diff_b = []
-        self.diff_c = []
-        self.diff_d = []
-        self.diff_e = []
-        self.diff_f = []
-
         self.needs_reset = False
         self.min_angle = np.inf
         self.min_spl = np.inf
         self.moved_forward = False
         self.num_steps_taken = 0
-        self.goal_idx, self.goal_address, self.goal_dir = \
-            self.select_goal(same_segment=True)
+        self.goal_idx, self.goal_address, self.goal_dir = self.select_goal()
         self.prev_sp = nx.shortest_path(
             self.G, self.agent_loc, target=self.goal_idx)
         self.prev_spl = len(self.prev_sp)
@@ -473,7 +501,7 @@ class SEVNBase(gym.GoalEnv):
         return actions
 
     def is_successful_trajectory(self, x):
-        if not self.agent_loc == self.goal_idx:
+        if not self.agent_loc == self.goal_idx or self.is_explorer:
             return False
         try:
             label = self.label_df.loc[self.agent_loc, [

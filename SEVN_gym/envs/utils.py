@@ -14,9 +14,9 @@ ACTION_MEANING = {
     2: 'FORWARD',
     3: 'RIGHT_SMALL',
     4: 'RIGHT_BIG',
-    # 5: 'DONE',
-    # 6: 'NOOP', #needed for continuous
-    # 7: 'READ'
+    5: 'DONE',
+    6: 'NOOP', #needed for continuous
+    7: 'READ'
 }
 
 class Actions(enum.IntEnum):
@@ -28,6 +28,22 @@ class Actions(enum.IntEnum):
     # DONE = 5
     # NOOP = 6  # needed for continuous
     # READ = 7
+
+class ActionsWithNOOP(enum.IntEnum):
+    LEFT_BIG = 0
+    LEFT_SMALL = 1
+    FORWARD = 2
+    RIGHT_SMALL = 3
+    RIGHT_BIG = 4
+    NOOP = 5
+
+class ActionsWithRead(enum.IntEnum):
+    LEFT_BIG = 0
+    LEFT_SMALL = 1
+    FORWARD = 2
+    RIGHT_SMALL = 3
+    RIGHT_BIG = 4
+    READ = 5
 
 def norm_angle(x):
     '''

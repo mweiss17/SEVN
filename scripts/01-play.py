@@ -1,97 +1,180 @@
-import gym
-from SEVN_gym.envs.SEVN_base import SEVNBase
-import numpy as np
-from SEVN_gym.envs.utils import denormalize_image, unconvert_house_numbers, unconvert_street_name, Actions
-from SEVN_gym.envs.wrappers import unwrap_obs
-import cv2
+from collections import deque
 import argparse
+import time
+import matplotlib
+import gym
+import SEVN_gym # noqa
+from gym import logger
+import pygame
+from SEVN_gym.envs.utils import ActionsWithNOOP
+
+try:
+    matplotlib.use('TkAgg')
+    import matplotlib.pyplot as plt
+except ImportError as e:
+    logger.warn('failed to set matplotlib backend,' +
+                ' plotting will not work: %s' % str(e))
+    plt = None
+from pygame.locals import VIDEORESIZE
 
 
-def show_img(env, frame):
-    img = np.swapaxes(frame[:3, :, :], 0, 2)
-    img = cv2.resize(denormalize_image(img)[:, :, ::-1], (500, 500))
-    cv2.imshow('SEVN viewer', img)
-    return cv2.waitKey(-1)
+def display_arr(screen, arr, video_size, transpose):
+    arr_min, arr_max = arr.min(), arr.max()
+    arr = 255.0 * (arr - arr_min) / (arr_max - arr_min)
+    pyg_img = pygame.surfarray.make_surface(arr.swapaxes(0, 2) if transpose else arr)
+    pyg_img = pygame.transform.scale(pyg_img, video_size)
+    screen.blit(pyg_img, (0, 0))
 
 
-def debug_output(env, obs):
+def display_text(screen, text, video_size):
+    textSurface = pygame.font.Font(
+        'freesansbold.ttf', 30).render(text, True, (0, 0, 0))
+    textRect = textSurface.get_rect()
+    textRect.center = (video_size[0]/10, video_size[1]/10)
+    screen.blit(textSurface, textRect)
+    pygame.display.update()
 
-    data = unwrap_obs(obs, True, True, None, True, env.unwrapped.num_streets)
-    print("goal hn", unconvert_house_numbers(data["goal_house_numbers"]))
-    for i in range(3):
-        print(f"visible {i}",
-              unconvert_house_numbers(data["visible_house_numbers"][i]))
 
-    print(
-        "goal street",
-        unconvert_street_name(data["goal_street_names"],
-                              env.unwrapped.all_street_names))
-    for i in range(2):
-        print(
-            f"visible street {i}",
-            unconvert_street_name(data["visible_street_names"][i],
-                                  env.unwrapped.all_street_names))
+def display_bb(screen, rel_coords, text, video_size):
+    textSurface = pygame.font.Font(
+        'freesansbold.ttf', 30).render(text, True, (0, 0, 0))
+    textRect = textSurface.get_rect()
+    BLUE = (0, 0, 255)
+    pygame.draw.rect(screen, BLUE, rel_coords)
+    textRect.center = (video_size[0]/10, video_size[1]/10)
+    screen.blit(textSurface, textRect)
+    pygame.display.update()
 
-    print(f"shortest path length: {env.unwrapped.prev_spl}")
 
-def play(env, zoom=4):
-    while True:
-        print("= = = RESETTING = = =")
-        obs, done = env.reset(), False
-        print(
-            "Highlight the Viewer window, press one of [aqwed]. Press 'x' to quit. Press 'r' to reset."
-        )
-        key = show_img(env, obs)
+def play(env, transpose=True, fps=30, zoom=0.5, high_res=False,
+         callback=None, keys_to_action=None):
+    obs = env.reset()
+    env.unwrapped._action_set = ActionsWithNOOP
+    rendered = env.render(mode='rgb_array')
+    if keys_to_action is None:
+        if hasattr(env, 'get_keys_to_action'):
+            keys_to_action = env.get_keys_to_action()
+        elif hasattr(env.unwrapped, 'get_keys_to_action'):
+            keys_to_action = env.unwrapped.get_keys_to_action()
+        else:
+            assert False, env.spec.id + ' does not have explicit key to' + \
+                          ' action mapping, please specify one manually'
+    relevant_keys = set(sum(map(list, keys_to_action.keys()), []))
+    video_size = [rendered.shape[1], rendered.shape[0]]
+    if zoom is not None:
+        video_size = int(video_size[0] * zoom), int(video_size[1] * zoom)
 
-        while not done:
+    pressed_keys = []
+    running = True
+    env_done = True
 
-            while key not in [ord(x) for x in ["a", "q", "w", "e", "d", "x", "r"]]:
-                key = show_img(env, obs)
+    pygame.font.init()
+    screen = pygame.display.set_mode(video_size)
+    clock = pygame.time.Clock()
+    pygame.display.set_caption('NAVI')
 
-            reset = False
-            if key == ord("a"):
-                action = Actions.LEFT_BIG
-            elif key == ord("q"):
-                action = Actions.LEFT_SMALL
-            elif key == ord("w"):
-                action = Actions.FORWARD
-            elif key == ord("e"):
-                action = Actions.RIGHT_SMALL
-            elif key == ord("d"):
-                action = Actions.RIGHT_BIG
-            elif key == ord("x"):
-                print("quitting")
-                quit()
-            elif key == ord("r"):
-                print("= requested resetting")
-                reset = True
-            key = None
+    info = None
+    f = 0
+    start = time.time()
+    while running:
+        f += 1
+        if time.time() - start > 1:
+            start = time.time()
+            f = 0
+        if env_done:
+            env_done = False
+            obs = env.reset()
+        else:
+            action = keys_to_action.get(tuple(sorted(pressed_keys)), 6)
+            prev_obs = obs
+            obs, rew, env_done, info = env.step(action)
 
-            if not reset:
-                obs, rew, _, info = env.step(action)
-            else:
-                obs = env.reset()
+            if callback is not None:
+                callback(prev_obs, obs, action, rew, env_done, info)
 
-            debug_output(env, obs)
+        if obs is not None:
+            rendered = env.render(mode='rgb_array')
+            display_arr(screen, rendered,
+                        transpose=transpose, video_size=video_size)
+        if info is not None:
+            info.get('achieved_goal')
 
-            if not reset:
-                print(f"Rew {rew}, done {done}, info {info}")
-            print("=========")
+        # process pygame events
+        for event in pygame.event.get():
+            # test events, set key states
+            if event.type == pygame.KEYDOWN:
+                if event.key in relevant_keys:
+                    pressed_keys.append(event.key)
+                elif event.key == 27:
+                    running = False
+            elif event.type == pygame.KEYUP:
+                if event.key in relevant_keys:
+                    pressed_keys.remove(event.key)
+            elif event.type == pygame.QUIT:
+                running = False
+            elif event.type == VIDEORESIZE:
+                video_size = event.size
+                screen = pygame.display.set_mode(video_size)
+                # print(video_size)
+
+        pygame.display.flip()
+        clock.tick(fps)
+    pygame.quit()
+
+
+class PlayPlot(object):
+    def __init__(self, callback, horizon_timesteps, plot_names):
+        self.data_callback = callback
+        self.horizon_timesteps = horizon_timesteps
+        self.plot_names = plot_names
+
+        assert plt is not None, 'matplotlib backend failed, plotting will' + \
+                                ' not work'
+
+        num_plots = len(self.plot_names)
+        self.fig, self.ax = plt.subplots(num_plots)
+        if num_plots == 1:
+            self.ax = [self.ax]
+        for axis, name in zip(self.ax, plot_names):
+            axis.set_title(name)
+        self.t = 0
+        self.cur_plot = [None for _ in range(num_plots)]
+        self.data = [deque(maxlen=horizon_timesteps) for _ in range(num_plots)]
+
+    def callback(self, obs_t, obs_tp1, action, rew, done, info):
+        points = self.data_callback(obs_t, obs_tp1, action, rew, done, info)
+        for point, data_series in zip(points, self.data):
+            data_series.append(point)
+        self.t += 1
+
+        xmin, xmax = max(0, self.t - self.horizon_timesteps), self.t
+
+        for i, plot in enumerate(self.cur_plot):
+            if plot is not None:
+                plot.remove()
+            self.cur_plot[i] = self.ax[i].scatter(
+                range(xmin, xmax), list(self.data[i]), c='blue')
+            self.ax[i].set_xlim(xmin, xmax)
+        plt.pause(0.000001)
+
 
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--env',
-                        type=str, default='SEVN-Train-AllObs-Shaped-v1',
+                        type=str, default='SEVN-Play-v1',
                         help='Define Environment')
     parser.add_argument('--high-res', action="store_true",
                         help='Use high-resolution images')
+    parser.add_argument('--fps', type=int, default=6,
+                        help='Set upper limit of FPS')
     args = parser.parse_args()
     if args.high_res:
         zoom = 0.5
     else:
         zoom = 4
-    env = gym.make(args.env, high_res=args.high_res)
-    play(env, zoom=zoom)
+    env = gym.make(args.env)
+    play(env, zoom=zoom, fps=6)
+
 
 if __name__ == '__main__':
     main()
