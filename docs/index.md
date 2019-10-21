@@ -4,8 +4,10 @@
 # Pano Image
 
 # Code
-[The Environment](https://github.com/mweiss17/SEVN)\\
-[The Model](https://github.com/mweiss17/SEVN-model)\\
+[The Environment](https://github.com/mweiss17/SEVN)
+
+[The Model](https://github.com/mweiss17/SEVN-model)
+
 [The Data Pipeline](https://github.com/mweiss17/SEVN-data)
 
 If you use this work, please cite us:
