@@ -52,7 +52,7 @@ You can manually download the dataset here (in case you don't want to follow the
 For more information about the data-preprocessing and the data format consult the `README` in the [SEVN-data](https://github.com/mweiss17/SEVN-data) github repository.
 
 ## Training
-For more information about how to train an agent on SEVN consult the `README` in the [SEVN Model Github repo](https://github.com/mweiss17/SEVN-model/tree/master/sevn_model).
+For more information about how to train an agent on SEVN consult the `README` in the [SEVN Model Github repo](https://github.com/mweiss17/SEVN-model).
 
 ## Citing
 
