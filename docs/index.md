@@ -3,10 +3,10 @@
 
 # Pano Image
 
-# Link to SEVN-data, SEVN, SEVN-model
-[https://github.com/mweiss17/SEVN](https://github.com/mweiss17/SEVN)
-[https://github.com/mweiss17/SEVN-model](https://github.com/mweiss17/SEVN-model)
-[https://github.com/mweiss17/SEVN-data](https://github.com/mweiss17/SEVN-data)
+# Code
+[The Environment](https://github.com/mweiss17/SEVN)\\
+[The Model](https://github.com/mweiss17/SEVN-model)\\
+[The Data Pipeline](https://github.com/mweiss17/SEVN-data)
 
 If you use this work, please cite us:
 
