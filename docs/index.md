@@ -1,7 +1,4 @@
-# Sidewalk Environment for Visual Navigation
 ![](img/example.gif)
-
-# Pano Image
 
 # Code
 [The Environment](https://github.com/mweiss17/SEVN)
