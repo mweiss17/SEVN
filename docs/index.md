@@ -1,5 +1,5 @@
 # Sidewalk Environment for Visual Navigation
-
+![](../img/example.gif)
 
 # Pano Image
 
