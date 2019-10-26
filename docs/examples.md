@@ -1,5 +1,5 @@
 ---
-title: SEVN Examples
+title: Examples
 layout: default
 filename: examples.md
 --- 
@@ -9,7 +9,8 @@ Here are a few examples from the SEVN dataset.
 
 ## Blurred Faces and License Plates
 We blurred license plates and faces across the entire dataset.
-![](img/blur.png)
+![](img/blur.png){: .center-image }
+
 
 ## 84x84 pixel image
 If you use the viewer in the [SEVN repository](github.com/mweiss17/SEVN), you'll see something like this.
