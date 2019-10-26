@@ -6,9 +6,9 @@
     <meta charset="UTF-8">
 
 <!-- Begin Jekyll SEO tag v2.5.0 -->
-<title>Sidewalk Environment for Visual Navigation | Cayman theme</title>
+<title>Abstract | Cayman theme</title>
 <meta name="generator" content="Jekyll v3.8.5" />
-<meta property="og:title" content="Sidewalk Environment for Visual Navigation" />
+<meta property="og:title" content="Abstract" />
 <meta property="og:locale" content="en_US" />
 <meta name="description" content="Cayman is a clean, responsive theme for GitHub Pages." />
 <meta property="og:description" content="Cayman is a clean, responsive theme for GitHub Pages." />
@@ -16,17 +16,17 @@
 <meta property="og:url" content="http://localhost:4000/" />
 <meta property="og:site_name" content="Cayman theme" />
 <script type="application/ld+json">
-{"@type":"WebSite","headline":"Sidewalk Environment for Visual Navigation","url":"http://localhost:4000/","name":"Cayman theme","description":"Cayman is a clean, responsive theme for GitHub Pages.","@context":"http://schema.org"}</script>
+{"@type":"WebSite","headline":"Abstract","url":"http://localhost:4000/","name":"Cayman theme","description":"Cayman is a clean, responsive theme for GitHub Pages.","@context":"http://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#157878">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="stylesheet" href="/assets/css/style.css?v=ec85af774c03138882a69139ea83d65d608db5b6">
+    <link rel="stylesheet" href="/assets/css/style.css?v=b29ce2567d48402e937335783bcbfb4ac16147f2">
   </head>
   <body>
     <header class="page-header" role="banner">
-      <video class="background"
+        <video class="background"
           loop
           muted
           autoplay
@@ -36,7 +36,8 @@
       </video>
       <div class="header-text">
         <h1 class="project-name">Sidewalk Environment for Visual Navigation</h1>
-        <h2 class="project-tagline">Cayman is a clean, responsive theme for GitHub Pages.</h2>
+        <h2 class="project-tagline">SEVN is built on high-resolution, real-world, sidewalk imagery.</h2>
+        <!--
         
           <a href="https://github.com/mweiss17/SEVN" class="btn">View on GitHub</a>
         
@@ -44,21 +45,22 @@
           <a href="https://github.com/mweiss17/SEVN/zipball/gh-pages" class="btn">Download .zip</a>
           <a href="https://github.com/mweiss17/SEVN/tarball/gh-pages" class="btn">Download .tar.gz</a>
         
-
+        -->
       </div>
     </header>
     <div class="bg-wrapper">
       <main id="content" class="main-content" role="main">
-        <h1 id="sidewalk-environment-for-visual-navigation">Sidewalk Environment for Visual Navigation</h1>
+        <h1 id="abstract">Abstract</h1>
+<p>In our endeavour to create a navigation assistant for the BVI, we found that existing RL environments were unsuitable for outdoor pedestrian navigation.
+This work introduces SEVN, a sidewalk simulation environment and a neural network-based approach to creating a navigation agent.
+SEVN contains panoramic images with labels for house numbers, doors, and street name signs, and formulations for several navigation tasks.
+We study the performance of an RL algorithm (PPO) in this setting. Our policy model fuses multi-modal observations in the form of variable resolution images, visible text, and simulated GPS data to navigate to a goal door. 
+We hope that this dataset, simulator, and experimental results will provide a foundation for further research into the creation of agents that can assist members of the BVI community with outdoor navigation.</p>
 
-<h1 id="pano-image">Pano Image</h1>
+<h1 id="sevn-simulator">SEVN Simulator</h1>
+<p>SEVN contains 4,988 full panoramic images and labels for house numbers, doors, and street name signs, which can be used for several different navigation tasks. Agents trained with SEVN have access to variable-resolution images, visible text, and simulated GPS data to navigate the environment. The SEVN Simulator is OpenAI Gym-compatible to allow the use of state-of-the-art deep reinforcement learning algorithms. An instance of the simulator using low-resolution imagery can be run at 400-800 frames per second on a machine with 2 CPU cores and 2 GB of RAM.</p>
 
-<h1 id="code">Code</h1>
-<p><a href="https://github.com/mweiss17/SEVN">The Environment</a></p>
-
-<p><a href="https://github.com/mweiss17/SEVN-model">The Model</a></p>
-
-<p><a href="https://github.com/mweiss17/SEVN-data">The Data Pipeline</a></p>
+<h1 id="paper">Paper</h1>
 
 <p>If you use this work, please cite us:</p>
 
@@ -72,169 +74,13 @@ In Conference on Robot Learning. 2019.
 
 <p>(TODO insert Arxiv bibtex here)</p>
 
-<p>Text can be <strong>bold</strong>, <em>italic</em>, or <del>strikethrough</del>.</p>
+<h2 id="code">Code</h2>
+<p><a href="https://github.com/mweiss17/SEVN">The Environment</a></p>
 
-<p><a href="./another-page.html">Link to another page</a>.</p>
+<p><a href="https://github.com/mweiss17/SEVN-model">The Model</a></p>
 
-<p>There should be whitespace between paragraphs.</p>
+<p><a href="https://github.com/mweiss17/SEVN-data">The Data Pipeline</a></p>
 
-<p>There should be whitespace between paragraphs. We recommend including a README, or a file with information about your project.</p>
-
-<h1 id="header-1">Header 1</h1>
-
-<p>This is a normal paragraph following a header. GitHub is a code hosting platform for version control and collaboration. It lets you and others work together on projects from anywhere.</p>
-
-<h2 id="header-2">Header 2</h2>
-
-<blockquote>
-  <p>This is a blockquote following a header.</p>
-
-  <p>When something is important enough, you do it even if the odds are not in your favor.</p>
-</blockquote>
-
-<h3 id="header-3">Header 3</h3>
-
-<div class="language-js highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1">// Javascript code with syntax highlighting.</span>
-<span class="kd">var</span> <span class="nx">fun</span> <span class="o">=</span> <span class="kd">function</span> <span class="nx">lang</span><span class="p">(</span><span class="nx">l</span><span class="p">)</span> <span class="p">{</span>
-  <span class="nx">dateformat</span><span class="p">.</span><span class="nx">i18n</span> <span class="o">=</span> <span class="nx">require</span><span class="p">(</span><span class="dl">'</span><span class="s1">./lang/</span><span class="dl">'</span> <span class="o">+</span> <span class="nx">l</span><span class="p">)</span>
-  <span class="k">return</span> <span class="kc">true</span><span class="p">;</span>
-<span class="p">}</span>
-</code></pre></div></div>
-
-<div class="language-ruby highlighter-rouge"><div class="highlight"><pre class="highlight"><code><span class="c1"># Ruby code with syntax highlighting</span>
-<span class="no">GitHubPages</span><span class="o">::</span><span class="no">Dependencies</span><span class="p">.</span><span class="nf">gems</span><span class="p">.</span><span class="nf">each</span> <span class="k">do</span> <span class="o">|</span><span class="n">gem</span><span class="p">,</span> <span class="n">version</span><span class="o">|</span>
-  <span class="n">s</span><span class="p">.</span><span class="nf">add_dependency</span><span class="p">(</span><span class="n">gem</span><span class="p">,</span> <span class="s2">"= </span><span class="si">#{</span><span class="n">version</span><span class="si">}</span><span class="s2">"</span><span class="p">)</span>
-<span class="k">end</span>
-</code></pre></div></div>
-
-<h4 id="header-4">Header 4</h4>
-
-<ul>
-  <li>This is an unordered list following a header.</li>
-  <li>This is an unordered list following a header.</li>
-  <li>This is an unordered list following a header.</li>
-</ul>
-
-<h5 id="header-5">Header 5</h5>
-
-<ol>
-  <li>This is an ordered list following a header.</li>
-  <li>This is an ordered list following a header.</li>
-  <li>This is an ordered list following a header.</li>
-</ol>
-
-<h6 id="header-6">Header 6</h6>
-
-<table>
-  <thead>
-    <tr>
-      <th style="text-align: left">head1</th>
-      <th style="text-align: left">head two</th>
-      <th style="text-align: left">three</th>
-    </tr>
-  </thead>
-  <tbody>
-    <tr>
-      <td style="text-align: left">ok</td>
-      <td style="text-align: left">good swedish fish</td>
-      <td style="text-align: left">nice</td>
-    </tr>
-    <tr>
-      <td style="text-align: left">out of stock</td>
-      <td style="text-align: left">good and plenty</td>
-      <td style="text-align: left">nice</td>
-    </tr>
-    <tr>
-      <td style="text-align: left">ok</td>
-      <td style="text-align: left">good <code class="language-plaintext highlighter-rouge">oreos</code></td>
-      <td style="text-align: left">hmm</td>
-    </tr>
-    <tr>
-      <td style="text-align: left">ok</td>
-      <td style="text-align: left">good <code class="language-plaintext highlighter-rouge">zoute</code> drop</td>
-      <td style="text-align: left">yumm</td>
-    </tr>
-  </tbody>
-</table>
-
-<h3 id="theres-a-horizontal-rule-below-this">There’s a horizontal rule below this.</h3>
-
-<hr />
-
-<h3 id="here-is-an-unordered-list">Here is an unordered list:</h3>
-
-<ul>
-  <li>Item foo</li>
-  <li>Item bar</li>
-  <li>Item baz</li>
-  <li>Item zip</li>
-</ul>
-
-<h3 id="and-an-ordered-list">And an ordered list:</h3>
-
-<ol>
-  <li>Item one</li>
-  <li>Item two</li>
-  <li>Item three</li>
-  <li>Item four</li>
-</ol>
-
-<h3 id="and-a-nested-list">And a nested list:</h3>
-
-<ul>
-  <li>level 1 item
-    <ul>
-      <li>level 2 item</li>
-      <li>level 2 item
-        <ul>
-          <li>level 3 item</li>
-          <li>level 3 item</li>
-        </ul>
-      </li>
-    </ul>
-  </li>
-  <li>level 1 item
-    <ul>
-      <li>level 2 item</li>
-      <li>level 2 item</li>
-      <li>level 2 item</li>
-    </ul>
-  </li>
-  <li>level 1 item
-    <ul>
-      <li>level 2 item</li>
-      <li>level 2 item</li>
-    </ul>
-  </li>
-  <li>level 1 item</li>
-</ul>
-
-<h3 id="small-image">Small image</h3>
-
-<p><img src="https://github.githubassets.com/images/icons/emoji/octocat.png" alt="Octocat" /></p>
-
-<h3 id="large-image">Large image</h3>
-
-<p><img src="https://guides.github.com/activities/hello-world/branching.png" alt="Branching" /></p>
-
-<h3 id="definition-lists-can-be-used-with-html-syntax">Definition lists can be used with HTML syntax.</h3>
-
-<dl>
-<dt>Name</dt>
-<dd>Godzilla</dd>
-<dt>Born</dt>
-<dd>1952</dd>
-<dt>Birthplace</dt>
-<dd>Japan</dd>
-<dt>Color</dt>
-<dd>Green</dd>
-</dl>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Long, single-line code blocks should not wrap. They should horizontally scroll if they are too long. This line should be long enough to demonstrate this.
-</code></pre></div></div>
-
-<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>The final element.
-</code></pre></div></div>
 
 
         <footer class="site-footer">
