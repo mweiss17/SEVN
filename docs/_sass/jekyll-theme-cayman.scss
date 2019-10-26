@@ -115,22 +115,13 @@ a {
   video.background {
     position: absolute;
     top: 50%;
-    width: 99vw;
+    left: 50%;
+    min-width: 100vw;
+    width: auto;
     z-index: -100;
     transform: translate(-50%, -50%);
   }
 
-  @include large {
-    padding: 5rem 6rem;
-  }
-
-  @include medium {
-    padding: 3rem 4rem;
-  }
-
-  @include small {
-    padding: 2rem 1rem;
-  }
 }
 .header-text{
     margin-top: 25vh;
