@@ -22,9 +22,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#157878">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="stylesheet" href="/assets/css/style.css?v=33362d0a5900a0531d136c2587cf5546105857b9">
+    <link rel="stylesheet" href="/assets/css/style.css?v=6a978a37e2bc32262eef3c6908bb95dab23deaae">
   </head>
   <body>
+      <header class="page-header" role="banner">
+      <div class="nav-wrapper">
+         <a href="/" class="btn">Home</a>
+         <a href="/01-article-env-introduction" class="btn">Introduction</a>
+         <a href="/examples" class="btn">Examples</a>
+      </div>
+    </header>
+
+    
     <header class="page-header" role="banner">
       <div class="wrapper">
         <video class="wrapper__video"
@@ -41,14 +50,16 @@
         <h2 class="project-tagline">SEVN is built on high-resolution, real-world, sidewalk imagery.</h2>
       </div>
     </header>
+    
+
     <div class="bg-wrapper">
       <main id="content" class="main-content" role="main">
         <h1 id="overview">Overview</h1>
 <p>In our endeavour to create a navigation assistant for the BVI, we found that existing RL environments were unsuitable for outdoor pedestrian navigation.
-This work introduces SEVN, a sidewalk simulation environment and a neural network-based approach to creating a navigation agent.
-SEVN contains panoramic images with labels for house numbers, doors, and street name signs, and formulations for several navigation tasks.
-We study the performance of an RL algorithm (PPO) in this setting. Our policy model fuses multi-modal observations in the form of variable resolution images, visible text, and simulated GPS data to navigate to a goal door. 
+So we created SEVN, a sidewalk simulation environment and a neural network-based approach to creating a navigation agent. 
 We hope that this dataset, simulator, and experimental results will provide a foundation for further research into the creation of agents that can assist members of the BVI community with outdoor navigation.</p>
+
+<p>For a longer overview, please <a href="01-article-env-introduction">read this post</a>.</p>
 
 <h1 id="sevn-simulator-code">SEVN Simulator <a href="https://github.com/mweiss17/SEVN">[code]</a></h1>
 <p>SEVN contains 4,988 full panoramic images and labels for house numbers, doors, and street name signs, which can be used for several different navigation tasks.

@@ -20,6 +20,15 @@
     <link rel="stylesheet" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}">
   </head>
   <body>
+      <header class="page-header" role="banner">
+      <div class="nav-wrapper">
+         <a href="/" class="btn">Home</a>
+         <a href="/01-article-env-introduction" class="btn">Introduction</a>
+         <a href="/examples" class="btn">Examples</a>
+      </div>
+    </header>
+
+    {% if page.title == "Overview" %}
     <header class="page-header" role="banner">
       <div class="wrapper">
         <video class="wrapper__video"
@@ -36,6 +45,8 @@
         <h2 class="project-tagline">SEVN is built on high-resolution, real-world, sidewalk imagery.</h2>
       </div>
     </header>
+    {% endif %}
+
     <div class="bg-wrapper">
       <main id="content" class="main-content" role="main">
         {{ content }}

@@ -261,16 +261,12 @@ body { padding: 0; margin: 0; font-family: "Open Sans", "Helvetica Neue", Helvet
 a { color: #1e6bb8; text-decoration: none; }
 a:hover { text-decoration: underline; }
 
-.btn { display: inline-block; margin-bottom: 1rem; color: rgba(255, 255, 255, 0.7); background-color: rgba(255, 255, 255, 0.08); border-color: rgba(255, 255, 255, 0.2); border-style: solid; border-width: 1px; border-radius: 0.3rem; transition: color 0.2s, background-color 0.2s, border-color 0.2s; }
+.btn { display: inline-block; margin-bottom: 1rem; color: rgba(255, 255, 255, 0.7); border-radius: 0.3rem; transition: color 0.2s, background-color 0.2s, border-color 0.2s; padding: 0.75rem 1rem; }
 .btn:hover { color: rgba(255, 255, 255, 0.8); text-decoration: none; background-color: rgba(255, 255, 255, 0.2); border-color: rgba(255, 255, 255, 0.3); }
-.btn + .btn { margin-left: 1rem; }
-@media screen and (min-width: 64em) { .btn { padding: 0.75rem 1rem; } }
-@media screen and (min-width: 42em) and (max-width: 64em) { .btn { padding: 0.6rem 0.9rem; font-size: 0.9rem; } }
-@media screen and (max-width: 42em) { .btn { display: block; width: 100%; padding: 0.75rem; font-size: 0.9rem; }
-  .btn + .btn { margin-top: 1rem; margin-left: 0; } }
 
 .page-header { color: #fff; text-align: center; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }
 .page-header .wrapper { width: 100%; height: 100vh; overflow: hidden; z-index: -100; }
+.page-header .nav-wrapper { width: 100%; height: 48px; background-color: #000; border-color: #000; text-shadow: 0 0, 0 0, 0 0, 0 0; text-align: left; }
 .page-header .wrapper .wrapper__video { object-fit: cover; width: 100%; height: 100%; }
 
 .header-text { width: 100%; position: absolute; top: 29vh; }

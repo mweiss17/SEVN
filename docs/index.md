@@ -4,10 +4,10 @@ layout: default
 
 # Overview
 In our endeavour to create a navigation assistant for the BVI, we found that existing RL environments were unsuitable for outdoor pedestrian navigation.
-This work introduces SEVN, a sidewalk simulation environment and a neural network-based approach to creating a navigation agent.
-SEVN contains panoramic images with labels for house numbers, doors, and street name signs, and formulations for several navigation tasks.
-We study the performance of an RL algorithm (PPO) in this setting. Our policy model fuses multi-modal observations in the form of variable resolution images, visible text, and simulated GPS data to navigate to a goal door. 
+So we created SEVN, a sidewalk simulation environment and a neural network-based approach to creating a navigation agent. 
 We hope that this dataset, simulator, and experimental results will provide a foundation for further research into the creation of agents that can assist members of the BVI community with outdoor navigation.
+
+For a longer overview, please [read this post](01-article-env-introduction).
 
 # SEVN Simulator [[code]](https://github.com/mweiss17/SEVN)
 SEVN contains 4,988 full panoramic images and labels for house numbers, doors, and street name signs, which can be used for several different navigation tasks.
