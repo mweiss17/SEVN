@@ -1,6 +1,7 @@
 /*! normalize.css v3.0.2 | MIT License | git.io/normalize */
 /** 1. Set default font family to sans-serif. 2. Prevent iOS text size adjust after orientation change, without disabling user zoom. */
-@import url("https://fonts.googleapis.com/css?family=Open+Sans:400,700");
+@import url("https://fonts.googleapis.com/css?family=Open+Sans:400");
+@import url("https://fonts.googleapis.com/css?family=Roboto&display=swap");
 html { font-family: sans-serif; /* 1 */ -ms-text-size-adjust: 100%; /* 2 */ -webkit-text-size-adjust: 100%; /* 2 */ }
 
 /** Remove default margin. */
@@ -264,21 +265,24 @@ a:hover { text-decoration: underline; }
 .btn { display: inline-block; margin-bottom: 1rem; color: rgba(255, 255, 255, 0.7); border-radius: 0.3rem; transition: color 0.2s, background-color 0.2s, border-color 0.2s; padding: 0.75rem 1rem; }
 .btn:hover { color: rgba(255, 255, 255, 0.8); text-decoration: none; background-color: rgba(255, 255, 255, 0.2); border-color: rgba(255, 255, 255, 0.3); }
 
-.page-header { color: #fff; text-align: center; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }
+.page-header { color: #fff; text-align: center; }
 .page-header .wrapper { width: 100%; height: 100vh; overflow: hidden; z-index: -100; }
 .page-header .nav-wrapper { width: 100%; height: 48px; background-color: #000; border-color: #000; text-shadow: 0 0, 0 0, 0 0, 0 0; text-align: left; }
-.page-header .wrapper .wrapper__video { object-fit: cover; width: 100%; height: 100%; }
+.page-header .wrapper .wrapper__video { object-fit: cover; width: 100%; height: 100%; filter: brightness(85%); }
+.page-header .hint:after { content: ''; position: absolute; left: 2.1em; top: 1.2em; border: 1px solid #fff; border-style: none solid solid none; width: 1em; height: 1em; -ms-transform: rotate(45deg); -moz-transform: rotate(45deg); -webkit-transform: rotate(45deg); transform: rotate(45deg); }
+.page-header .unselectable { -moz-user-select: -moz-none; -khtml-user-select: none; -webkit-user-select: none; -o-user-select: none; user-select: none; }
+.page-header .hint { position: absolute; bottom: 2.5em; font-weight: 100 !important; /* right: 3em; */ left: 50%; font-size: 1.0em; font-family: 'Roboto', sans-serif; color: #fff; -ms-transform: translateX(-50%); -moz-transform: translateX(-50%); -webkit-transform: translateX(-50%); transform: translateX(-50%); font: 100 16px/1.55em -apple-system, BlinkMacSystemFont, "Roboto", Helvetica, sans-serif; text-size-adjust: 100%; }
 
-.header-text { width: 100%; position: absolute; top: 29vh; }
+.header-text { width: 100%; position: absolute; top: 29vh; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; }
 
 .project-name { margin-top: 0; margin-bottom: 0.1rem; }
 @media screen and (min-width: 64em) { .project-name { font-size: 4.25rem; } }
 @media screen and (min-width: 42em) and (max-width: 64em) { .project-name { font-size: 2.25rem; } }
 @media screen and (max-width: 42em) { .project-name { font-size: 1.75rem; } }
 
-.project-tagline { margin-bottom: 2rem; font-weight: normal; opacity: 0.7; }
-@media screen and (min-width: 64em) { .project-tagline { font-size: 1.25rem; } }
-@media screen and (min-width: 42em) and (max-width: 64em) { .project-tagline { font-size: 1.15rem; } }
+.project-tagline { margin-bottom: 2rem; font-weight: normal; opacity: 0.8; }
+@media screen and (min-width: 64em) { .project-tagline { font-size: 1.5rem; } }
+@media screen and (min-width: 42em) and (max-width: 64em) { .project-tagline { font-size: 1.25rem; } }
 @media screen and (max-width: 42em) { .project-tagline { font-size: 1rem; } }
 
 .bg-wrapper { background-color: white !important; width: 100%; height: 100%; }
