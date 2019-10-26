@@ -21,7 +21,7 @@ This takes raw 360° video as an input. The camera used was the Vuze+ 3D 360 VR 
 The Vuze+ has four synchronized stereo cameras. 
 Each stereo camera is composed of two image sensors with fisheye lenses that each capture full high definition video (1920x1080) at 30 Frames Per Second (FPS).
 
-# The Model [[code]](https://github.com/mweiss17/SEVN-model)
+# SEVN Baseline Model [[code]](https://github.com/mweiss17/SEVN-model)
 In this repository you'll find the code used to train the multi-modal agents on SEVN. 
 These agents can take in images, scene-text, and gps to navigate to goal addresses.
 This repository was forked from [this PPO repository](https://github.com/ikostrikov/pytorch-a2c-ppo-acktr-gail).
