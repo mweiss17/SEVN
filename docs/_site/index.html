@@ -6,27 +6,28 @@
     <meta charset="UTF-8">
 
 <!-- Begin Jekyll SEO tag v2.5.0 -->
-<title>Abstract | Cayman theme</title>
+<title>Abstract | SEVN</title>
 <meta name="generator" content="Jekyll v3.8.5" />
 <meta property="og:title" content="Abstract" />
 <meta property="og:locale" content="en_US" />
-<meta name="description" content="Cayman is a clean, responsive theme for GitHub Pages." />
-<meta property="og:description" content="Cayman is a clean, responsive theme for GitHub Pages." />
+<meta name="description" content="SEVN is an RL environment for navigation agents." />
+<meta property="og:description" content="SEVN is an RL environment for navigation agents." />
 <link rel="canonical" href="http://localhost:4000/" />
 <meta property="og:url" content="http://localhost:4000/" />
-<meta property="og:site_name" content="Cayman theme" />
+<meta property="og:site_name" content="SEVN" />
 <script type="application/ld+json">
-{"@type":"WebSite","headline":"Abstract","url":"http://localhost:4000/","name":"Cayman theme","description":"Cayman is a clean, responsive theme for GitHub Pages.","@context":"http://schema.org"}</script>
+{"@type":"WebSite","headline":"Abstract","url":"http://localhost:4000/","name":"SEVN","description":"SEVN is an RL environment for navigation agents.","@context":"http://schema.org"}</script>
 <!-- End Jekyll SEO tag -->
 
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#157878">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="stylesheet" href="/assets/css/style.css?v=b29ce2567d48402e937335783bcbfb4ac16147f2">
+    <link rel="stylesheet" href="/assets/css/style.css?v=33362d0a5900a0531d136c2587cf5546105857b9">
   </head>
   <body>
     <header class="page-header" role="banner">
-        <video class="background"
+      <div class="wrapper">
+        <video class="wrapper__video"
           loop
           muted
           autoplay
@@ -34,6 +35,7 @@
           poster="img/game.png">
           <source src="img/example.webm" type="video/mp4">
       </video>
+      </div>
       <div class="header-text">
         <h1 class="project-name">Sidewalk Environment for Visual Navigation</h1>
         <h2 class="project-tagline">SEVN is built on high-resolution, real-world, sidewalk imagery.</h2>
@@ -57,11 +59,24 @@ SEVN contains panoramic images with labels for house numbers, doors, and street 
 We study the performance of an RL algorithm (PPO) in this setting. Our policy model fuses multi-modal observations in the form of variable resolution images, visible text, and simulated GPS data to navigate to a goal door. 
 We hope that this dataset, simulator, and experimental results will provide a foundation for further research into the creation of agents that can assist members of the BVI community with outdoor navigation.</p>
 
-<h1 id="sevn-simulator">SEVN Simulator</h1>
-<p>SEVN contains 4,988 full panoramic images and labels for house numbers, doors, and street name signs, which can be used for several different navigation tasks. Agents trained with SEVN have access to variable-resolution images, visible text, and simulated GPS data to navigate the environment. The SEVN Simulator is OpenAI Gym-compatible to allow the use of state-of-the-art deep reinforcement learning algorithms. An instance of the simulator using low-resolution imagery can be run at 400-800 frames per second on a machine with 2 CPU cores and 2 GB of RAM.</p>
+<h1 id="sevn-simulator-code">SEVN Simulator <a href="https://github.com/mweiss17/SEVN">[code]</a></h1>
+<p>SEVN contains 4,988 full panoramic images and labels for house numbers, doors, and street name signs, which can be used for several different navigation tasks.
+Agents trained with SEVN have access to variable-resolution images, visible text, and simulated GPS data to navigate the environment. 
+The SEVN Simulator is OpenAI Gym-compatible to allow the use of state-of-the-art deep reinforcement learning algorithms.
+An instance of the simulator using low-resolution imagery can be run at 400-800 frames per second on a machine with 2 CPU cores and 2 GB of RAM.</p>
+
+<h1 id="sevn-data-pipeline-code">SEVN Data Pipeline <a href="https://github.com/mweiss17/SEVN-data">[code]</a></h1>
+<p>Data pre-processing for SEVN (Sidewalk Simulation Environment for Visual Navigation). 
+This takes raw 360° video as an input. The camera used was the Vuze+ 3D 360 VR Camera. 
+The Vuze+ has four synchronized stereo cameras. 
+Each stereo camera is composed of two image sensors with fisheye lenses that each capture full high definition video (1920x1080) at 30 Frames Per Second (FPS).</p>
+
+<h1 id="the-model-code">The Model <a href="https://github.com/mweiss17/SEVN-model">[code]</a></h1>
+<p>In this repository you’ll find the code used to train the multi-modal agents on SEVN. 
+These agents can take in images, scene-text, and gps to navigate to goal addresses.
+This repository was forked from <a href="https://github.com/ikostrikov/pytorch-a2c-ppo-acktr-gail">this PPO repository</a>.</p>
 
 <h1 id="paper">Paper</h1>
-
 <p>If you use this work, please cite us:</p>
 
 <div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>Martin Weiss, Simon Chamorro, Roger Girgis, Margaux Luck, Samira Ebrahimi Kahou, 
@@ -73,13 +88,6 @@ In Conference on Robot Learning. 2019.
 <p>Or via our bibtex:</p>
 
 <p>(TODO insert Arxiv bibtex here)</p>
-
-<h2 id="code">Code</h2>
-<p><a href="https://github.com/mweiss17/SEVN">The Environment</a></p>
-
-<p><a href="https://github.com/mweiss17/SEVN-model">The Model</a></p>
-
-<p><a href="https://github.com/mweiss17/SEVN-data">The Data Pipeline</a></p>
 
 
 
