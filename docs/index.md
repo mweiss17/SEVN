@@ -2,7 +2,7 @@
 layout: default
 ---
 
-# Abstract
+# Overview
 In our endeavour to create a navigation assistant for the BVI, we found that existing RL environments were unsuitable for outdoor pedestrian navigation.
 This work introduces SEVN, a sidewalk simulation environment and a neural network-based approach to creating a navigation agent.
 SEVN contains panoramic images with labels for house numbers, doors, and street name signs, and formulations for several navigation tasks.
