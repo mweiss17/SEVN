@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en-US">
+  <head>
+
+    
+    <meta charset="UTF-8">
+
+<!-- Begin Jekyll SEO tag v2.5.0 -->
+<title>Creating a Navigation Assistant for the Visually Impaired | Cayman theme</title>
+<meta name="generator" content="Jekyll v3.8.5" />
+<meta property="og:title" content="Creating a Navigation Assistant for the Visually Impaired" />
+<meta property="og:locale" content="en_US" />
+<meta name="description" content="Cayman is a clean, responsive theme for GitHub Pages." />
+<meta property="og:description" content="Cayman is a clean, responsive theme for GitHub Pages." />
+<link rel="canonical" href="http://localhost:4000/01-article-env-introduction.html" />
+<meta property="og:url" content="http://localhost:4000/01-article-env-introduction.html" />
+<meta property="og:site_name" content="Cayman theme" />
+<script type="application/ld+json">
+{"@type":"WebPage","headline":"Creating a Navigation Assistant for the Visually Impaired","url":"http://localhost:4000/01-article-env-introduction.html","description":"Cayman is a clean, responsive theme for GitHub Pages.","@context":"http://schema.org"}</script>
+<!-- End Jekyll SEO tag -->
+
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#157878">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="stylesheet" href="/assets/css/style.css?v=b29ce2567d48402e937335783bcbfb4ac16147f2">
+  </head>
+  <body>
+    <header class="page-header" role="banner">
+        <video class="background"
+          loop
+          muted
+          autoplay
+          preload="auto"
+          poster="img/game.png">
+          <source src="img/example.webm" type="video/mp4">
+      </video>
+      <div class="header-text">
+        <h1 class="project-name">Sidewalk Environment for Visual Navigation</h1>
+        <h2 class="project-tagline">SEVN is built on high-resolution, real-world, sidewalk imagery.</h2>
+        <!--
+        
+          <a href="https://github.com/mweiss17/SEVN" class="btn">View on GitHub</a>
+        
+        
+          <a href="https://github.com/mweiss17/SEVN/zipball/gh-pages" class="btn">Download .zip</a>
+          <a href="https://github.com/mweiss17/SEVN/tarball/gh-pages" class="btn">Download .tar.gz</a>
+        
+        -->
+      </div>
+    </header>
+    <div class="bg-wrapper">
+      <main id="content" class="main-content" role="main">
+        <h1 id="creating-a-navigation-assistant-for-the-visually-impaired">Creating a Navigation Assistant for the Visually Impaired</h1>
+<h2 id="step-1-build-a-sidewalk-simulation-environment">Step 1: Build a Sidewalk Simulation Environment</h2>
+
+<p><img src="https://i.imgur.com/okfisip.jpg" alt="" /></p>
+
+<p><em>As part of the NAVI project, we have released our dataset and environment called SEVN (Sidewalk Simulation Environment for the Visually Impaired). We hope that this work will enable future research in visual navigation and, in the long term, contribute to allowing the blind and visually impaired to gain autonomy when commuting.</em></p>
+
+<h2 id="navi-navigational-assistant-for-the-visually-impaired">NAVI: Navigational Assistant for the Visually Impaired</h2>
+
+<p>For a moment, imagine you will imminently become blind to a degenerative illness. You must find a <a href="https://www.cnib.ca/en/programs-and-services/rehab--services?region=qc">rehab center</a> and get training to use a cane, learn to love Siri, and buy an Alexa. You’re going to have to <a href="https://nfb.org/images/nfb/publications/bm/bm14/bm1404/bm140414.htm">learn how to be independent all over again</a>. Unfortunately, there are some compromises you’ll have to make. Take this example.</p>
+
+<p>You’re at home on a Friday evening when you get a text inviting you to a party. But venturing to a new location is tough without the help of a sighted person. Sure, you can get out of the house, and Uber can take you most of the way, but then what? There are a lot of <a href="https://www.sciencedirect.com/science/article/pii/S1877705813016214">tools</a> out there that can help, but most of them rely on GPS and can’t actually get you all the way to the venue. The <a href="https://arxiv.org/pdf/1811.10120.pdf">perfect end-to-end solution</a> does not yet exist.</p>
+
+<p>That’s why we’re building a tool called NAVI, the Navigational Assistant for the Visually Impaired. NAVI uses GPS and vision – even reading scene text like house numbers and street signs – to dynamically navigate!</p>
+
+<p><img src="https://i.imgur.com/pn2EWu1.png" alt="" /></p>
+
+<p>There are three primary processes that make up the NAVI system:</p>
+
+<ul>
+  <li><strong>Sensing:</strong> Before even thinking of understanding our surroundings, we need our system to have access to raw information about its environment. Considering that we want our solution to be easily available, we assume the user only has access to the sensors that are included in a regular smartphone, such as a camera and a GPS. These signals need to be pre-processed to be used by the following  components.</li>
+  <li><strong>Perception:</strong> Once  we have access to all this information about our surroundings, we need to extract  relevant features from it. This includes any text that is visible in the scene, such as house numbers and street names, as well as any useful visual features.</li>
+  <li><strong>Reasoning:</strong> Finally, this is the most important part of the process. Given all relevant information about our surroundings and a precise goal destination, we need to make an informed decision about what actions to take in order to get there.</li>
+</ul>
+
+<p>These are the processes that take place, usually subconsciously, for those that are not visually impaired – sensing, perception and reasoning. Our final goal is to recreate these processes in the NAVI technology. But before we can successfully develop this solution, there are three key components that have yet to be tackled.</p>
+
+<ol>
+  <li>Create a navigation environment with real-world data and simulates sensor signals</li>
+  <li>Train an RL agent to navigate that environment</li>
+  <li>Transfer that agent to an edge device for real-world use</li>
+</ol>
+
+<p>We are committed to developing these systems as free, open-source software. Any future deployed NAVI system will <em>not</em> upload your location to a server or track your behaviour <em>in any way</em>.</p>
+
+<p>In our work <a href="https://linktoourpaper">SEVN: A Sidewalk Simulation Environment for Visual Navigation</a>, we present an RL environment to train agents in and set a baseline performance on the navigation task using the RL algorithm Proximal Policy Optimization.</p>
+
+<h2 id="a-sidewalk-simulation-environment-for-visual-navigation">A Sidewalk Simulation Environment for Visual Navigation</h2>
+
+<h3 id="real-world-data">Real World Data</h3>
+
+<p>Our dataset contains 5k+ panoramic images taken from Montreal’s Little Italy. They cover 7 blocks, totaling 6.3km of sidewalk. We annotated doors, house numbers and street signs and provided ground truth text labels for each annotation.</p>
+
+<p><img src="https://i.imgur.com/JhUAn97.png" alt="" /></p>
+
+<p>We have also made available the pre-processed house number and street sign crops from our dataset, which could be used to test Optical Character Recognition recognition models :point_right: <a href="https://linktotextcrops">link</a></p>
+
+<h3 id="an-open-ai-gym-environment">An Open-AI gym environment</h3>
+
+<p><img src="https://i.imgur.com/xRG7gDI.gif" alt="" /></p>
+
+<p>Our Sidewalk Simulation Environment for Visual Navigation (SEVN) is a realistic representation of what it is like to travel over the sidewalk in a typical urban neighborhood. The goal is to use this simulated environment to train Reinforcement Learning agents that will eventually be able to solve this task and transfer to the real world.</p>
+
+<p>The simulator allows the agent to observe a part of a specific panorama based on its position and orientation, and navigate in the environment by rotating or transitioning to neighboring panoramas. Many tasks are available, they have different sensor modalities and present different challenges with varying difficulty.</p>
+
+<p>We chose Montreal’s Little Italy because it features a high variety of zones and encompasses interesting characteristics that make it a challenging setting for navigation. In a relatively small area, there are many different types of zones, such as residential commercial and industrial areas.</p>
+
+<h3 id="how-we-built-it">How we built it</h3>
+
+<p>To build our environment, we collected raw video with a 360 degree <a href="https://vuze.camera/camera/vuze-plus-camera/">Vuze+</a> mounted on a monopod and held sligthly above eye-height. The Vuze+ is equiped with four synchronized stereo cameras, each one composed of two images sensors with fisheye lenses. We captured 360 degree high definition video, from which we extracted 30 frames per second.</p>
+
+<p><img src="https://i.imgur.com/E5FyVFf.png" alt="" /></p>
+
+<p>To get an accurate localisation for each one of our frames, we used <a href="https://github.com/raulmur/ORB_SLAM2">ORBSLAM2</a>, a Simultaneous Localisation and Mapping pipeline. This allowed us to triangulate the position of the camera at every timestep relying only on visual features from our footage.</p>
+
+<p>In parallel, we used the <a href="https://vuze.camera/vr-software/">VuzeVR Studio software</a> to stitch together the raw footage from each camera and obtain a 360 stabilized video, from which we extracted 3840 x 2160 pixel equirectangular projections.</p>
+
+<p>Finally, we used the coordinates from each image to geo-localise the 360 degree equirrectangular panoramas. We constructed a graph with these panoramas, where an agent can navigate by transferring between neighboring images. This results in a Google Street View–like environment. For a more detailed explanation of the process, take a look at our <a href="https://linktoourpaper">paper</a> and our <a href="https://github.com/simonchamorro/SEVN-data">code</a>.</p>
+
+<p><img src="https://i.imgur.com/wdb0Jpc.jpg" alt="" /></p>
+
+<h3 id="how-to-use-it">How to use it</h3>
+
+<p>Our environment <a href="https://github.com/mweiss17/SEVN">SEVN</a> is compatible with Open AI gym and quite easy to use. Here is an example:</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>import gym
+import SEVN_gym
+
+env = gym.make("SEVN-Mini-All-Shaped-v1")
+obs = env.reset() # See obs 1
+</code></pre></div></div>
+
+<p>In <em>SENV-Mini-All-Shaped</em>, the agent has access to all different modalities. The observation contains:</p>
+
+<ul>
+  <li>Image (84 x 84 pixels): The visible part of the current panorama, covering a horizontal FOV of 135 degrees.</li>
+  <li>Mission: The goal adress is the combination of a street name and a house number. Street names are encoded as one-hot vectors of length 7, since there are 7 different streets in our dataset. House numbers are composed of 4 digits, and each one of those is encoded as a one-hot vector of length 10.</li>
+  <li>Relative and Goal GPS: The relative GPS coordinates of the goal as well as its absolute coordinates.</li>
+  <li>Visible Text: In this environment, the ground truth label from any text that is inside the agent’s FOV is passed as part of the observation.</li>
+</ul>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>action = env.Actions['FORWARD']
+obs, rew, done, info = env.step(action) # See obs 2
+</code></pre></div></div>
+
+<p>This environment features a shaped reward. The agent get a positive reward every time it gets closer to its goal, and a negative reward when it moves away from its goal.</p>
+
+<div class="language-plaintext highlighter-rouge"><div class="highlight"><pre class="highlight"><code>action = env.Actions['BIG_RIGHT']
+obs, rew, done, info = env.step(action) # See obs 2
+</code></pre></div></div>
+
+<p><img src="https://i.imgur.com/8tUNV0L.png" alt="" /></p>
+
+<p>We hope that our environment will contribute to the progress of state-of-the-art Visual Navigation models, and will be a stepping stone for coming up with a system that will solve this problem for the blind and visually impaired.</p>
+
+
+        <footer class="site-footer">
+          
+            <span class="site-footer-owner"><a href="https://github.com/mweiss17/SEVN">SEVN</a> is maintained by <a href="https://github.com/mweiss17">mweiss17</a>.</span>
+          
+          <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a>.</span>
+        </footer>
+      </main>
+
+    </div>
+  </body>
+</html>

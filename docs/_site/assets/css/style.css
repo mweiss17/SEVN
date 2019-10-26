@@ -270,7 +270,7 @@ a:hover { text-decoration: underline; }
   .btn + .btn { margin-top: 1rem; margin-left: 0; } }
 
 .page-header { color: #fff; text-align: center; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000; height: 100vh; }
-.page-header video.background { position: absolute; top: 50%; left: 50%; min-width: 100vw; width: auto; z-index: -100; transform: translate(-50%, -50%); }
+.page-header video.background { position: absolute; top: 50%; left: 50%; min-width: 100vw; width: auto; height: auto; z-index: -100; transform: translate(-50%, -50%); }
 
 .header-text { margin-top: 25vh; }
 
