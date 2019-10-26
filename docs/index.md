@@ -7,7 +7,7 @@ In our endeavour to create a navigation assistant for the BVI, we found that exi
 So we created SEVN, a sidewalk simulation environment and a neural network-based approach to creating a navigation agent. 
 We hope that this dataset, simulator, and experimental results will provide a foundation for further research into the creation of agents that can assist members of the BVI community with outdoor navigation.
 
-For a longer overview, please [read this post](01-article-env-introduction).
+For a longer overview, please [read this post](/SEVN/01-article-env-introduction). For more examples, [see here](/SEVN/examples).
 
 # SEVN Simulator [[code]](https://github.com/mweiss17/SEVN)
 SEVN contains 4,988 full panoramic images and labels for house numbers, doors, and street name signs, which can be used for several different navigation tasks.
