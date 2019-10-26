@@ -19,15 +19,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="stylesheet" href="{{ '/assets/css/style.css?v=' | append: site.github.build_revision | relative_url }}">
   </head>
-  <body>
-      <header class="page-header" role="banner">
-      <div class="nav-wrapper">
-         <a href="/SEVN/" class="btn">Home</a>
-         <a href="/SEVN/01-article-env-introduction" class="btn">Introduction</a>
-         <a href="/SEVN/examples" class="btn">Examples</a>
-      </div>
-    </header>
-
+  <body>s
     {% if page.title == "Overview" %}
     <header class="page-header" role="banner">
       <div class="wrapper">
@@ -45,6 +37,15 @@
         <h2 class="project-tagline">SEVN is built on high-resolution, real-world, sidewalk imagery.</h2>
       </div>
     </header>
+    {% else %}
+  <header class="page-header" role="banner">
+      <div class="nav-wrapper">
+         <a href="/SEVN/" class="btn">Home</a>
+         <a href="/SEVN/01-article-env-introduction" class="btn">Introduction</a>
+         <a href="/SEVN/examples" class="btn">Examples</a>
+      </div>
+    </header>
+
     {% endif %}
 
     <div class="bg-wrapper">
