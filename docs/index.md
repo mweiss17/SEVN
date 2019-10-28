@@ -12,7 +12,7 @@ In this page you'll find few examples from the SEVN dataset and the simulator.
 The dataset covers different types of regions from the city of Montreal, including residential, commercial and industrial.
 The SEVN Simulator is available in low resolution and high resolution.
 
-## How to Create a Navigation Assistant for the Visually Impaired [[read more]](/SEVN/01-article-env-introduction)
+## Creating a Navigation Assistant for the Visually Impaired [[read more]](/SEVN/01-article-env-introduction)
 ### Step 1: Build a Sidewalk Simulation Environment
 
 ![](https://i.imgur.com/okfisip.jpg)
