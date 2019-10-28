@@ -2,7 +2,7 @@
 layout: default
 ---
 
-# How to Create a Navigation Assistant for the Visually Impaired
+# Creating a Navigation Assistant for the Visually Impaired
 ## Step 1: Build a Sidewalk Simulation Environment
 
 
