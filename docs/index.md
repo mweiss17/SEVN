@@ -7,7 +7,14 @@ In our endeavour to create a navigation assistant for the BVI, we found that exi
 So we created SEVN, a sidewalk simulation environment and a neural network-based approach to creating a navigation agent. 
 We hope that this dataset, simulator, and experimental results will provide a foundation for further research into the creation of agents that can assist members of the BVI community with outdoor navigation.
 
-For a longer overview, please [read this post](/SEVN/01-article-env-introduction). For more examples, [see here](/SEVN/examples).
+# Dataset [[examples]](/SEVN/examples)
+In this page you'll find few examples from the SEVN dataset and the simulator.
+The dataset covers different types of regions from the city of Montreal, including residential, commercial and industrial.
+The SEVN Simulator is available in low resolution and high resolution.
+
+# Blog Post [[post]](/SEVN/examples)
+In this post, we describe the motivation for building the SEVN Dataset and Simulator. 
+We describe the process of building it and give instructions on how to use it.
 
 # SEVN Simulator [[code]](https://github.com/mweiss17/SEVN)
 SEVN contains 4,988 full panoramic images and labels for house numbers, doors, and street name signs, which can be used for several different navigation tasks.
@@ -24,7 +31,6 @@ Each stereo camera is composed of two image sensors with fisheye lenses that eac
 # SEVN Baseline Model [[code]](https://github.com/mweiss17/SEVN-model)
 In this repository you'll find the code used to train the multi-modal agents on SEVN. 
 These agents can take in images, scene-text, and gps to navigate to goal addresses.
-This repository was forked from [this PPO repository](https://github.com/ikostrikov/pytorch-a2c-ppo-acktr-gail).
 
 # Paper 
 If you use this work, please cite us:
