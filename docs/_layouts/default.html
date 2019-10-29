@@ -3,12 +3,14 @@
   <head>
 
     {% if site.google_analytics %}
-      <script async src="https://www.googletagmanager.com/gtag/js?id={{ site.google_analytics }}"></script>
+      <!-- Global site tag (gtag.js) - Google Analytics -->
+      <script async src="https://www.googletagmanager.com/gtag/js?id=UA-151118977-1"></script>
       <script>
         window.dataLayer = window.dataLayer || [];
         function gtag(){dataLayer.push(arguments);}
         gtag('js', new Date());
-        gtag('config', '{{ site.google_analytics }}');
+
+        gtag('config', 'UA-151118977-1');
       </script>
     {% endif %}
     <meta charset="UTF-8">

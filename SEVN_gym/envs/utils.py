@@ -1,12 +1,13 @@
 import math
-
 import enum
 import os
 import random
-
 import numpy as np
 import pandas as pd
+from torch.utils.data import Dataset
 from SEVN_gym.data import DATA_PATH
+from skimage import io
+
 
 ACTION_MEANING = {
     0: 'LEFT_BIG',
@@ -283,3 +284,37 @@ def get_data_path():
         path = random.randint(0, 4)
         return os.path.join(parent,f"data{path}")
 
+
+class HighResDataset(Dataset):
+    def __init__(self, frame_key, transform=None):
+        """
+        Args:
+            csv_file (string): Path to the csv file with annotations.
+            root_dir (string): Directory with all the images.
+            transform (callable, optional): Optional transform to be applied
+                on a sample.
+        """
+        self.root_dir = DATA_PATH + "panos/"
+        self.frame_key = {v: k for k, v in frame_key.items()}
+        self.fnames = sorted(os.listdir(self.root_dir))
+
+    def __len__(self):
+        return len(self.fnames)
+
+    def __getitem__(self, idx):
+        img_name = os.path.join(self.root_dir,
+                                f"pano_{self.frame_key[idx]}.png")
+        image = io.imread(img_name)
+        image = normalize_image(image)
+        return image
+
+def normalize_image(image):
+    '''
+    Values calculated for SEVN: mean=[0.45247, 0.45871, 0.47285],
+    std=[0.25556, 0.26181, 0.27931].
+    '''
+    normed_image = image / 255.0
+    normed_image[:, :, 0] = (normed_image[:, :, 0] - 0.45247) / 0.25556
+    normed_image[:, :, 1] = (normed_image[:, :, 1] - 0.45871) / 0.26181
+    normed_image[:, :, 2] = (normed_image[:, :, 2] - 0.47285) / 0.27931
+    return normed_image

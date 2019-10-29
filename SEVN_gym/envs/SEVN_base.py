@@ -5,11 +5,10 @@ import h5py
 import zipfile
 import numpy as np
 import pandas as pd
-import dask.array as da
 import networkx as nx
 import matplotlib.pyplot as plt
 import gym
-from SEVN_gym.envs.utils import Actions, ACTION_MEANING, get_data_path
+from SEVN_gym.envs.utils import Actions, ACTION_MEANING, get_data_path, HighResDataset
 from gym import spaces
 from matplotlib.collections import LineCollection
 from SEVN_gym.envs import utils, wrappers
@@ -88,12 +87,13 @@ class SEVNBase(gym.GoalEnv):
             #     .extractall(DATA_PATH)
             zipfile.ZipFile(os.path.join(DATA_PATH,
                                          'dataset.zip')).extractall(DATA_PATH)
-        if high_res:
-            f = h5py.File(os.path.join(DATA_PATH, 'images-high-res.hdf5'), 'r')
-        else:
-            f = h5py.File(os.path.join(DATA_PATH, 'images.hdf5'), 'r')
+
+        f = h5py.File(os.path.join(DATA_PATH, 'images.hdf5'), 'r')
         self.images = f["images"]
         self.frame_key = {int(k): i for i, k in enumerate(f['frames'][:])}
+        if high_res:
+            self.images = HighResDataset(self.frame_key)
+
         self.label_df = pd.read_hdf(
             os.path.join(DATA_PATH, 'label.hdf5'), key='df', mode='r')
         self.coord_df = pd.read_hdf(

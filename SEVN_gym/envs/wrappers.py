@@ -33,7 +33,7 @@ def wrap_obs(obs, use_gps_obs, use_visible_text_obs, use_image_obs, use_goal, nu
         else:
             vhn_fm = vhn_fm.flatten()
             vhn_fm = np.tile(vhn_fm, w // 120)
-            vhn_fm = np.pad(vhn_fm, int((w % vhn_fm.shape[0]) / 2))
+            vhn_fm = np.pad(vhn_fm, int((w % vhn_fm.shape[0]) / 2), 'constant')
             vhn_fm = np.tile(vhn_fm, (1280, 1))
         vhn_fm = np.expand_dims(vhn_fm, axis=0)
     else:
@@ -63,7 +63,7 @@ def wrap_obs(obs, use_gps_obs, use_visible_text_obs, use_image_obs, use_goal, nu
         else:
             gsn_fm = np.tile(gsn_fm, (1, w // num_streets))
             gsn_fm = gsn_fm.flatten()
-            gsn_fm = np.pad(gsn_fm, (0, int((w % num_streets))))
+            gsn_fm = np.pad(gsn_fm, (0, int((w % num_streets))), 'constant')
             gsn_fm = np.tile(gsn_fm, (w, 1))
         gsn_fm = np.expand_dims(gsn_fm, axis=0)
 
@@ -71,7 +71,6 @@ def wrap_obs(obs, use_gps_obs, use_visible_text_obs, use_image_obs, use_goal, nu
     else:
         ghn_fm = np.zeros((1, w, w), dtype=np.float32)
         gsn_fm = np.zeros((1, w, w), dtype=np.float32)
-
     out = np.concatenate((obs['image'], gps_fm, vsn_fm, vhn_fm, ghn_fm, gsn_fm), axis=0)
     return out
 

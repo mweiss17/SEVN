@@ -9,7 +9,7 @@ import argparse
 
 def show_img(env, frame):
     img = np.swapaxes(frame[:3, :, :], 0, 2)
-    img = cv2.resize(denormalize_image(img)[:, :, ::-1], (500, 500))
+    img = cv2.resize(denormalize_image(img)[:, :, ::-1], (1500, 1500), interpolation = cv2.INTER_NEAREST)
     cv2.imshow('SEVN viewer', img)
     return cv2.waitKey(-1)
 
@@ -44,7 +44,8 @@ def play(env, zoom=4):
         key = show_img(env, obs)
 
         while not done:
-
+            import time
+            time.sleep(.05)
             while key not in [ord(x) for x in ["a", "q", "w", "e", "d", "x", "r"]]:
                 key = show_img(env, obs)
 
