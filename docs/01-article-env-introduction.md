@@ -2,7 +2,7 @@
 layout: default
 ---
 
-# How to Create a Navigation Assistant for the Visually Impaired
+# Creating a Navigation Assistant for the Visually Impaired
 ## Step 1: Build a Sidewalk Simulation Environment
 
 
@@ -45,7 +45,7 @@ Our dataset contains 5k+ panoramic images taken from Montreal's Little Italy. Th
 
 ![](https://i.imgur.com/JhUAn97.png)
 
-We have also made available the pre-processed house number and street sign crops from our dataset, which could be used to test Optical Character Recognition recognition models :point_right: [link](https://linktotextcrops)
+<!--- We have also made available the pre-processed house number and street sign crops from our dataset, which could be used to test Optical Character Recognition recognition models :point_right: [link](https://linktotextcrops) --->
 
 
 ### An Open-AI gym environment

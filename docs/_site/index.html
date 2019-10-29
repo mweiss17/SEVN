@@ -22,7 +22,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="theme-color" content="#157878">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-    <link rel="stylesheet" href="/assets/css/style.css?v=4720ab29093617a9ab164f3df2235da63c56afb9">
+    <link rel="stylesheet" href="/assets/css/style.css?v=08d45c10c0ecf3827a6e579ce5d2fb2153e766f9">
   </head>
   <body>
     
@@ -56,7 +56,14 @@
 So we created SEVN, a sidewalk simulation environment and a neural network-based approach to creating a navigation agent. 
 We hope that this dataset, simulator, and experimental results will provide a foundation for further research into the creation of agents that can assist members of the BVI community with outdoor navigation.</p>
 
-<p>For a longer overview, please <a href="/SEVN/01-article-env-introduction">read this post</a>. For more examples, <a href="/SEVN/examples">see here</a>.</p>
+<h1 id="dataset-examples">Dataset <a href="/SEVN/examples">[examples]</a></h1>
+<p>In this page you’ll find few examples from the SEVN dataset and the simulator.
+The dataset covers different types of regions from the city of Montreal, including residential, commercial and industrial.
+The SEVN Simulator is available in low resolution and high resolution.</p>
+
+<h1 id="blog-post-post">Blog Post <a href="/SEVN/examples">[post]</a></h1>
+<p>In this post, we describe the motivation for building the SEVN Dataset and Simulator. 
+We describe the process of building it and give instructions on how to use it.</p>
 
 <h1 id="sevn-simulator-code">SEVN Simulator <a href="https://github.com/mweiss17/SEVN">[code]</a></h1>
 <p>SEVN contains 4,988 full panoramic images and labels for house numbers, doors, and street name signs, which can be used for several different navigation tasks.
@@ -70,10 +77,9 @@ This takes raw 360° video as an input. The camera used was the Vuze+ 3D 360 VR 
 The Vuze+ has four synchronized stereo cameras. 
 Each stereo camera is composed of two image sensors with fisheye lenses that each capture full high definition video (1920x1080) at 30 Frames Per Second (FPS).</p>
 
-<h1 id="the-model-code">The Model <a href="https://github.com/mweiss17/SEVN-model">[code]</a></h1>
+<h1 id="sevn-baseline-model-code">SEVN Baseline Model <a href="https://github.com/mweiss17/SEVN-model">[code]</a></h1>
 <p>In this repository you’ll find the code used to train the multi-modal agents on SEVN. 
-These agents can take in images, scene-text, and gps to navigate to goal addresses.
-This repository was forked from <a href="https://github.com/ikostrikov/pytorch-a2c-ppo-acktr-gail">this PPO repository</a>.</p>
+These agents can take in images, scene-text, and gps to navigate to goal addresses.</p>
 
 <h1 id="paper">Paper</h1>
 <p>If you use this work, please cite us:</p>
