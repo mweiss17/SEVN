@@ -2,7 +2,7 @@
 layout: default
 ---
 
-# Creating a Navigation Assistant for the Visually Impaired
+# Creating a Navigation Agent for the Visually Impaired
 ## Step 1: Build a Sidewalk Simulation Environment
 
 
@@ -11,13 +11,13 @@ layout: default
 *As part of the NAVI project, we have released our dataset and environment called SEVN (Sidewalk Simulation Environment for the Visually Impaired). We hope that this work will enable future research in visual navigation and, in the long term, contribute to allowing the blind and visually impaired to gain autonomy when commuting.*
 
 
-## NAVI: Navigational Assistant for the Visually Impaired
+## NAVI: Navigation Agent for the Visually Impaired
 
 For a moment, imagine you will imminently become blind to a degenerative illness. You must find a [rehab center](https://www.cnib.ca/en/programs-and-services/rehab--services?region=qc) and get training to use a cane, learn to love Siri, and buy an Alexa. You're going to have to [learn how to be independent all over again](https://nfb.org/images/nfb/publications/bm/bm14/bm1404/bm140414.htm). Unfortunately, there are some compromises you'll have to make. Take this example.
 
 You're at home on a Friday evening when you get a text inviting you to a party. But venturing to a new location is tough without the help of a sighted person. Sure, you can get out of the house, and Uber can take you most of the way, but then what? There are a lot of [tools](https://www.sciencedirect.com/science/article/pii/S1877705813016214) out there that can help, but most of them rely on GPS and can't actually get you all the way to the venue. The [perfect end-to-end solution](https://arxiv.org/pdf/1811.10120.pdf) does not yet exist.
 
-That's why we're building a tool called NAVI, the Navigational Assistant for the Visually Impaired. NAVI uses GPS and vision -- even reading scene text like house numbers and street signs -- to dynamically navigate!
+That's why we're building a tool called NAVI, the Navigation Agent for the Visually Impaired. NAVI uses GPS and vision -- even reading scene text like house numbers and street signs -- to dynamically navigate!
 
 ![](https://i.imgur.com/pn2EWu1.png)
 
