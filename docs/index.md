@@ -35,21 +35,19 @@ Each stereo camera is composed of two image sensors with fisheye lenses that eac
 In this repository you'll find the code used to train the multi-modal agents on SEVN. 
 These agents can take in images, scene-text, and gps to navigate to goal addresses.
 
-## Paper 
-If you use this work, please cite us:
+## Paper [[Arxiv]](https://arxiv.org/abs/1910.13249)
+
+If you use this work, please cite us. Here's the Bibtex for our paper.
 
 ```
-Martin Weiss, Simon Chamorro, Roger Girgis, Margaux Luck, Samira Ebrahimi Kahou, 
-Joseph Paul Cohen, Derek Nowrouzezahrai, Doina Precup, Florian Golemo, Chris Pal. 
-"Navigation Agents for the Visually Impaired: A Sidewalk Simulator and Experiments" 
-In Conference on Robot Learning. 2019.
+@misc{weiss2019navigation,
+    title={Navigation Agents for the Visually Impaired: A Sidewalk Simulator and Experiments},
+    author={Martin Weiss and Simon Chamorro and Roger Girgis and Margaux Luck and
+            Samira E. Kahou and Joseph P. Cohen and Derek Nowrouzezahrai and
+            Doina Precup and Florian Golemo and Chris Pal},
+    year={2019},
+    eprint={1910.13249},
+    archivePrefix={arXiv},
+    primaryClass={cs.CV}
+}
 ```
-
-Or via our bibtex:
-
-(TODO insert Arxiv bibtex here)
-
-
-
-
-
