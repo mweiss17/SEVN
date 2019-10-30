@@ -29,6 +29,7 @@ cd SEVN
 conda create -n sevn python=3.7
 
 # Install the dependencies
+conda activate sevn
 pip install -e .
 
 # Download the low resolution image data, labels, and spatial graph
@@ -37,7 +38,7 @@ python scripts/download.py
 # Test that your environment is correctly setup
 python scripts/01-play.py
 
-# WARNING! Running this step downloads 48GB of image data and is not required to run the model or play with the environment.
+# WARNING! Running this step downloads 28GB of image data and is not required to run the model or play with the environment.
 # python scripts/download.py --high-res
 # python scripts/01-play.py --high-res
 
@@ -45,8 +46,9 @@ python scripts/01-play.py
 
 ## Dataset
 You can manually download the dataset here (in case you don't want to follow the installation instructions above).
-- [Low resolution](http://sevn.s3.amazonaws.com/dataset.zip)
-- [High resolution](https://sevn.s3.amazonaws.com/SEVN-high-res-images.zip) (Warning! 48 GB of images)
+- [Metadata](https://zenodo.org/record/3521988#.Xbi0nnUzaV4)
+- [Low resolution](https://zenodo.org/record/3521905#.XbhKu3UzaV4)
+- [High resolution](TODO - High res link) (Warning! 48 GB of images)
 
 ### Dataset pre-processing
 For more information about the data-preprocessing and the data format consult the `README` in the [SEVN-data](https://github.com/mweiss17/SEVN-data) github repository.
@@ -58,7 +60,7 @@ For more information about how to train an agent on SEVN consult the `README` in
 
 This work was accepted at [Conference on Robot Learning (CoRL) 2019](https://www.robot-learning.org/).
 
-The paper was also published to Arxiv: [Navigation Agents for the Visually Impaired: A Sidewalk Simulator and Experiments](TODO-arxiv link)
+The paper was also published to Arxiv: [Navigation Agents for the Visually Impaired: A Sidewalk Simulator and Experiments](http://arxiv.org/abs/1910.13249)
 
 If you use this work, please cite us:
 
