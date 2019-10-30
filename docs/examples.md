@@ -18,8 +18,8 @@ If you use the viewer in the [SEVN repository](github.com/mweiss17/SEVN), you'll
 
 ![](img/low-res-viewer.png){: .center-image }
 
-## 1920x1280 pixel image
-If you use the `--high-res` flag, you'll see something like this, after downloading the ~50Gb of image data.
+## 1280x1280 pixel image
+If you use the `--high-res` flag, you'll see something like this, after downloading the ~28Gb of image data.
 
 ![](img/high-res-viewer.png){: .center-image }
 

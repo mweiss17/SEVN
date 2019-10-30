@@ -59,21 +59,21 @@
 
       <main id="content" class="main-content" role="main">
         <h2 id="overview">Overview</h2>
-<p>In our endeavour to create a navigation assistant for the BVI, we found that existing RL environments were unsuitable for outdoor pedestrian navigation.
+<p>In our endeavour to create a navigation assistant for the Blind and Visually Impaired (BVI), we found that existing RL environments were unsuitable for outdoor pedestrian navigation.
 So we created SEVN, a sidewalk simulation environment and a neural network-based approach to creating a navigation agent. 
 We hope that this dataset, simulator, and experimental results will provide a foundation for further research into the creation of agents that can assist members of the BVI community with outdoor navigation.</p>
 
 <h2 id="dataset-examples">Dataset <a href="/SEVN/examples">[examples]</a></h2>
-<p>In this page you’ll find few examples from the SEVN dataset and the simulator.
-The dataset covers different types of regions from the city of Montreal, including residential, commercial and industrial.
-The SEVN Simulator is available in low resolution and high resolution.</p>
+<p>In this page you’ll find a few examples from the SEVN dataset and simulator.
+The dataset covers different types of <a href="/SEVN/examples#zones">regions</a> from the city of Montreal, including residential, commercial and industrial.
+The SEVN Simulator is available in low (84x84 pixels) and high resolution (1280x1280 pixels).</p>
 
-<h2 id="creating-a-navigation-assistant-for-the-visually-impaired-read-more">Creating a Navigation Assistant for the Visually Impaired <a href="/SEVN/01-article-env-introduction">[read more]</a></h2>
+<h2 id="creating-a-navigation-agent-for-the-visually-impaired-read-more">Creating a Navigation Agent for the Visually Impaired <a href="/SEVN/01-article-env-introduction">[read more]</a></h2>
 <h3 id="step-1-build-a-sidewalk-simulation-environment">Step 1: Build a Sidewalk Simulation Environment</h3>
 
 <p><img src="https://i.imgur.com/okfisip.jpg" alt="" /></p>
 
-<p><em>As part of the NAVI project, we have released our dataset and environment called SEVN (Sidewalk Simulation Environment for the Visually Impaired). We hope that this work will enable future research in visual navigation and, in the long term, contribute to allowing the blind and visually impaired to gain autonomy when commuting.</em></p>
+<p><em>As part of the Navigation Agent for the Visually Impaired (NAVI) project, we have released our dataset and environment called SEVN (Sidewalk Simulation Environment for the Visually Impaired). We hope that this work will enable future research in visual navigation and, in the long term, contribute to allowing the blind and visually impaired to gain autonomy when commuting.</em></p>
 
 <h2 id="sevn-simulator-code">SEVN Simulator <a href="https://github.com/mweiss17/SEVN">[code]</a></h2>
 <p>SEVN contains 4,988 full panoramic images and labels for house numbers, doors, and street name signs, which can be used for several different navigation tasks.
@@ -82,9 +82,8 @@ The SEVN Simulator is OpenAI Gym-compatible to allow the use of state-of-the-art
 An instance of the simulator using low-resolution imagery can be run at 400-800 frames per second on a machine with 2 CPU cores and 2 GB of RAM.</p>
 
 <h2 id="sevn-data-pipeline-code">SEVN Data Pipeline <a href="https://github.com/mweiss17/SEVN-data">[code]</a></h2>
-<p>Data pre-processing for SEVN (Sidewalk Simulation Environment for Visual Navigation). 
-This takes raw 360° video as an input. The camera used was the Vuze+ 3D 360 VR Camera. 
-The Vuze+ has four synchronized stereo cameras. 
+<p>This repository contains the data pre-processing pipeline for SEVN. 
+This takes raw 360° video as an input. The camera used was the Vuze+ 3D 360 VR Camera, which has four synchronized stereo cameras. 
 Each stereo camera is composed of two image sensors with fisheye lenses that each capture full high definition video (1920x1080) at 30 Frames Per Second (FPS).</p>
 
 <h2 id="sevn-baseline-model-code">SEVN Baseline Model <a href="https://github.com/mweiss17/SEVN-model">[code]</a></h2>
