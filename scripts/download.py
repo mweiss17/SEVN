@@ -1,13 +1,12 @@
 import requests
 import zipfile
+import os
 from tqdm import tqdm
 import argparse
 from SEVN_gym.data import DATA_PATH
 
 
-METADATA_URL = 'https://zenodo.org/record/3521988/files/SEVN-metadata.zip?download=1'
-LOW_RES_PANOS_URL = 'https://zenodo.org/record/3521905/files/images.hdf5?download=1'
-HIGH_RES_PANOS_URL = "TODO"
+ZENODO_URL = 'https://zenodo.org/record/3526490/files/'
 
 
 def download_file(url, filename):
@@ -24,22 +23,40 @@ def download_file(url, filename):
                 f.write(chunk)
 
 
-def download_low_res():
+def download_metadata():
     # Download and unzip metadata 
     print('Downloading metadata')
-    download_file(METADATA_URL, DATA_PATH + 'SEVN-metadata.zip')
+    if os.path.isfile(DATA_PATH + 'coord.hdf5'):
+        print("Already Downloaded coord.hdf5")
+    else:
+        download_file(ZENODO_URL + "coord.hdf5", DATA_PATH + 'coord.hdf5')
+    if os.path.isfile(DATA_PATH + 'graph.pkl'):
+        print("Already Downloaded graph.pkl")
+    else:
+        download_file(ZENODO_URL + "graph.pkl", DATA_PATH + 'graph.pkl')
+    if os.path.isfile(DATA_PATH + 'label.hdf5'):
+        print("Already Downloaded label.hdf5")
+    else:
+        download_file(ZENODO_URL + "label.hdf5", DATA_PATH + 'label.hdf5')
+    print('Metadata Download Finished')
 
-    with zipfile.ZipFile(DATA_PATH + 'SEVN-metadata.zip', 'r') as zip_ref:
-        zip_ref.extractall(DATA_PATH)
 
-    # Download images
+def download_low_res():
     print('Downloading images')
-    download_file(LOW_RES_PANOS_URL, DATA_PATH + 'images.hdf5')
+    if os.path.isfile(DATA_PATH + 'images.hdf5'):
+        print("Already Downloaded images.hdf5")
+    else:
+        download_file(ZENODO_URL + "images.hdf5", DATA_PATH + 'images.hdf5')
     print('Download finished')
 
 
 def download_high_res():
-    print('High resolution dataset is not yet available')
+    print('Downloading images')
+    if os.path.isfile(DATA_PATH + 'high-res-panos.zip'):
+        print("Already Downloaded high-res-panos.zip")
+    else:
+        download_file(ZENODO_URL + "high-res-panos.zip", DATA_PATH + 'high-res-panos.zip')
+    print('Download finished')
 
 
 def main():
@@ -47,6 +64,7 @@ def main():
     parser.add_argument('--high-res', action="store_true",
                         help='Download high-resolution images')
     args = parser.parse_args()
+    download_metadata()
     if args.high_res:
         download_high_res()
     else:
