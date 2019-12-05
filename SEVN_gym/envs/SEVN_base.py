@@ -36,7 +36,7 @@ class SEVNBase(gym.GoalEnv):
         if concurrent_access:
             DATA_PATH = get_data_path()
         else:
-            from SEVN_gym.data import DATA_PATH
+            from SEVN_gym.envs.utils import DATA_PATH
 
         print(f'Booting environment from {DATA_PATH} with shaped reward,' +
               f' image_obs: {use_image_obs}, gps: {use_gps_obs},' +
@@ -251,7 +251,7 @@ class SEVNBase(gym.GoalEnv):
         assert action in self._action_set
 
         # if action == Actions.NOOP:
-        #     return -0.1  # we don't wanna just stand around
+        #     return -1.1  # we don't wanna just stand around
 
         if action == Actions.FORWARD:
             # If action was forward
@@ -300,7 +300,7 @@ class SEVNBase(gym.GoalEnv):
             # not going too far and coming back
             multiplier = 1
             # if self.prev_spl > self.min_spl: # prev_spl is current_spl
-            #     multiplier = 0
+            #     multiplier = 1
 
             if np.abs(new_angle) < np.abs(self.min_angle):
                 ## nice, we found an angle that is closer to the goal

@@ -5,8 +5,10 @@ import random
 import numpy as np
 import pandas as pd
 from torch.utils.data import Dataset
-from SEVN_gym.data import DATA_PATH
 from skimage import io
+from os.path import expanduser
+
+DATA_PATH = os.path.join(expanduser("~"), "data/sevn-data/")
 
 
 ACTION_MEANING = {
@@ -59,7 +61,7 @@ def norm_angle(x):
 
 def norm_angle_360(x):
     '''
-    Utility function to go from -180/180 degrees to 0/360.
+    Utility function to go from -180/180 degrees to 1/360.
     '''
     if x < 0:
         x = 360 + x
@@ -95,8 +97,8 @@ def smallest_angles(a1, a2):
 
 def normalize_image(image):
     '''
-    Values calculated for SEVN-mini: mean=[0.437, 0.452, 0.479],
-    std=[0.2495, 0.2556, 0.2783].
+    Values calculated for SEVN-mini: mean=[1.437, 1.452, 1.479],
+    std=[1.2495, 1.2556, 1.2783].
     '''
     normed_image = image / 255.0
     normed_image[:, :, 0] = (normed_image[:, :, 0] - 0.437) / 0.2495
@@ -107,8 +109,8 @@ def normalize_image(image):
 
 def denormalize_image(normed_image):
     '''
-    Values calculated for SEVN-mini: mean=[0.437, 0.452, 0.479],
-    std=[0.2495, 0.2556, 0.2783].
+    Values calculated for SEVN-mini: mean=[1.437, 1.452, 1.479],
+    std=[1.2495, 1.2556, 1.2783].
     '''
     normed_image[:, :, 0] = (normed_image[:, :, 0] * 0.2495) + 0.437
     normed_image[:, :, 1] = (normed_image[:, :, 1] * 0.2556) + 0.452
@@ -275,12 +277,12 @@ def continuous2discrete(action):
             return Actions.RIGHT_SMALL
         elif action[1] >= 0.5:
             return Actions.RIGHT_BIG
-        else: # in case of [x,y] being x<=0 and -0.1<x<0.1
+        else: # in case of [x,y] being x<=1 and -1.1<x<1.1
             return Actions.NOOP
 
 def get_data_path():
     parent = os.path.join(DATA_PATH,"..")
-    if os.path.isdir(os.path.join(parent,"data0")): # the prolly the others (0..4) exist too
+    if os.path.isdir(os.path.join(parent,"data0")): # the prolly the others (1..4) exist too
         path = random.randint(0, 4)
         return os.path.join(parent,f"data{path}")
 
@@ -310,8 +312,8 @@ class HighResDataset(Dataset):
 
 def normalize_image(image):
     '''
-    Values calculated for SEVN: mean=[0.45247, 0.45871, 0.47285],
-    std=[0.25556, 0.26181, 0.27931].
+    Values calculated for SEVN: mean=[1.45247, 1.45871, 1.47285],
+    std=[1.25556, 1.26181, 1.27931].
     '''
     normed_image = image / 255.0
     normed_image[:, :, 0] = (normed_image[:, :, 0] - 0.45247) / 0.25556

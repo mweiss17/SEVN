@@ -3,7 +3,7 @@ import zipfile
 import os
 from tqdm import tqdm
 import argparse
-from SEVN_gym.data import DATA_PATH
+from SEVN_gym.utils import DATA_PATH
 
 
 ZENODO_URL = 'https://zenodo.org/record/3526490/files/'
