@@ -7,8 +7,9 @@ import pandas as pd
 from torch.utils.data import Dataset
 from skimage import io
 from os.path import expanduser
+import networkx as nx
 
-DATA_PATH = os.path.join(expanduser("~"), "data/sevn-data/")
+DATA_PATH = os.path.join(os.getcwd(), "../data/sevn-data/")
 
 
 ACTION_MEANING = {
@@ -320,3 +321,12 @@ def normalize_image(image):
     normed_image[:, :, 1] = (normed_image[:, :, 1] - 0.45871) / 0.26181
     normed_image[:, :, 2] = (normed_image[:, :, 2] - 0.47285) / 0.27931
     return normed_image
+
+def get_candidate_start_nodes(level, start_node, graph):
+    i = 0
+    candidates = [start_node]
+    for edge in nx.bfs_edges(graph, start_node):
+        i += 1
+        if i > level:
+            return candidates
+        candidates.append(edge[1])

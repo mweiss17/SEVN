@@ -28,7 +28,9 @@ class SEVNBase(gym.GoalEnv):
                  reward_type=None,
                  continuous=False,
                  concurrent_access=False,
-                 high_res=False):
+                 high_res=False,
+                 curriculum=True,
+                 curriculum_level=1):
 
         # in order to speed up training/NFS file access, you can make 5 copies of
         # SEVN_gym/data0 and call them SEVN_gym/data0 to ...data4. Then this script will
@@ -53,6 +55,8 @@ class SEVNBase(gym.GoalEnv):
         self.use_visible_text_obs = use_visible_text_obs
         self.reward_type = reward_type
         self.goal_type = "segment"
+        self.curriculum = curriculum
+        self.curriculum_level = curriculum_level
         self.needs_reset = True
         self.plot_ready = False
         self.is_explorer = False
@@ -83,8 +87,6 @@ class SEVNBase(gym.GoalEnv):
                 or not os.path.isfile(os.path.join(DATA_PATH, 'graph.pkl')) \
                 or not os.path.isfile(os.path.join(DATA_PATH, 'label.hdf5')) \
                 or not os.path.isfile(os.path.join(DATA_PATH, 'coord.hdf5')):
-            # zipfile.ZipFile(at.get("b9e719976cdedb94a25d2f162b899d5f0e711fe0", datastore=DATA_PATH)) \
-            #     .extractall(DATA_PATH)
             zipfile.ZipFile(os.path.join(DATA_PATH,
                                          'dataset.zip')).extractall(DATA_PATH)
 
@@ -187,7 +189,8 @@ class SEVNBase(gym.GoalEnv):
             label_dir = (224 - (label.x_min + label.x_max) / 2) * 360 / 224 - 180
             goal_dir = utils.norm_angle(label_dir + pano_rotation)
             self.agent_dir = self.SMALL_TURN_DEG * np.random.choice(range(-8, 8))
-            self.agent_loc = np.random.choice(segment_panos.index.unique())
+            candidates = utils.get_candidate_start_nodes(self.curriculum_level, goal.name, self.G)
+            self.agent_loc = np.random.choice(candidates)
             goal_address = {
                 'house_numbers':
                     utils.convert_house_numbers(self.goal_hn),
