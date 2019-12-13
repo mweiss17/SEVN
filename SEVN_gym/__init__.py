@@ -85,6 +85,13 @@ register(
     max_episode_steps=10000,
 )
 
+register(
+    id='SEVN-Action-v1',
+    entry_point='SEVN_gym.envs:SEVNActionspace',
+    kwargs={'split': 'Test'},
+    max_episode_steps=10000,
+)
+
 for i in range(0, 100):
     for split in ['Train', 'Test', 'AllData']:
         for modality in ['AllObs', 'NoImg', 'NoGPS', 'ImgOnly']:

@@ -6,13 +6,10 @@ import numpy as np
 import pandas as pd
 from torch.utils.data import Dataset
 from skimage import io
-from os.path import expanduser
 import networkx as nx
+
 # DATA_PATH ="/home/dockeruser/data/sevn-data/"
 DATA_PATH ="/home/martin/data/sevn-data/"
-
-# DATA_PATH = os.path.join(os.getcwd(), "../data/sevn-data/")
-
 
 ACTION_MEANING = {
     0: 'LEFT_BIG',
@@ -50,6 +47,7 @@ class ActionsWithRead(enum.IntEnum):
     RIGHT_SMALL = 3
     RIGHT_BIG = 4
     READ = 5
+
 
 def norm_angle(x):
     '''
@@ -326,7 +324,7 @@ def normalize_image(image):
 
 def get_candidate_start_nodes(level, start_node, graph):
     i = 0
-    candidates = [start_node]
+    candidates = []
     for edge in nx.bfs_edges(graph, start_node):
         i += 1
         if i > level:

@@ -87,7 +87,7 @@ def play(env, transpose=True, fps=30, zoom=0.5, high_res=False,
         else:
             action = keys_to_action.get(tuple(sorted(pressed_keys)), 6)
             prev_obs = obs
-            obs, rew, env_done, info = env.step(action)
+            obs, rew, env_done, info = env.step([action])
 
             if callback is not None:
                 callback(prev_obs, obs, action, rew, env_done, info)
@@ -95,7 +95,7 @@ def play(env, transpose=True, fps=30, zoom=0.5, high_res=False,
         if obs is not None:
             rendered = env.render(mode='rgb_array')
             display_arr(screen, rendered,
-                        transpose=transpose, video_size=video_size)
+                        transpose=False, video_size=video_size)
         if info is not None:
             info.get('achieved_goal')
 
@@ -161,7 +161,7 @@ class PlayPlot(object):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument('--env',
-                        type=str, default='SEVN-Play-v1',
+                        type=str, default='SEVN-Action-v1',
                         help='Define Environment')
     parser.add_argument('--high-res', action="store_true",
                         help='Use high-resolution images')
