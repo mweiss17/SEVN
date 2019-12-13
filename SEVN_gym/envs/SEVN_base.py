@@ -151,19 +151,6 @@ class SEVNBase(gym.GoalEnv):
         self.ax.add_collection(self.edge_collection)
         plt.savefig(figname)
 
-    def turn(self, action):
-        # Modify agent heading
-        action = self._action_set(action)
-        if action == Actions.LEFT_BIG:
-            self.agent_dir += self.BIG_TURN_DEG
-        if action == Actions.LEFT_SMALL:
-            self.agent_dir += self.SMALL_TURN_DEG
-        if action == Actions.RIGHT_SMALL:
-            self.agent_dir -= self.SMALL_TURN_DEG
-        if action == Actions.RIGHT_BIG:
-            self.agent_dir -= self.BIG_TURN_DEG
-        self.agent_dir = utils.norm_angle(self.agent_dir)
-
     def select_goal(self):
         goals = self.label_df.loc[self.label_df['is_goal'] == True]
         if self.goal_type == "segment":
@@ -182,14 +169,6 @@ class SEVNBase(gym.GoalEnv):
                 (self.coord_df.group == segment_group)
                 & (self.coord_df.type == 'street_segment')]
             self.goal_hn = goal.house_number
-            pano_rotation = utils.norm_angle(self.coord_df.loc[goal.name].angle)
-            label = self.label_df.loc[goal.name]
-            if isinstance(label, pd.DataFrame):
-                label = label[label.is_goal].iloc[np.random.choice(
-                    label[label.is_goal].shape[0])]
-            label_dir = (224 - (label.x_min + label.x_max) / 2) * 360 / 224 - 180
-            goal_dir = utils.norm_angle(label_dir + pano_rotation)
-            self.agent_dir = self.SMALL_TURN_DEG * np.random.choice(range(-8, 8))
             candidates = utils.get_candidate_start_nodes(self.curriculum_level, goal.name, self.G)
             self.agent_loc = np.random.choice(candidates)
             goal_address = {
@@ -231,7 +210,7 @@ class SEVNBase(gym.GoalEnv):
                     utils.convert_street_name(goal.street_name,
                                               self.all_street_names)
             }
-        return goal.name, goal_address, goal_dir
+        return goal.name, goal_address
 
     def transition(self):
         '''
