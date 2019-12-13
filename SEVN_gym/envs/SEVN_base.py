@@ -83,6 +83,7 @@ class SEVNBase(gym.GoalEnv):
         self.last_x = None
 
         # Load data
+
         if not os.path.isfile(os.path.join(DATA_PATH, 'images.hdf5')) \
                 or not os.path.isfile(os.path.join(DATA_PATH, 'graph.pkl')) \
                 or not os.path.isfile(os.path.join(DATA_PATH, 'label.hdf5')) \

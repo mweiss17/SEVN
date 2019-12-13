@@ -8,8 +8,10 @@ from torch.utils.data import Dataset
 from skimage import io
 from os.path import expanduser
 import networkx as nx
+# DATA_PATH ="/home/dockeruser/data/sevn-data/"
+DATA_PATH ="/home/martin/data/sevn-data/"
 
-DATA_PATH = os.path.join(os.getcwd(), "../data/sevn-data/")
+# DATA_PATH = os.path.join(os.getcwd(), "../data/sevn-data/")
 
 
 ACTION_MEANING = {
