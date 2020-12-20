@@ -37,6 +37,7 @@ class ActionsWithNOOP(enum.IntEnum):
     RIGHT_SMALL = 3
     RIGHT_BIG = 4
     NOOP = 5
+    DONE = 6
 
 class ActionsWithRead(enum.IntEnum):
     LEFT_BIG = 0

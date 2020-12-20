@@ -4,6 +4,7 @@ import time
 import matplotlib
 import gym
 import SEVN_gym # noqa
+import numpy as np
 from gym import logger
 import pygame
 from SEVN_gym.envs.utils import ActionsWithNOOP
@@ -19,9 +20,13 @@ from pygame.locals import VIDEORESIZE
 
 
 def display_arr(screen, arr, video_size, transpose):
+    # need to reformat and (possibly) transpose the image for pygame
     arr_min, arr_max = arr.min(), arr.max()
     arr = 255.0 * (arr - arr_min) / (arr_max - arr_min)
-    pyg_img = pygame.surfarray.make_surface(arr.swapaxes(0, 2) if transpose else arr)
+    arr = arr.astype("int8")
+    arr = arr.swapaxes(0, 2) if transpose else arr
+    arr = np.transpose(arr, (1, 0, 2))
+    pyg_img = pygame.surfarray.make_surface(arr)
     pyg_img = pygame.transform.scale(pyg_img, video_size)
     screen.blit(pyg_img, (0, 0))
 
@@ -60,7 +65,9 @@ def play(env, transpose=True, fps=30, zoom=0.5, high_res=False,
             assert False, env.spec.id + ' does not have explicit key to' + \
                           ' action mapping, please specify one manually'
     relevant_keys = set(sum(map(list, keys_to_action.keys()), []))
-    video_size = [rendered.shape[1], rendered.shape[0]]
+
+    # Take the two spatial dimensions of the rendered image to be displayed
+    video_size = [rendered.shape[1], rendered.shape[2]]
     if zoom is not None:
         video_size = int(video_size[0] * zoom), int(video_size[1] * zoom)
 
@@ -85,7 +92,8 @@ def play(env, transpose=True, fps=30, zoom=0.5, high_res=False,
             env_done = False
             obs = env.reset()
         else:
-            action = keys_to_action.get(tuple(sorted(pressed_keys)), 6)
+            # If no key pressed, then NOOP it out
+            action = keys_to_action.get(tuple(sorted(pressed_keys)), ActionsWithNOOP.NOOP)
             prev_obs = obs
             obs, rew, env_done, info = env.step(action)
 
@@ -115,7 +123,6 @@ def play(env, transpose=True, fps=30, zoom=0.5, high_res=False,
             elif event.type == VIDEORESIZE:
                 video_size = event.size
                 screen = pygame.display.set_mode(video_size)
-                # print(video_size)
 
         pygame.display.flip()
         clock.tick(fps)
