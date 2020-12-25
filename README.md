@@ -48,7 +48,7 @@ python scripts/01-play.py
 You can manually download the dataset here (in case you don't want to follow the installation instructions above).
 - [Metadata](https://zenodo.org/record/3521988#.Xbi0nnUzaV4)
 - [Low resolution](https://zenodo.org/record/3521905#.XbhKu3UzaV4)
-- [High resolution](TODO - High res link) (Warning! 48 GB of images)
+- [High resolution](https://zenodo.org/record/3526490/files/high-res-panos.zip) (Warning! 48 GB of images in a zip file)
 
 ### Dataset pre-processing
 For more information about the data-preprocessing and the data format consult the `README` in the [SEVN-data](https://github.com/mweiss17/SEVN-data) github repository.
@@ -79,7 +79,7 @@ If you use this work, please cite us. Here's the Bibtex for our paper.
 
 ## Team
 
-- [Martin Weiss](https://github.com/mweiss17), Master student (Mila) 
+- [Martin Weiss](https://github.com/mweiss17), PhD student (Mila) 
 - [Simon Chamorro](https://github.com/simonchamorro), Undergrad student (USherbrooke)
 - [Roger Girgis](https://github.com/roggirg), PhD student (Mila)
 - [Margaux Luck](https://github.com/Museau), Postdoctoral fellow (Mila)
