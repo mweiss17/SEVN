@@ -19,7 +19,8 @@ A longer introduction can be found here: [Creating a Navigation Assistant for th
 
 ## Installation
 
-In order to setup the environment, follow this script
+In order to setup the environment, do something like the following. If using a fresh Ubuntu install, ensure that build-essential is installed (i.e., `sudo apt-get build-essential`). We'll need GCC for this, and that installs it.
+
 ```bash
 # Install the code
 git clone https://github.com/mweiss17/SEVN.git
