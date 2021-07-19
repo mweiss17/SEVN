@@ -47,9 +47,11 @@ python scripts/01-play.py
 
 ## Dataset
 You can manually download the dataset here (in case you don't want to follow the installation instructions above).
-- [Metadata](https://zenodo.org/record/3521988#.Xbi0nnUzaV4)
-- [Low resolution](https://zenodo.org/record/3521905#.XbhKu3UzaV4)
-- [High resolution](https://zenodo.org/record/3526490/files/high-res-panos.zip) (Warning! 48 GB of images in a zip file)
+- [Coordinates of Panoramas](https://zenodo.org/record/3526490/files/coord.hdf5)
+- [Connectvity Graph](https://zenodo.org/record/3526490/files/graph.pkl)
+- [Image Labels](https://zenodo.org/record/3526490/files/labels.hdf5)
+- [Panoramas (Low resolution)](https://zenodo.org/record/files/images.hdf5)
+- [Panoramas (High resolution)](https://zenodo.org/record/3526490/files/high-res-panos.zip) (Warning! 48 GB of images in a zip file)
 
 ### Dataset pre-processing
 For more information about the data-preprocessing and the data format consult the `README` in the [SEVN-data](https://github.com/mweiss17/SEVN-data) github repository.
